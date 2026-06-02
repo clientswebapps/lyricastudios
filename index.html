@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lyricastudios — Custom Songs & Lyrics for Your Loved Ones</title>
+  <meta name="description" content="Create beautiful, custom songs and lyrics dedicated to your loved ones. Professional studio-quality compositions for weddings, anniversaries, birthdays, memorials, and more." />
+  <meta name="keywords" content="custom songs, personalized lyrics, love songs, wedding songs, anniversary songs, birthday songs, Lyricastudios" />
+  <meta property="og:title" content="Lyricastudios — Custom Songs & Lyrics for Your Loved Ones" />
+  <meta property="og:description" content="Turn your stories into beautiful, studio-quality songs. The perfect heartfelt gift for anyone you love." />
+  <meta property="og:type" content="website" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- PROMO BANNER                                -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="promo-banner" id="promo-banner">
+    <div class="container">
+      <p>🎵 <strong>Limited Offer</strong> — Get 20% off your first custom song! Use code <span class="promo-code">FIRSTSONG</span> at checkout <a href="#hero" class="promo-link">Start Now →</a></p>
+    </div>
+    <button class="promo-close" id="promo-close" aria-label="Close promotion banner">&times;</button>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- NAVIGATION                                  -->
+  <!-- ═══════════════════════════════════════════ -->
+  <header class="header" id="header">
+    <div class="container header__inner">
+      <a href="#" class="header__logo">
+        <span class="logo-icon">♪</span>
+        <span class="logo-text">Lyrica<span class="logo-accent">studios</span></span>
+      </a>
+
+      <nav class="header__nav" id="main-nav" aria-label="Main navigation">
+        <ul class="nav__list">
+          <li><a href="#how-it-works" class="nav__link">How It Works</a></li>
+          <li><a href="#reviews" class="nav__link">Reviews</a></li>
+          <li><a href="#categories" class="nav__link">Song Types</a></li>
+          <li><a href="#what-you-get" class="nav__link">What You Get</a></li>
+          <li><a href="#faq" class="nav__link">FAQ</a></li>
+        </ul>
+      </nav>
+
+      <div class="header__actions">
+        <a href="#hero" class="btn btn--primary btn--sm header__cta">Create Your Song</a>
+        <button class="header__hamburger" id="hamburger" aria-label="Toggle navigation" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- MOBILE NAV OVERLAY                          -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="mobile-nav-overlay" id="mobile-nav-overlay">
+    <div class="mobile-nav__content">
+      <button class="mobile-nav__close" id="mobile-nav-close" aria-label="Close navigation">&times;</button>
+      <ul class="mobile-nav__list">
+        <li><a href="#how-it-works" class="mobile-nav__link">How It Works</a></li>
+        <li><a href="#reviews" class="mobile-nav__link">Reviews</a></li>
+        <li><a href="#categories" class="mobile-nav__link">Song Types</a></li>
+        <li><a href="#what-you-get" class="mobile-nav__link">What You Get</a></li>
+        <li><a href="#faq" class="mobile-nav__link">FAQ</a></li>
+      </ul>
+      <a href="#hero" class="btn btn--primary mobile-nav__cta">Create Your Song</a>
+    </div>
+  </div>
+
+  <main>
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- HERO SECTION                                -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="hero" id="hero">
+      <div class="hero__bg-shapes">
+        <div class="hero__shape hero__shape--1"></div>
+        <div class="hero__shape hero__shape--2"></div>
+        <div class="hero__shape hero__shape--3"></div>
+      </div>
+
+      <div class="container hero__inner">
+        <div class="hero__content" data-animate="fade-up">
+          <span class="badge">✨ THE #1 CUSTOM SONG STUDIO</span>
+          <h1 class="hero__title">Turn Your Love Story Into a <span class="text-gradient">Beautiful Song</span></h1>
+          <p class="hero__subtitle">We craft personalized lyrics and studio-quality compositions for life's most meaningful moments — anniversaries, weddings, birthdays, and beyond.</p>
+
+          <div class="hero__cta-group">
+            <a href="#categories" class="btn btn--primary btn--lg">
+              <span>Create Your Song</span>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+            <button class="btn btn--glass btn--lg" id="listen-btn">
+              <span class="listen-icon" id="listen-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              </span>
+              <span>Listen to a Sample</span>
+            </button>
+          </div>
+
+          <div class="hero__trust">
+            <div class="trust-item">
+              <div class="trust-avatars">
+                <span class="avatar avatar--1">♡</span>
+                <span class="avatar avatar--2">♡</span>
+                <span class="avatar avatar--3">♡</span>
+                <span class="avatar avatar--4">♡</span>
+              </div>
+              <span class="trust-text"><strong>2,000+</strong> songs created</span>
+            </div>
+            <div class="trust-divider"></div>
+            <div class="trust-item">
+              <span class="trust-stars">★★★★★</span>
+              <span class="trust-text"><strong>4.9/5</strong> from happy customers</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero__visual" data-animate="fade-up" data-delay="200">
+          <div class="hero__image-wrapper">
+            <div class="hero__image-placeholder">
+              <div class="placeholder-icon">🎶</div>
+              <p>Hero Image</p>
+              <span>Replace with hero visual</span>
+            </div>
+            <!-- Floating cards -->
+            <div class="floating-card floating-card--1">
+              <span class="floating-card__icon">🎵</span>
+              <div>
+                <strong>New Song Ready!</strong>
+                <small>"Forever Yours"</small>
+              </div>
+            </div>
+            <div class="floating-card floating-card--2">
+              <span class="floating-card__icon">⭐</span>
+              <div>
+                <strong>5-Star Review</strong>
+                <small>"Made her cry happy tears!"</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- MEDIA / TRUST BAR                           -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="media-bar" data-animate="fade-up">
+      <div class="container">
+        <p class="media-bar__label">Featured In</p>
+        <div class="media-bar__logos">
+          <div class="media-logo">Billboard</div>
+          <div class="media-logo">Rolling Stone</div>
+          <div class="media-logo">Spotify News</div>
+          <div class="media-logo">The Guardian</div>
+          <div class="media-logo">Vogue</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- HOW IT WORKS                                -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="how-it-works" id="how-it-works">
+      <div class="container">
+        <div class="section-header" data-animate="fade-up">
+          <span class="section-tag">Simple Process</span>
+          <h2 class="section-title">How It Works</h2>
+          <p class="section-subtitle">From your story to a professional song — in just three simple steps.</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card" data-animate="fade-up" data-delay="0">
+            <div class="step-card__number">01</div>
+            <div class="step-card__icon-wrap">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
+            </div>
+            <h3 class="step-card__title">Share Your Story</h3>
+            <p class="step-card__text">Tell us about the person, the occasion, and the emotions you want to capture. Include memories, inside jokes, or special moments.</p>
+          </div>
+
+          <div class="step-connector" data-animate="fade-up" data-delay="100">
+            <svg width="40" height="24" viewBox="0 0 40 24"><path d="M0 12h36M30 4l8 8-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+
+          <div class="step-card" data-animate="fade-up" data-delay="200">
+            <div class="step-card__number">02</div>
+            <div class="step-card__icon-wrap">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            </div>
+            <h3 class="step-card__title">We Compose & Create</h3>
+            <p class="step-card__text">Our professional songwriters and musicians bring your story to life with custom lyrics, melodies, and studio-quality production.</p>
+          </div>
+
+          <div class="step-connector" data-animate="fade-up" data-delay="300">
+            <svg width="40" height="24" viewBox="0 0 40 24"><path d="M0 12h36M30 4l8 8-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+
+          <div class="step-card" data-animate="fade-up" data-delay="400">
+            <div class="step-card__number">03</div>
+            <div class="step-card__icon-wrap">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+            </div>
+            <h3 class="step-card__title">Receive & Share</h3>
+            <p class="step-card__text">Get your finished song delivered in 7 days (or 24 hours with rush delivery). Download, share, and watch their reaction!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- REVIEWS CAROUSEL                            -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="reviews" id="reviews">
+      <div class="container">
+        <div class="section-header" data-animate="fade-up">
+          <span class="section-tag">Love Letters in Song</span>
+          <h2 class="section-title">What Our Customers Say</h2>
+          <p class="section-subtitle">Real stories from real people who gave the gift of music.</p>
+        </div>
+
+        <div class="reviews-carousel" data-animate="fade-up">
+          <div class="carousel-track" id="carousel-track">
+
+            <!-- Review 1 -->
+            <div class="review-card">
+              <div class="review-card__song-preview">
+                <div class="song-preview-placeholder">
+                  <div class="placeholder-icon">🎵</div>
+                  <p>Song Cover Art</p>
+                </div>
+                <div class="song-preview__overlay">
+                  <button class="song-preview__play" aria-label="Play sample">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="review-card__body">
+                <div class="review-card__stars">★★★★★</div>
+                <p class="review-card__quote">"I gave this to my wife on our 10th anniversary. She cried the moment she heard the first verse. It captured everything about us perfectly."</p>
+                <div class="review-card__author">
+                  <div class="review-card__avatar">M</div>
+                  <div>
+                    <strong>Michael R.</strong>
+                    <span>Anniversary Song</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review 2 -->
+            <div class="review-card">
+              <div class="review-card__song-preview">
+                <div class="song-preview-placeholder">
+                  <div class="placeholder-icon">🎵</div>
+                  <p>Song Cover Art</p>
+                </div>
+                <div class="song-preview__overlay">
+                  <button class="song-preview__play" aria-label="Play sample">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="review-card__body">
+                <div class="review-card__stars">★★★★★</div>
+                <p class="review-card__quote">"I surprised my mom on her 60th birthday. The whole family was in tears. This was the most meaningful gift I've ever given."</p>
+                <div class="review-card__author">
+                  <div class="review-card__avatar">S</div>
+                  <div>
+                    <strong>Sarah K.</strong>
+                    <span>Birthday Song</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review 3 -->
+            <div class="review-card">
+              <div class="review-card__song-preview">
+                <div class="song-preview-placeholder">
+                  <div class="placeholder-icon">🎵</div>
+                  <p>Song Cover Art</p>
+                </div>
+                <div class="song-preview__overlay">
+                  <button class="song-preview__play" aria-label="Play sample">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="review-card__body">
+                <div class="review-card__stars">★★★★★</div>
+                <p class="review-card__quote">"We played it at our wedding reception as our first dance. Not a dry eye in the room. The lyrics were so personal, everyone thought we wrote it ourselves!"</p>
+                <div class="review-card__author">
+                  <div class="review-card__avatar">J</div>
+                  <div>
+                    <strong>James & Lisa</strong>
+                    <span>Wedding Song</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review 4 -->
+            <div class="review-card">
+              <div class="review-card__song-preview">
+                <div class="song-preview-placeholder">
+                  <div class="placeholder-icon">🎵</div>
+                  <p>Song Cover Art</p>
+                </div>
+                <div class="song-preview__overlay">
+                  <button class="song-preview__play" aria-label="Play sample">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="review-card__body">
+                <div class="review-card__stars">★★★★★</div>
+                <p class="review-card__quote">"After losing my father, I wanted something to remember him by. Lyricastudios turned my memories into the most beautiful tribute. I listen to it every day."</p>
+                <div class="review-card__author">
+                  <div class="review-card__avatar">E</div>
+                  <div>
+                    <strong>Emma T.</strong>
+                    <span>Memorial Song</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Review 5 -->
+            <div class="review-card">
+              <div class="review-card__song-preview">
+                <div class="song-preview-placeholder">
+                  <div class="placeholder-icon">🎵</div>
+                  <p>Song Cover Art</p>
+                </div>
+                <div class="song-preview__overlay">
+                  <button class="song-preview__play" aria-label="Play sample">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="review-card__body">
+                <div class="review-card__stars">★★★★★</div>
+                <p class="review-card__quote">"I proposed to my girlfriend with a custom song playing in the background. She said yes before the chorus even hit! Absolutely magical experience."</p>
+                <div class="review-card__author">
+                  <div class="review-card__avatar">D</div>
+                  <div>
+                    <strong>David L.</strong>
+                    <span>Proposal Song</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="carousel-controls">
+            <button class="carousel-btn carousel-btn--prev" id="carousel-prev" aria-label="Previous review">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <div class="carousel-dots" id="carousel-dots"></div>
+            <button class="carousel-btn carousel-btn--next" id="carousel-next" aria-label="Next review">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SONG CATEGORIES                             -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="categories" id="categories">
+      <div class="container">
+        <div class="section-header" data-animate="fade-up">
+          <span class="section-tag">For Every Occasion</span>
+          <h2 class="section-title">What Song Will You Create?</h2>
+          <p class="section-subtitle">Whether it's a celebration, a surprise, or a tribute — we have the perfect song for every moment.</p>
+        </div>
+
+        <div class="categories-grid">
+          <div class="category-card" data-animate="fade-up" data-delay="0">
+            <div class="category-card__image">
+              <div class="category-placeholder" style="--cat-hue: 340;">
+                <span>💕</span>
+              </div>
+            </div>
+            <div class="category-card__body">
+              <h3>For Your Partner</h3>
+              <p>Express your deepest feelings with a song that captures your unique love story.</p>
+              <a href="#" class="category-card__link">Create This Song →</a>
+            </div>
+          </div>
+
+          <div class="category-card" data-animate="fade-up" data-delay="100">
+            <div class="category-card__image">
+              <div class="category-placeholder" style="--cat-hue: 30;">
+                <span>👨‍👩‍👧</span>
+              </div>
+            </div>
+            <div class="category-card__body">
+              <h3>For Your Parents</h3>
+              <p>Thank the people who gave you everything with a song they'll treasure forever.</p>
+              <a href="#" class="category-card__link">Create This Song →</a>
+            </div>
+          </div>
+
+          <div class="category-card" data-animate="fade-up" data-delay="200">
+            <div class="category-card__image">
+              <div class="category-placeholder" style="--cat-hue: 200;">
+                <span>👶</span>
+              </div>
+            </div>
+            <div class="category-card__body">
+              <h3>For Your Children</h3>
+              <p>A lullaby, a milestone song, or a message they'll carry with them always.</p>
+              <a href="#" class="category-card__link">Create This Song →</a>
+            </div>
+          </div>
+
+          <div class="category-card" data-animate="fade-up" data-delay="0">
+            <div class="category-card__image">
+              <div class="category-placeholder" style="--cat-hue: 280;">
+                <span>💍</span>
+              </div>
+            </div>
+            <div class="category-card__body">
+              <h3>Wedding Songs</h3>
+              <p>Make your big day unforgettable with a custom first dance or ceremony song.</p>
+              <a href="#" class="category-card__link">Create This Song →</a>
+            </div>
+          </div>
+
+          <div class="category-card" data-animate="fade-up" data-delay="100">
+            <div class="category-card__image">
+              <div class="category-placeholder" style="--cat-hue: 45;">
+                <span>🎂</span>
+              </div>
+            </div>
+            <div class="category-card__body">
+              <h3>Birthday Songs</h3>
+              <p>Go beyond "Happy Birthday" with a personalized song that celebrates them.</p>
+              <a href="#" class="category-card__link">Create This Song →</a>
+            </div>
+          </div>
+
+          <div class="category-card" data-animate="fade-up" data-delay="200">
+            <div class="category-card__image">
+              <div class="category-placeholder" style="--cat-hue: 160;">
+                <span>🎉</span>
+              </div>
+            </div>
+            <div class="category-card__body">
+              <h3>Anniversary Songs</h3>
+              <p>Celebrate the years you've shared with a song that tells your journey together.</p>
+              <a href="#" class="category-card__link">Create This Song →</a>
+            </div>
+          </div>
+
+          <div class="category-card" data-animate="fade-up" data-delay="0">
+            <div class="category-card__image">
+              <div class="category-placeholder" style="--cat-hue: 220;">
+                <span>🕊️</span>
+              </div>
+            </div>
+            <div class="category-card__body">
+              <h3>Memorial Tributes</h3>
+              <p>Honor a loved one's memory with a heartfelt song that keeps their spirit alive.</p>
+              <a href="#" class="category-card__link">Create This Song →</a>
+            </div>
+          </div>
+
+          <div class="category-card" data-animate="fade-up" data-delay="100">
+            <div class="category-card__image">
+              <div class="category-placeholder" style="--cat-hue: 0;">
+                <span>💐</span>
+              </div>
+            </div>
+            <div class="category-card__body">
+              <h3>Proposal Songs</h3>
+              <p>Pop the question with your own song playing. The most unforgettable proposal ever.</p>
+              <a href="#" class="category-card__link">Create This Song →</a>
+            </div>
+          </div>
+
+          <div class="category-card" data-animate="fade-up" data-delay="200">
+            <div class="category-card__image">
+              <div class="category-placeholder" style="--cat-hue: 120;">
+                <span>🤝</span>
+              </div>
+            </div>
+            <div class="category-card__body">
+              <h3>Friendship Songs</h3>
+              <p>Celebrate a friendship that means the world to you with a song made just for them.</p>
+              <a href="#" class="category-card__link">Create This Song →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- WHAT YOU GET                                -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="what-you-get" id="what-you-get">
+      <div class="container">
+        <div class="section-header" data-animate="fade-up">
+          <span class="section-tag">The Full Package</span>
+          <h2 class="section-title">What You'll Receive</h2>
+          <p class="section-subtitle">Every song comes with everything you need to listen, share, and cherish.</p>
+        </div>
+
+        <div class="wyg-layout">
+          <!-- Mock Audio Player -->
+          <div class="mock-player" data-animate="fade-up">
+            <div class="mock-player__artwork">
+              <div class="player-placeholder">
+                <div class="placeholder-icon">🎧</div>
+                <p>Album Art</p>
+              </div>
+            </div>
+            <div class="mock-player__info">
+              <h4 class="mock-player__title">Forever Yours</h4>
+              <p class="mock-player__artist">Written for Sarah & Michael</p>
+              <div class="mock-player__progress">
+                <div class="progress-bar">
+                  <div class="progress-bar__fill" style="width: 35%;"></div>
+                </div>
+                <div class="progress-time">
+                  <span>1:12</span>
+                  <span>3:28</span>
+                </div>
+              </div>
+              <div class="mock-player__controls">
+                <button class="player-ctrl" aria-label="Previous">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 20L9 12l10-8v16zM7 19V5H5v14h2z"/></svg>
+                </button>
+                <button class="player-ctrl player-ctrl--play" aria-label="Play">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                </button>
+                <button class="player-ctrl" aria-label="Next">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l10 8-10 8V4zM17 5v14h2V5h-2z"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Features -->
+          <div class="wyg-features">
+            <div class="wyg-feature" data-animate="fade-up" data-delay="0">
+              <div class="wyg-feature__icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+              </div>
+              <div>
+                <h4>Studio-Quality Song</h4>
+                <p>Professionally composed and produced with real instruments. Delivered as a high-quality MP3 and WAV file.</p>
+              </div>
+            </div>
+
+            <div class="wyg-feature" data-animate="fade-up" data-delay="100">
+              <div class="wyg-feature__icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
+              </div>
+              <div>
+                <h4>Custom Lyrics Sheet</h4>
+                <p>A beautifully formatted PDF with the full lyrics to your song — perfect for framing or gifting alongside.</p>
+              </div>
+            </div>
+
+            <div class="wyg-feature" data-animate="fade-up" data-delay="200">
+              <div class="wyg-feature__icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+              </div>
+              <div>
+                <h4>7-Day Delivery</h4>
+                <p>Standard delivery in 7 days or rush delivery in just 24 hours. One free revision included.</p>
+              </div>
+            </div>
+
+            <div class="wyg-feature" data-animate="fade-up" data-delay="300">
+              <div class="wyg-feature__icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" x2="12" y1="2" y2="15"/></svg>
+              </div>
+              <div>
+                <h4>Easy Sharing</h4>
+                <p>Share via a beautiful link, post on social media, or download to play at your event. It's all yours.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- CTA BANNER                                  -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="cta-banner" data-animate="fade-up">
+      <div class="container cta-banner__inner">
+        <div class="cta-banner__content">
+          <h2>Ready to Create Something Unforgettable?</h2>
+          <p>Give the most personal, meaningful gift imaginable. A song that's 100% about them.</p>
+        </div>
+        <a href="#hero" class="btn btn--white btn--lg">
+          <span>Get Started Now</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- FAQ                                         -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="faq" id="faq">
+      <div class="container">
+        <div class="section-header" data-animate="fade-up">
+          <span class="section-tag">Got Questions?</span>
+          <h2 class="section-title">Frequently Asked Questions</h2>
+          <p class="section-subtitle">Everything you need to know before ordering your custom song.</p>
+        </div>
+
+        <div class="faq-list" data-animate="fade-up">
+
+          <div class="faq-item">
+            <button class="faq-item__question" aria-expanded="false">
+              <span>How does the song creation process work?</span>
+              <span class="faq-item__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </button>
+            <div class="faq-item__answer">
+              <p>It's simple! You fill out a short questionnaire telling us about the person, the occasion, your favorite memories together, and any specific phrases or themes you'd like included. Our songwriters then craft original lyrics and compose a unique melody. You'll receive your finished song within 7 days (or 24 hours with rush delivery).</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-item__question" aria-expanded="false">
+              <span>What genres and styles are available?</span>
+              <span class="faq-item__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </button>
+            <div class="faq-item__answer">
+              <p>We offer a wide range of genres including Pop, R&B, Country, Acoustic, Classical, Jazz, Gospel, Hip-Hop, and more. You can choose the style that best fits the personality of your loved one and the mood of the occasion.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-item__question" aria-expanded="false">
+              <span>Can I request revisions?</span>
+              <span class="faq-item__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </button>
+            <div class="faq-item__answer">
+              <p>Absolutely! Every order includes one free revision. If you'd like changes to the lyrics, tempo, or arrangement, just let us know and we'll make adjustments until you're happy. Additional revisions are available at a small fee.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-item__question" aria-expanded="false">
+              <span>How long does it take to get my song?</span>
+              <span class="faq-item__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </button>
+            <div class="faq-item__answer">
+              <p>Standard delivery is within 7 business days. Need it sooner? Our rush delivery option gets your song to you in just 24 hours. We'll email you a preview first, then deliver the final files after your approval.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-item__question" aria-expanded="false">
+              <span>What files will I receive?</span>
+              <span class="faq-item__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </button>
+            <div class="faq-item__answer">
+              <p>You'll receive a high-quality MP3 and WAV audio file, a beautifully formatted PDF with the full lyrics, and a shareable link to play the song online. All files are yours to keep forever — we don't charge licensing fees.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-item__question" aria-expanded="false">
+              <span>Is there a money-back guarantee?</span>
+              <span class="faq-item__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </button>
+            <div class="faq-item__answer">
+              <p>Yes! If you're not completely satisfied with your song after revisions, we offer a full money-back guarantee. We stand behind the quality of every song we create. Your happiness is our top priority.</p>
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-item__question" aria-expanded="false">
+              <span>Can I use the song publicly or on streaming platforms?</span>
+              <span class="faq-item__icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              </span>
+            </button>
+            <div class="faq-item__answer">
+              <p>The song is 100% yours for personal use — play it at events, share it with family, post it on social media. If you'd like to distribute it on streaming platforms like Spotify or Apple Music, we offer an extended commercial license add-on.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="faq-guarantee" data-animate="fade-up">
+          <div class="guarantee-badge">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+          </div>
+          <div>
+            <strong>100% Satisfaction Guarantee</strong>
+            <p>Not happy with your song? We'll make it right — or your money back. No questions asked.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- FOOTER                                      -->
+  <!-- ═══════════════════════════════════════════ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <a href="#" class="footer__logo">
+            <span class="logo-icon">♪</span>
+            <span class="logo-text">Lyrica<span class="logo-accent">studios</span></span>
+          </a>
+          <p>We turn your most cherished memories and emotions into beautiful, professionally produced songs. The most personal gift you can give.</p>
+          <div class="footer__socials">
+            <a href="#" class="social-link" aria-label="Instagram">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+            </a>
+            <a href="#" class="social-link" aria-label="YouTube">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+            </a>
+            <a href="#" class="social-link" aria-label="TikTok">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+            </a>
+            <a href="#" class="social-link" aria-label="Facebook">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+            </a>
+          </div>
+        </div>
+
+        <div class="footer__links">
+          <h4>Quick Links</h4>
+          <ul>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#reviews">Reviews</a></li>
+            <li><a href="#categories">Song Types</a></li>
+            <li><a href="#faq">FAQ</a></li>
+          </ul>
+        </div>
+
+        <div class="footer__links">
+          <h4>Song Types</h4>
+          <ul>
+            <li><a href="#">Wedding Songs</a></li>
+            <li><a href="#">Anniversary Songs</a></li>
+            <li><a href="#">Birthday Songs</a></li>
+            <li><a href="#">Memorial Songs</a></li>
+          </ul>
+        </div>
+
+        <div class="footer__links">
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:hello@lyricastudios.com">hello@lyricastudios.com</a></li>
+            <li><a href="#">Privacy Policy</a></li>
+            <li><a href="#">Terms of Service</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer__bottom">
+        <p>&copy; 2025 Lyricastudios. All rights reserved.</p>
+        <p>Made with ♪ for the ones you love.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

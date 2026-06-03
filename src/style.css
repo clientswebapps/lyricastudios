@@ -189,6 +189,15 @@ ul, ol {
   to { opacity: 1; }
 }
 
+@keyframes floatBadge {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
 /* Scroll-triggered animations — subtler 20px instead of 30px */
 [data-animate] {
   opacity: 0;
@@ -332,7 +341,6 @@ ul, ol {
   transform: translateY(-100%);
   opacity: 0;
   pointer-events: none;
-  position: absolute;
 }
 
 
@@ -750,13 +758,21 @@ ul, ol {
   display: flex;
   align-items: center;
   gap: var(--space-md);
-  box-shadow: var(--shadow-md);
-  transition: transform 0.3s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
   z-index: 2;
+  animation: floatBadge 3s ease-in-out infinite;
+}
+
+.floating-card--1 {
+  animation-delay: 0s;
+}
+
+.floating-card--2 {
+  animation-delay: 1.5s;
 }
 
 .floating-card:hover {
-  transform: translateY(-4px);
+  animation-play-state: paused;
 }
 
 .floating-card__icon {
@@ -1804,8 +1820,22 @@ ul, ol {
     max-height: var(--header-height);
     overflow: hidden;
     border-radius: 26px;
+    /* No transition by default — prevents scroll-triggered animation artifacts */
+    transition: none;
+  }
+
+  /* Only animate when menu is actively toggling */
+  .header__pill.is-animating {
     transition: max-height 200ms var(--ease-out),
-                box-shadow 200ms var(--ease-out);
+                box-shadow 200ms var(--ease-out),
+                border-radius 200ms var(--ease-out),
+                padding 200ms var(--ease-out);
+  }
+
+  .header__pill::before {
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(28px) saturate(180%);
+    -webkit-backdrop-filter: blur(28px) saturate(180%);
   }
 
   .header__pill.is-open {
@@ -1869,16 +1899,36 @@ ul, ol {
     display: flex;
   }
 
-  .promo-banner:not(.is-hidden) ~ .header {
-    padding-top: calc(var(--header-top) + 32px);
+  /* On mobile, the header always uses a fixed padding-top — no banner dependency */
+  .header {
+    padding-top: var(--header-top);
+    transition: none;
   }
 
+  /* Banner is fixed on mobile for full visibility on first load */
   .promo-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     padding: 8px 44px 8px 12px;
     overflow: hidden;
     height: 36px;
     display: flex;
     align-items: center;
+    transition: transform 250ms var(--ease-out);
+  }
+
+  .promo-banner.is-hidden {
+    transform: translateY(-100%);
+    pointer-events: none;
+    opacity: 1;
+  }
+
+  /* Push the header down below the banner */
+  .promo-banner:not(.is-hidden) ~ .header {
+    padding-top: calc(var(--header-top) + 36px);
+    transition: none;
   }
 
   .promo-banner .container {
@@ -1892,8 +1942,8 @@ ul, ol {
   .promo-banner p {
     display: inline-block;
     white-space: nowrap;
-    animation: promo-marquee 18s linear infinite;
-    padding-left: 10%;
+    animation: promo-marquee 12s linear infinite;
+    padding-left: 0;
     margin: 0;
   }
 
@@ -2114,7 +2164,7 @@ body.nav-open {
 
 @keyframes promo-marquee {
   0% {
-    transform: translate3d(100%, 0, 0);
+    transform: translate3d(50%, 0, 0);
   }
   100% {
     transform: translate3d(-100%, 0, 0);

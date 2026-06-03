@@ -85,19 +85,27 @@ function initMobileNav() {
   if (!hamburger || !pill || !overlay) return;
 
   const open = () => {
-    pill.classList.add('is-open');
-    overlay.classList.add('is-open');
-    hamburger.classList.add('is-active');
-    hamburger.setAttribute('aria-expanded', 'true');
-    document.body.classList.add('nav-open');
+    pill.classList.add('is-animating');
+    requestAnimationFrame(() => {
+      pill.classList.add('is-open');
+      overlay.classList.add('is-open');
+      hamburger.classList.add('is-active');
+      hamburger.setAttribute('aria-expanded', 'true');
+      document.body.classList.add('nav-open');
+    });
+    // Remove animating class after transition completes
+    setTimeout(() => pill.classList.remove('is-animating'), 250);
   };
 
   const close = () => {
+    pill.classList.add('is-animating');
     pill.classList.remove('is-open');
     overlay.classList.remove('is-open');
     hamburger.classList.remove('is-active');
     hamburger.setAttribute('aria-expanded', 'false');
     document.body.classList.remove('nav-open');
+    // Remove animating class after transition completes
+    setTimeout(() => pill.classList.remove('is-animating'), 250);
   };
 
   hamburger.addEventListener('click', () => {

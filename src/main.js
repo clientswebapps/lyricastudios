@@ -14,39 +14,60 @@ document.addEventListener('DOMContentLoaded', () => {
   initFAQAccordion();
   initListenButton();
   initSmoothScroll();
+  initHeroSlideshow();
 });
 
 
-/* ── Promo Banner ──────────────────────────────────────────── */
+/* ── Promo Banner — Close on click, hide on scroll ─────────── */
 function initPromoBanner() {
   const banner = document.getElementById('promo-banner');
   const closeBtn = document.getElementById('promo-close');
 
   if (!banner || !closeBtn) return;
 
+  // Close on button click
   closeBtn.addEventListener('click', () => {
     banner.classList.add('is-hidden');
+  });
+
+  // Hide on scroll down, show on scroll up
+  let lastScroll = 0;
+  const scrollThreshold = 80;
+
+  window.addEventListener('scroll', () => {
+    if (banner.classList.contains('is-closed')) return; // permanently closed
+
+    const currentScroll = window.scrollY;
+
+    if (currentScroll > scrollThreshold) {
+      banner.classList.add('is-hidden');
+    } else {
+      banner.classList.remove('is-hidden');
+    }
+
+    lastScroll = currentScroll;
+  }, { passive: true });
+
+  // Mark as permanently closed when X is clicked
+  closeBtn.addEventListener('click', () => {
+    banner.classList.add('is-closed');
   });
 }
 
 
-/* ── Sticky Header ─────────────────────────────────────────── */
+/* ── Sticky Header — Scroll state for CTA reveal ──────────── */
 function initStickyHeader() {
   const header = document.getElementById('header');
   if (!header) return;
 
-  let lastScroll = 0;
-
   const onScroll = () => {
     const currentScroll = window.scrollY;
 
-    if (currentScroll > 50) {
+    if (currentScroll > 120) {
       header.classList.add('is-scrolled');
     } else {
       header.classList.remove('is-scrolled');
     }
-
-    lastScroll = currentScroll;
   };
 
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -57,13 +78,14 @@ function initStickyHeader() {
 /* ── Mobile Navigation ─────────────────────────────────────── */
 function initMobileNav() {
   const hamburger = document.getElementById('hamburger');
+  const pill = document.getElementById('header-pill');
   const overlay = document.getElementById('mobile-nav-overlay');
-  const closeBtn = document.getElementById('mobile-nav-close');
-  const navLinks = document.querySelectorAll('.mobile-nav__link, .mobile-nav__cta');
+  const navLinks = document.querySelectorAll('.nav__link, .mobile-only-cta');
 
-  if (!hamburger || !overlay) return;
+  if (!hamburger || !pill || !overlay) return;
 
   const open = () => {
+    pill.classList.add('is-open');
     overlay.classList.add('is-open');
     hamburger.classList.add('is-active');
     hamburger.setAttribute('aria-expanded', 'true');
@@ -71,6 +93,7 @@ function initMobileNav() {
   };
 
   const close = () => {
+    pill.classList.remove('is-open');
     overlay.classList.remove('is-open');
     hamburger.classList.remove('is-active');
     hamburger.setAttribute('aria-expanded', 'false');
@@ -78,30 +101,24 @@ function initMobileNav() {
   };
 
   hamburger.addEventListener('click', () => {
-    if (overlay.classList.contains('is-open')) {
+    if (pill.classList.contains('is-open')) {
       close();
     } else {
       open();
     }
   });
 
-  if (closeBtn) {
-    closeBtn.addEventListener('click', close);
-  }
+  // Close on backdrop overlay click
+  overlay.addEventListener('click', close);
 
-  // Close on background click
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) close();
-  });
-
-  // Close when a nav link is clicked
+  // Close when nav links are clicked
   navLinks.forEach(link => {
     link.addEventListener('click', close);
   });
 
-  // Close on escape
+  // Close on escape key
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && overlay.classList.contains('is-open')) {
+    if (e.key === 'Escape' && pill.classList.contains('is-open')) {
       close();
     }
   });
@@ -202,14 +219,13 @@ function initReviewsCarousel() {
     const offset = currentIndex * cardWidth;
 
     isTransitioning = true;
-    track.style.transition = `transform 500ms cubic-bezier(0.22, 1, 0.36, 1)`;
+    track.style.transition = `transform 400ms cubic-bezier(0.22, 1, 0.36, 1)`;
     track.style.transform = `translateX(-${offset}px)`;
     refreshDots();
 
-    // Reset transitioning flag after animation completes
     setTimeout(() => {
       isTransitioning = false;
-    }, 520);
+    }, 420);
   }
 
   function slideNext() {
@@ -236,7 +252,6 @@ function initReviewsCarousel() {
     }
   }
 
-  // Prev / Next buttons — stop autoplay FIRST, then navigate
   prevBtn.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -374,7 +389,6 @@ function initListenButton() {
         </svg>
       `;
       listenBtn.querySelector('span:last-child').textContent = 'Now Playing...';
-      listenIcon.style.animation = 'pulse-glow 2s ease-in-out infinite';
     } else {
       listenIcon.innerHTML = `
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -382,7 +396,6 @@ function initListenButton() {
         </svg>
       `;
       listenBtn.querySelector('span:last-child').textContent = 'Listen to a Sample';
-      listenIcon.style.animation = '';
     }
   });
 }
@@ -400,8 +413,10 @@ function initSmoothScroll() {
 
       e.preventDefault();
 
-      const headerHeight = document.getElementById('header')?.offsetHeight || 0;
-      const targetPosition = target.getBoundingClientRect().top + window.scrollY - headerHeight - 20;
+      const headerPill = document.getElementById('header-pill');
+      const headerHeight = headerPill ? headerPill.offsetHeight : 60;
+      const headerTop = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--header-top')) || 24;
+      const targetPosition = target.getBoundingClientRect().top + window.scrollY - headerHeight - headerTop - 20;
 
       window.scrollTo({
         top: targetPosition,
@@ -409,4 +424,19 @@ function initSmoothScroll() {
       });
     });
   });
+}
+
+
+/* ── Hero Slideshow ────────────────────────────────────────── */
+function initHeroSlideshow() {
+  const slides = document.querySelectorAll('.hero__slide');
+  if (slides.length <= 1) return;
+
+  let currentSlide = 0;
+
+  setInterval(() => {
+    slides[currentSlide].classList.remove('is-active');
+    currentSlide = (currentSlide + 1) % slides.length;
+    slides[currentSlide].classList.add('is-active');
+  }, 3000);
 }

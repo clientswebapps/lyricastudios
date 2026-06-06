@@ -60,11 +60,12 @@
         <a href="#faq" class="nav__link">FAQ</a>
 
         <!-- Mobile-only CTA button inside the menu list -->
-        <a href="#categories" class="btn btn--primary mobile-only-cta">Create Your Song</a>
+        <a href="#categories" class="btn btn--primary mobile-only-cta" data-open-modal>Create Your Song</a>
       </div>
 
       <!-- Desktop CTA button -->
-      <a href="#categories" class="btn btn--primary btn--sm header__cta" id="header-cta">Create Your Song</a>
+      <a href="#categories" class="btn btn--primary btn--sm header__cta" id="header-cta" data-open-modal>Create Your
+        Song</a>
     </nav>
   </header>
 
@@ -84,7 +85,7 @@
             meaningful moments — anniversaries, weddings, birthdays, and beyond.</p>
 
           <div class="hero__cta-group">
-            <a href="#categories" class="btn btn--primary btn--lg">
+            <a href="#categories" class="btn btn--primary btn--lg" data-open-modal>
               <span>Create Your Song</span>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
@@ -442,7 +443,7 @@
             <div class="category-card__body">
               <h3>For Your Partner</h3>
               <p>Express your deepest feelings with a song that captures your unique love story.</p>
-              <a href="#" class="category-card__link">Create This Song →</a>
+              <a href="#" class="category-card__link" data-open-modal>Create This Song →</a>
             </div>
           </div>
 
@@ -455,7 +456,7 @@
             <div class="category-card__body">
               <h3>For Your Parents</h3>
               <p>Thank the people who gave you everything with a song they'll treasure forever.</p>
-              <a href="#" class="category-card__link">Create This Song →</a>
+              <a href="#" class="category-card__link" data-open-modal>Create This Song →</a>
             </div>
           </div>
 
@@ -468,7 +469,7 @@
             <div class="category-card__body">
               <h3>For Your Children</h3>
               <p>A lullaby, a milestone song, or a message they'll carry with them always.</p>
-              <a href="#" class="category-card__link">Create This Song →</a>
+              <a href="#" class="category-card__link" data-open-modal>Create This Song →</a>
             </div>
           </div>
 
@@ -481,7 +482,7 @@
             <div class="category-card__body">
               <h3>Wedding Songs</h3>
               <p>Make your big day unforgettable with a custom first dance or ceremony song.</p>
-              <a href="#" class="category-card__link">Create This Song →</a>
+              <a href="#" class="category-card__link" data-open-modal>Create This Song →</a>
             </div>
           </div>
 
@@ -494,7 +495,7 @@
             <div class="category-card__body">
               <h3>Birthday Songs</h3>
               <p>Go beyond "Happy Birthday" with a personalized song that celebrates them.</p>
-              <a href="#" class="category-card__link">Create This Song →</a>
+              <a href="#" class="category-card__link" data-open-modal>Create This Song →</a>
             </div>
           </div>
 
@@ -507,7 +508,7 @@
             <div class="category-card__body">
               <h3>Anniversary Songs</h3>
               <p>Celebrate the years you've shared with a song that tells your journey together.</p>
-              <a href="#" class="category-card__link">Create This Song →</a>
+              <a href="#" class="category-card__link" data-open-modal>Create This Song →</a>
             </div>
           </div>
 
@@ -520,7 +521,7 @@
             <div class="category-card__body">
               <h3>Memorial Tributes</h3>
               <p>Honor a loved one's memory with a heartfelt song that keeps their spirit alive.</p>
-              <a href="#" class="category-card__link">Create This Song →</a>
+              <a href="#" class="category-card__link" data-open-modal>Create This Song →</a>
             </div>
           </div>
 
@@ -533,7 +534,7 @@
             <div class="category-card__body">
               <h3>Proposal Songs</h3>
               <p>Pop the question with your own song playing. The most unforgettable proposal ever.</p>
-              <a href="#" class="category-card__link">Create This Song →</a>
+              <a href="#" class="category-card__link" data-open-modal>Create This Song →</a>
             </div>
           </div>
 
@@ -546,7 +547,7 @@
             <div class="category-card__body">
               <h3>Friendship Songs</h3>
               <p>Celebrate a friendship that means the world to you with a song made just for them.</p>
-              <a href="#" class="category-card__link">Create This Song →</a>
+              <a href="#" class="category-card__link" data-open-modal>Create This Song →</a>
             </div>
           </div>
         </div>
@@ -682,7 +683,7 @@
           <h2>Ready to Create Something Unforgettable?</h2>
           <p>Give the most personal, meaningful gift imaginable. A song that's 100% about them.</p>
         </div>
-        <a href="#hero" class="btn btn--white btn--lg">
+        <a href="#hero" class="btn btn--white btn--lg" data-open-modal>
           <span>Get Started Now</span>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -925,6 +926,318 @@
       </div>
     </div>
   </footer>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- SONG CREATION MODAL — 5 Step Form          -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="song-modal" id="song-modal" role="dialog" aria-modal="true" aria-labelledby="song-modal-title">
+    <div class="song-modal__backdrop"></div>
+    <div class="song-modal__container">
+      <button class="song-modal__close" id="modal-close" aria-label="Close modal">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      </button>
+
+      <!-- Progress -->
+      <div class="song-modal__progress">
+        <div class="song-modal__progress-track">
+          <div class="song-modal__progress-fill" id="modal-progress-fill" style="width: 20%;"></div>
+        </div>
+        <div class="song-modal__progress-meta">
+          <span id="modal-step-label">Step 1 of 5</span>
+          <span id="modal-percent-label">20% Complete</span>
+        </div>
+      </div>
+
+      <!-- Steps -->
+      <div class="song-modal__body">
+
+        <!-- Step 1: Recipient & Pronouns -->
+        <div class="song-modal__step is-active" data-step="1">
+          <div class="song-modal__step-header">
+            <h2 id="song-modal-title">Who is this song for?</h2>
+            <p>Tell us about the recipient</p>
+          </div>
+          <div class="song-modal__field">
+            <label class="song-modal__label">Who's this for? <span class="song-modal__required">*</span></label>
+            <div class="song-modal__chips" data-group="recipient">
+              <button type="button" class="song-modal__chip" data-value="Partner / Spouse">Partner / Spouse</button>
+              <button type="button" class="song-modal__chip" data-value="Parent">Parent</button>
+              <button type="button" class="song-modal__chip" data-value="Child">Child</button>
+              <button type="button" class="song-modal__chip" data-value="Friend">Friend</button>
+              <button type="button" class="song-modal__chip" data-value="Sibling">Sibling</button>
+              <button type="button" class="song-modal__chip" data-value="Other">Other</button>
+            </div>
+          </div>
+          <div class="song-modal__field">
+            <label class="song-modal__label" for="recipient-name">Their Name</label>
+            <input type="text" class="song-modal__input" id="recipient-name" placeholder="e.g. Sarah" />
+          </div>
+          <div class="song-modal__field">
+            <label class="song-modal__label">Their Pronouns</label>
+            <div class="song-modal__chips" data-group="pronouns">
+              <button type="button" class="song-modal__chip" data-value="He/Him">He / Him</button>
+              <button type="button" class="song-modal__chip" data-value="She/Her">She / Her</button>
+              <button type="button" class="song-modal__chip" data-value="They/Them">They / Them</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Occasion -->
+        <div class="song-modal__step" data-step="2">
+          <div class="song-modal__step-header">
+            <h2>What's the occasion?</h2>
+            <p>Help us understand the vibe</p>
+          </div>
+          <div class="song-modal__field">
+            <label class="song-modal__label">What's the occasion? <span class="song-modal__required">*</span></label>
+            <div class="song-modal__chips" data-group="occasion">
+              <button type="button" class="song-modal__chip" data-value="Anniversary">Anniversary</button>
+              <button type="button" class="song-modal__chip" data-value="Birthday">Birthday</button>
+              <button type="button" class="song-modal__chip" data-value="Wedding">Wedding</button>
+              <button type="button" class="song-modal__chip" data-value="Valentine's Day">Valentine's Day</button>
+              <button type="button" class="song-modal__chip" data-value="Just Because">Just Because</button>
+              <button type="button" class="song-modal__chip" data-value="Apology">Apology</button>
+              <button type="button" class="song-modal__chip" data-value="Memorial">Memorial</button>
+              <button type="button" class="song-modal__chip" data-value="Other">Other</button>
+            </div>
+          </div>
+          <div class="song-modal__field">
+            <label class="song-modal__label" for="occasion-story">Describe the Occasion / Story</label>
+            <textarea class="song-modal__textarea" id="occasion-story" rows="4"
+              placeholder="e.g., How you met, a favorite memory, or what makes them special..."></textarea>
+          </div>
+        </div>
+
+        <!-- Step 3: Mood & Genre -->
+        <div class="song-modal__step" data-step="3">
+          <div class="song-modal__step-header">
+            <h2>Choose the Mood & Genre</h2>
+            <p>How should the song sound?</p>
+          </div>
+          <div class="song-modal__field">
+            <label class="song-modal__label">Select Genre <span class="song-modal__required">*</span></label>
+            <div class="song-modal__chips song-modal__chips--genre" data-group="genre">
+              <button type="button" class="song-modal__chip" data-value="Acoustic Pop">
+                <strong>Acoustic Pop</strong>
+                <span class="genre-desc">Warm, acoustic & intimate</span>
+              </button>
+              <button type="button" class="song-modal__chip" data-value="Romantic Ballad">
+                <strong>Romantic Ballad</strong>
+                <span class="genre-desc">Slow, emotional & sweet</span>
+              </button>
+              <button type="button" class="song-modal__chip" data-value="Country / Folk">
+                <strong>Country / Folk</strong>
+                <span class="genre-desc">Story-driven, rustic & acoustic</span>
+              </button>
+              <button type="button" class="song-modal__chip" data-value="R&B / Soul">
+                <strong>R&B / Soul</strong>
+                <span class="genre-desc">Smooth, expressive & rich</span>
+              </button>
+              <button type="button" class="song-modal__chip" data-value="Upbeat Pop">
+                <strong>Upbeat Pop</strong>
+                <span class="genre-desc">Energetic, catchy & bright</span>
+              </button>
+              <button type="button" class="song-modal__chip" data-value="Indie / Rock">
+                <strong>Indie / Rock</strong>
+                <span class="genre-desc">Melodic, guitar-driven & raw</span>
+              </button>
+            </div>
+          </div>
+          <div class="song-modal__field">
+            <label class="song-modal__label">Select Mood <span class="song-modal__required">*</span></label>
+            <div class="song-modal__chips" data-group="mood">
+              <button type="button" class="song-modal__chip" data-value="Heartfelt">Heartfelt</button>
+              <button type="button" class="song-modal__chip" data-value="Happy / Upbeat">Happy / Upbeat</button>
+              <button type="button" class="song-modal__chip" data-value="Melancholy">Melancholy</button>
+              <button type="button" class="song-modal__chip" data-value="Romantic">Romantic</button>
+              <button type="button" class="song-modal__chip" data-value="Funny / Playful">Funny / Playful</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Key Details & Memories -->
+        <div class="song-modal__step" data-step="4">
+          <div class="song-modal__step-header">
+            <h2>Add Key Details & Memories</h2>
+            <p>The more specific, the better the lyrics!</p>
+          </div>
+          <div class="song-modal__field">
+            <label class="song-modal__label" for="memories-jokes">Key Memories or Inside Jokes</label>
+            <textarea class="song-modal__textarea" id="memories-jokes" rows="4"
+              placeholder="e.g., That time we got lost in Paris, or how they always burn the toast..."></textarea>
+          </div>
+          <div class="song-modal__field">
+            <label class="song-modal__label">3 Words to Describe Them</label>
+            <div class="song-modal__words-row">
+              <input type="text" class="song-modal__input" id="word-1" placeholder="e.g. Kind" />
+              <input type="text" class="song-modal__input" id="word-2" placeholder="e.g. Funny" />
+              <input type="text" class="song-modal__input" id="word-3" placeholder="e.g. Caring" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 5: Review & Checkout Screen -->
+        <div class="song-modal__step" data-step="5">
+          <div class="song-modal__step-header">
+            <h2 class="song-modal__checkout-heading">You're just a few clicks away from ordering your Custom Song!</h2>
+          </div>
+
+          <!-- Circular Avatars social proof -->
+          <div class="song-modal__checkout-social">
+            <div class="song-modal__checkout-avatars">
+              <span class="checkout-avatar"
+                style="background-image: url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&h=80&fit=crop&crop=faces');"></span>
+              <span class="checkout-avatar"
+                style="background-image: url('https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=faces');"></span>
+              <span class="checkout-avatar"
+                style="background-image: url('https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&crop=faces');"></span>
+              <span class="checkout-avatar"
+                style="background-image: url('https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop&crop=faces');"></span>
+              <span class="checkout-avatar"
+                style="background-image: url('https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=faces');"></span>
+              <span class="checkout-avatar checkout-avatar--more">•••</span>
+            </div>
+            <p class="song-modal__checkout-rating">1,000+ Families Love Their Custom Song!</p>
+          </div>
+
+          <!-- Scrollable Reviews Container -->
+          <div class="song-modal__checkout-reviews-wrap">
+            <div class="song-modal__checkout-reviews">
+              <!-- Card 1 -->
+              <div class="song-modal__checkout-review-card">
+                <div class="checkout-review-card__header">
+                  <div class="checkout-review-card__stars">★★★★★</div>
+                  <p class="checkout-review-card__text">"Oh praise God! This is absolutely breathtaking. I can't believe
+                    it... I am going to have a hard time keeping this a secret!"</p>
+                </div>
+                <div class="checkout-review-card__author">
+                  <div class="checkout-review-card__avatar"
+                    style="background-image: url('https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=60&h=60&fit=crop&crop=faces');">
+                  </div>
+                  <div>
+                    <strong>Wendy B.</strong>
+                    <span class="checkout-review-card__verified">✓ Verified</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 2 (Video Player Mock Card) -->
+              <div class="song-modal__checkout-review-card checkout-review-card--video"
+                style="background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url('/images/hero_wedding.jpeg');">
+                <button type="button" class="checkout-review-card__play" aria-label="Play video review">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </button>
+                <div class="checkout-review-card__video-meta">
+                  <strong>Three Squeezes</strong>
+                  <span>Custom Song</span>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="song-modal__checkout-review-card">
+                <div class="checkout-review-card__header">
+                  <div class="checkout-review-card__stars">★★★★★</div>
+                  <p class="checkout-review-card__text">"Very very wonderful song. I absolutely loved it and so did
+                    Dave! I put it on my FB. I will be singing your praises!"</p>
+                </div>
+                <div class="checkout-review-card__author">
+                  <div class="checkout-review-card__avatar"
+                    style="background-image: url('https://images.unsplash.com/photo-1580489944761-15a19d654956?w=60&h=60&fit=crop&crop=faces');">
+                  </div>
+                  <div>
+                    <strong>Markeeta B.</strong>
+                    <span class="checkout-review-card__verified">✓ Verified</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card 4 (Video Player Mock Card 2) -->
+              <div class="song-modal__checkout-review-card checkout-review-card--video"
+                style="background-image: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url('/images/hero_family.jpeg');">
+                <button type="button" class="checkout-review-card__play" aria-label="Play video review">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                </button>
+                <div class="checkout-review-card__video-meta">
+                  <strong>Chosen Hearts</strong>
+                  <span>Custom Song</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Guarantee Banner -->
+          <div class="song-modal__guarantee">
+            <div class="song-modal__guarantee-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00c896" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="m9 11 2 2 4-4" />
+              </svg>
+            </div>
+            <div class="song-modal__guarantee-content">
+              <strong>30-Day Money-Back Guarantee</strong>
+              <p>We're confident you'll love your custom song. If you're not satisfied, email us and we'll give you a
+                full refund.</p>
+            </div>
+          </div>
+
+          <!-- Checkout Action Area -->
+          <div class="song-modal__checkout-actions">
+            <button type="button" class="song-modal__btn-checkout btn btn--accent" id="checkout-submit-btn">
+              <span>Continue to checkout ($79)</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </button>
+            <button type="button" class="song-modal__checkout-back" id="checkout-back-link">
+              ← Edit details & memories
+            </button>
+          </div>
+
+          <!-- News Logos -->
+          <div class="song-modal__news-strip">
+            <p class="song-modal__news-label">FEATURED ON LOCAL NEWS</p>
+            <div class="song-modal__news-logos">
+              <span class="news-logo">cbs news</span>
+              <span class="news-logo">fox</span>
+              <span class="news-logo">aol</span>
+              <span class="news-logo font-yahoo">yahoo<i>!</i>life</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer -->
+      <div class="song-modal__footer">
+        <button type="button" class="song-modal__btn-back is-hidden" id="modal-back">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          <span>Back</span>
+        </button>
+        <button type="button" class="song-modal__btn-next" id="modal-next">
+          <span>Next</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+      <p class="song-modal__terms">By continuing, you agree to our <a href="#">Terms of Service</a> and <a
+          href="#">Privacy Policy</a>.</p>
+    </div>
+  </div>
 
   <script type="module" src="/src/main.js"></script>
 </body>

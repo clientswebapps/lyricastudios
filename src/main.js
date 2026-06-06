@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initListenButton();
   initSmoothScroll();
   initHeroSlideshow();
+  initSongModal();
 });
 
 
@@ -447,4 +448,275 @@ function initHeroSlideshow() {
     currentSlide = (currentSlide + 1) % slides.length;
     slides[currentSlide].classList.add('is-active');
   }, 3000);
+}
+
+
+/* ── Song Creation Modal ───────────────────────────────────────── */
+function initSongModal() {
+  const modal = document.getElementById('song-modal');
+  const closeBtn = document.getElementById('modal-close');
+  const backBtn = document.getElementById('modal-back');
+  const nextBtn = document.getElementById('modal-next');
+  const progressFill = document.getElementById('modal-progress-fill');
+  const stepLabel = document.getElementById('modal-step-label');
+  const percentLabel = document.getElementById('modal-percent-label');
+
+  if (!modal || !closeBtn || !backBtn || !nextBtn) return;
+
+  const totalSteps = 5;
+  let currentStep = 1;
+
+  // ── Trigger buttons ─────────────────────────────
+  const triggers = document.querySelectorAll('[data-open-modal]');
+  triggers.forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      openModal();
+    });
+  });
+
+  // ── Close (X button only, not backdrop) ──────────
+  closeBtn.addEventListener('click', closeModal);
+
+  // Escape key to close
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('is-open')) {
+      closeModal();
+    }
+  });
+
+  // ── Navigation ──────────────────────────────────
+  backBtn.addEventListener('click', () => {
+    if (currentStep > 1) {
+      goToStep(currentStep - 1, 'backward');
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (!validateStep(currentStep)) return;
+
+    if (currentStep < totalSteps) {
+      goToStep(currentStep + 1, 'forward');
+    }
+  });
+
+  // ── Step 5 custom buttons ──────────────────────
+  const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
+  const checkoutBackLink = document.getElementById('checkout-back-link');
+
+  if (checkoutSubmitBtn) {
+    checkoutSubmitBtn.addEventListener('click', () => {
+      submitForm();
+    });
+  }
+
+  if (checkoutBackLink) {
+    checkoutBackLink.addEventListener('click', () => {
+      goToStep(4, 'backward');
+    });
+  }
+
+  // ── Chip selection (single-select per group) ────
+  modal.querySelectorAll('.song-modal__chips, .song-modal__chips--genre').forEach(group => {
+    group.querySelectorAll('.song-modal__chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        // Deselect all siblings in this group
+        group.querySelectorAll('.song-modal__chip').forEach(c => c.classList.remove('is-selected'));
+        // Select clicked
+        chip.classList.add('is-selected');
+      });
+    });
+  });
+
+  // ── Plan Card Selection ──────────────────────────
+  const planCards = modal.querySelectorAll('.song-modal__plan-card');
+  planCards.forEach(card => {
+    card.addEventListener('click', () => {
+      planCards.forEach(c => c.classList.remove('is-selected'));
+      card.classList.add('is-selected');
+    });
+
+    const selectBtn = card.querySelector('.song-modal__plan-select');
+    if (selectBtn) {
+      selectBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        planCards.forEach(c => c.classList.remove('is-selected'));
+        card.classList.add('is-selected');
+      });
+    }
+  });
+
+  // ── Open Modal ──────────────────────────────────
+  function openModal() {
+    resetModal();
+    modal.classList.add('is-open');
+    document.body.classList.add('modal-open');
+    // Set initial direction
+    modal.setAttribute('data-direction', 'forward');
+  }
+
+  // ── Close Modal ─────────────────────────────────
+  function closeModal() {
+    modal.classList.remove('is-open');
+    document.body.classList.remove('modal-open');
+  }
+
+  // ── Go To Step ──────────────────────────────────
+  function goToStep(step, direction) {
+    currentStep = step;
+    modal.setAttribute('data-direction', direction);
+
+    // Switch visible step
+    const steps = modal.querySelectorAll('.song-modal__step');
+    steps.forEach(s => s.classList.remove('is-active'));
+    const target = modal.querySelector(`[data-step="${step}"]`);
+    if (target) target.classList.add('is-active');
+
+    // Update progress bar
+    const percent = Math.round((step / totalSteps) * 100);
+    if (progressFill) progressFill.style.width = `${percent}%`;
+    if (stepLabel) stepLabel.textContent = `Step ${step} of ${totalSteps}`;
+    if (percentLabel) percentLabel.textContent = `${percent}% Complete`;
+
+    // Show/hide standard footer and terms on step 5
+    const footer = modal.querySelector('.song-modal__footer');
+    const terms = modal.querySelector('.song-modal__terms');
+    if (step === 5) {
+      if (footer) footer.style.display = 'none';
+      if (terms) terms.style.display = 'none';
+    } else {
+      if (footer) footer.style.display = 'flex';
+      if (terms) terms.style.display = 'block';
+
+      // Show/hide back button
+      backBtn.classList.toggle('is-hidden', step === 1);
+
+      // Update next button text on Step 4
+      const nextText = nextBtn.querySelector('span');
+      if (step === 4) {
+        nextText.textContent = 'Next: Review Order';
+      } else {
+        nextText.textContent = 'Next';
+      }
+    }
+
+    // Scroll container to top
+    modal.querySelector('.song-modal__container').scrollTop = 0;
+  }
+
+  // ── Validation ──────────────────────────────────
+  function validateStep(step) {
+    if (step === 1) {
+      const selected = modal.querySelector('[data-group="recipient"] .song-modal__chip.is-selected');
+      if (!selected) {
+        shakeElement(modal.querySelector('[data-group="recipient"]'));
+        return false;
+      }
+    }
+    if (step === 2) {
+      const selected = modal.querySelector('[data-group="occasion"] .song-modal__chip.is-selected');
+      if (!selected) {
+        shakeElement(modal.querySelector('[data-group="occasion"]'));
+        return false;
+      }
+    }
+    if (step === 3) {
+      const genreSelected = modal.querySelector('[data-group="genre"] .song-modal__chip.is-selected');
+      const moodSelected = modal.querySelector('[data-group="mood"] .song-modal__chip.is-selected');
+      
+      let isValid = true;
+      if (!genreSelected) {
+        shakeElement(modal.querySelector('[data-group="genre"]'));
+        isValid = false;
+      }
+      if (!moodSelected) {
+        shakeElement(modal.querySelector('[data-group="mood"]'));
+        isValid = false;
+      }
+      return isValid;
+    }
+    return true;
+  }
+
+  function shakeElement(el) {
+    if (!el) return;
+    el.classList.remove('shake');
+    // Force reflow to restart animation
+    void el.offsetWidth;
+    el.classList.add('shake');
+    setTimeout(() => el.classList.remove('shake'), 500);
+  }
+
+  // ── Submit ──────────────────────────────────────
+  function submitForm() {
+    const recipientChip = modal.querySelector('[data-group="recipient"] .song-modal__chip.is-selected');
+    const pronounsChip = modal.querySelector('[data-group="pronouns"] .song-modal__chip.is-selected');
+    const occasionChip = modal.querySelector('[data-group="occasion"] .song-modal__chip.is-selected');
+    const genreChip = modal.querySelector('[data-group="genre"] .song-modal__chip.is-selected');
+    const moodChip = modal.querySelector('[data-group="mood"] .song-modal__chip.is-selected');
+
+    const formData = {
+      recipient: recipientChip ? recipientChip.dataset.value : '',
+      name: (document.getElementById('recipient-name') || {}).value || '',
+      pronouns: pronounsChip ? pronounsChip.dataset.value : '',
+      occasion: occasionChip ? occasionChip.dataset.value : '',
+      occasionStory: (document.getElementById('occasion-story') || {}).value || '',
+      genre: genreChip ? genreChip.dataset.value : '',
+      mood: moodChip ? moodChip.dataset.value : '',
+      memories: (document.getElementById('memories-jokes') || {}).value || '',
+      words: [
+        (document.getElementById('word-1') || {}).value || '',
+        (document.getElementById('word-2') || {}).value || '',
+        (document.getElementById('word-3') || {}).value || '',
+      ].filter(Boolean),
+      plan: 'standard',
+      price: '$49'
+    };
+
+    console.log('Song Creation Checkout Form Submitted:', formData);
+
+    // Simulate checkout redirect/alert
+    alert(`Thank you! Proceeding to checkout for your custom song ($49) for ${formData.name || formData.recipient}.`);
+
+    closeModal();
+  }
+
+  // ── Reset ───────────────────────────────────────
+  function resetModal() {
+    currentStep = 1;
+
+    // Reset steps visibility
+    const steps = modal.querySelectorAll('.song-modal__step');
+    steps.forEach(s => s.classList.remove('is-active'));
+    const firstStep = modal.querySelector('[data-step="1"]');
+    if (firstStep) firstStep.classList.add('is-active');
+
+    // Reset progress
+    if (progressFill) progressFill.style.width = '20%';
+    if (stepLabel) stepLabel.textContent = 'Step 1 of 5';
+    if (percentLabel) percentLabel.textContent = '20% Complete';
+
+    // Show footer and terms
+    const footer = modal.querySelector('.song-modal__footer');
+    const terms = modal.querySelector('.song-modal__terms');
+    if (footer) footer.style.display = 'flex';
+    if (terms) terms.style.display = 'block';
+
+    // Hide back button
+    backBtn.classList.add('is-hidden');
+
+    // Reset next button
+    const nextText = nextBtn.querySelector('span');
+    const nextSvg = nextBtn.querySelector('svg');
+    if (nextText) nextText.textContent = 'Next';
+    if (nextSvg) nextSvg.style.display = '';
+
+    // Deselect all chips
+    modal.querySelectorAll('.song-modal__chip').forEach(c => c.classList.remove('is-selected'));
+
+    // Clear inputs
+    modal.querySelectorAll('.song-modal__input, .song-modal__textarea').forEach(input => {
+      input.value = '';
+    });
+  }
 }

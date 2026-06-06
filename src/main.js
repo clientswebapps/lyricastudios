@@ -2,8 +2,8 @@
    LYRICASTUDIOS — Main JavaScript
    ═══════════════════════════════════════════════════════════════ */
 
-// Firebase
-import './firebase.js';
+import { db } from './firebase.js';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 document.addEventListener('DOMContentLoaded', () => {
   initPromoBanner();
@@ -549,6 +549,7 @@ function initSongModal() {
   // ── Open Modal ──────────────────────────────────
   function openModal() {
     resetModal();
+    modal.style.display = ''; // Ensure no leftover inline display styles block the modal
     modal.classList.add('is-open');
     document.body.classList.add('modal-open');
     // Set initial direction
@@ -648,7 +649,7 @@ function initSongModal() {
   }
 
   // ── Submit ──────────────────────────────────────
-  function submitForm() {
+  async function submitForm() {
     const recipientChip = modal.querySelector('[data-group="recipient"] .song-modal__chip.is-selected');
     const pronounsChip = modal.querySelector('[data-group="pronouns"] .song-modal__chip.is-selected');
     const occasionChip = modal.querySelector('[data-group="occasion"] .song-modal__chip.is-selected');
@@ -670,15 +671,21 @@ function initSongModal() {
         (document.getElementById('word-3') || {}).value || '',
       ].filter(Boolean),
       plan: 'standard',
-      price: '$49'
+      price: '$79'
     };
 
     console.log('Song Creation Checkout Form Submitted:', formData);
-
-    // Simulate checkout redirect/alert
-    alert(`Thank you! Proceeding to checkout for your custom song ($49) for ${formData.name || formData.recipient}.`);
-
-    closeModal();
+    
+    // Instead of writing to DB right away, we intercept and open the payment modal
+    // We store the data globally to be used by the payment script
+    window.currentOrderData = formData;
+    
+    const paymentModal = document.getElementById('payment-modal');
+    if(paymentModal) {
+      paymentModal.style.display = 'flex';
+    } else {
+      alert("We just deployed the new payment system! Please completely refresh your browser page (F5 or Ctrl+R) to load the new checkout interface.");
+    }
   }
 
   // ── Reset ───────────────────────────────────────
@@ -720,3 +727,100 @@ function initSongModal() {
     });
   }
 }
+
+// ── Payment Modal Logic ───────────────────────────────────
+function initPaymentModal() {
+  const modal = document.getElementById('payment-modal');
+  if (!modal) return;
+
+  const closeBtn = document.getElementById('close-payment-modal');
+  const tabs = modal.querySelectorAll('.pay-tab');
+  const sections = modal.querySelectorAll('.pay-method-section');
+  const payForm = document.getElementById('payment-form');
+  const btnPayStripe = document.getElementById('btn-pay-stripe');
+  const btnPayPaypal = document.getElementById('btn-pay-paypal');
+  const loadingOverlay = document.getElementById('payment-loading');
+  const errorMsg = document.getElementById('payment-error');
+
+  // Close Modal
+  const closePayment = () => {
+    modal.style.display = 'none';
+    errorMsg.style.display = 'none';
+    if(payForm) payForm.reset();
+  };
+
+  closeBtn.addEventListener('click', closePayment);
+  window.addEventListener('click', (e) => {
+    if (e.target === modal) closePayment();
+  });
+
+  // Tab Switching
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const method = tab.dataset.method;
+      sections.forEach(sec => sec.style.display = 'none');
+      document.getElementById(`pay-method-${method}`).style.display = 'block';
+    });
+  });
+
+  // Mock Payment Processing
+  const processPayment = (e) => {
+    if (e) e.preventDefault();
+    errorMsg.style.display = 'none';
+    loadingOverlay.style.display = 'flex';
+
+    // Check for the mock failure card
+    const cardInput = document.getElementById('pay-card');
+    const isMockFailure = (cardInput && cardInput.value.replace(/\s+/g, '') === '4000000000000000');
+
+    setTimeout(async () => {
+      if (isMockFailure) {
+        loadingOverlay.style.display = 'none';
+        errorMsg.textContent = 'Transaction declined by bank. Please try a different card.';
+        errorMsg.style.display = 'block';
+      } else {
+        // Success
+        try {
+          if (!window.currentOrderData) throw new Error("No order data found");
+          
+          await addDoc(collection(db, 'orders'), {
+            customerData: window.currentOrderData,
+            status: 'Pending Assignment',
+            assignedArtistId: null,
+            timestamps: {
+                createdAt: serverTimestamp()
+            },
+            assets: {}
+          });
+          
+          loadingOverlay.style.display = 'none';
+          alert('Payment Successful! Your song order has been sent to our artists.');
+          closePayment();
+          
+          // Close the original song modal too
+          const songModal = document.getElementById('song-modal');
+          if (songModal) {
+            songModal.classList.remove('is-open');
+            document.body.classList.remove('modal-open');
+          }
+          
+          window.currentOrderData = null;
+        } catch (error) {
+          loadingOverlay.style.display = 'none';
+          console.error("Error creating order: ", error);
+          errorMsg.textContent = "An error occurred while creating your order. Please try again.";
+          errorMsg.style.display = 'block';
+        }
+      }
+    }, 2000); // 2 second mock delay
+  };
+
+  if(payForm) payForm.addEventListener('submit', processPayment);
+  if(btnPayStripe) btnPayStripe.addEventListener('click', processPayment);
+  if(btnPayPaypal) btnPayPaypal.addEventListener('click', processPayment);
+}
+
+document.addEventListener('DOMContentLoaded', initPaymentModal);

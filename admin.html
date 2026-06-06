@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Lyricastudios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/admin.css">
+</head>
+<body>
+  <!-- Authentication View -->
+  <div id="auth-view" class="auth-container">
+    <div class="auth-box">
+      <h2>Admin Login</h2>
+      <form id="login-form">
+        <div class="form-group">
+          <label for="admin-email">Email</label>
+          <input type="email" id="admin-email" required>
+        </div>
+        <div class="form-group">
+          <label for="admin-password">Password</label>
+          <input type="password" id="admin-password" required>
+        </div>
+        <button type="submit" class="btn btn--accent">Login</button>
+      </form>
+      <div id="auth-error" class="error-msg" style="display: none;"></div>
+      
+      <!-- Temporary Bootstrap Button for Development -->
+      <div style="margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1rem; text-align: center;">
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem;">Development Only</p>
+        <button id="bootstrap-admin-btn" class="btn btn--outline" style="font-size: 0.8rem;">Create Initial Head Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Dashboard View -->
+  <div id="dashboard-view" class="dashboard-container" style="display: none;">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h3>Lyrica Admin</h3>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-btn active" data-view="pool-view">Order Pool</button>
+        <button class="nav-btn" data-view="tasks-view">My Tasks</button>
+        <button class="nav-btn" data-view="qa-view" id="nav-qa" style="display:none;">QA Pending</button>
+        <button class="nav-btn" data-view="users-view" id="nav-users" style="display:none;">Manage Users</button>
+      </nav>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn btn--outline">Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="topbar">
+        <div class="user-info">
+          <span id="user-name">Loading...</span> (<span id="user-role">...</span>)
+        </div>
+        <div class="user-stats">
+          <div class="stat-badge incentive">
+            Incentives: $<span id="user-incentives">0.00</span>
+          </div>
+          <div class="stat-badge penalty">
+            Penalties: $<span id="user-penalties">0.00</span>
+          </div>
+          <div class="stat-badge tasks">
+            Tasks: <span id="user-active-tasks">0</span>/5
+          </div>
+        </div>
+      </header>
+
+      <div class="content-area">
+        <!-- Order Pool View -->
+        <section id="pool-view" class="view-section active">
+          <h2>Order Pool (Pending Assignment)</h2>
+          <div id="pool-list" class="order-grid"></div>
+        </section>
+
+        <!-- My Tasks View -->
+        <section id="tasks-view" class="view-section" style="display: none;">
+          <h2>My Active Tasks</h2>
+          <div id="tasks-list" class="order-grid"></div>
+        </section>
+
+        <!-- QA View (Admin Only) -->
+        <section id="qa-view" class="view-section" style="display: none;">
+          <h2>QA Pending Orders</h2>
+          <div id="qa-list" class="order-grid"></div>
+        </section>
+
+        <!-- Users View (Admin Only) -->
+        <section id="users-view" class="view-section" style="display: none;">
+          <h2>Manage Users</h2>
+          <div class="create-user-form">
+            <h3>Create New Artist</h3>
+            <form id="create-artist-form">
+              <div class="form-group">
+                <input type="text" id="new-artist-name" placeholder="Name" required>
+              </div>
+              <div class="form-group">
+                <input type="email" id="new-artist-email" placeholder="Email" required>
+              </div>
+              <div class="form-group">
+                <input type="password" id="new-artist-password" placeholder="Password" required>
+              </div>
+              <button type="submit" class="btn btn--accent" id="create-artist-submit">Create Artist</button>
+            </form>
+            <div id="create-user-msg" class="mt-4" style="font-size:0.875rem;"></div>
+          </div>
+          <div id="users-list" class="users-grid mt-4"></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- Order Details Modal -->
+  <div id="order-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content admin-modal">
+      <div class="modal-header">
+        <h3 id="modal-order-id">Order Details</h3>
+        <button class="close-modal" id="close-order-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="order-meta">
+          <div class="meta-grid">
+            <div class="meta-item">
+              <span class="meta-label">Status</span>
+              <span class="meta-value" id="modal-order-status"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Recipient</span>
+              <span class="meta-value" id="modal-order-recipient"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Name</span>
+              <span class="meta-value" id="modal-order-name"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Pronouns</span>
+              <span class="meta-value" id="modal-order-pronouns"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Occasion</span>
+              <span class="meta-value" id="modal-order-occasion"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Genre</span>
+              <span class="meta-value" id="modal-order-genre"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Mood</span>
+              <span class="meta-value" id="modal-order-mood"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Plan</span>
+              <span class="meta-value" id="modal-order-plan"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Price</span>
+              <span class="meta-value" id="modal-order-price"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Key Words</span>
+              <span class="meta-value" id="modal-order-words"></span>
+            </div>
+          </div>
+
+          <div class="meta-story-section">
+            <p class="meta-label">Occasion Story</p>
+            <blockquote id="modal-order-story"></blockquote>
+          </div>
+          <div class="meta-story-section">
+            <p class="meta-label">Memories & Jokes</p>
+            <blockquote id="modal-order-memories"></blockquote>
+          </div>
+          
+          <div id="modal-order-assets" style="margin-top: 1rem;"></div>
+        </div>
+        
+        <div id="modal-action-area" class="action-area">
+          <!-- Dynamically populated based on status and role -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/admin.js"></script>
+</body>
+</html>

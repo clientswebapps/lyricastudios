@@ -37,8 +37,11 @@
 
   <!-- Main Dashboard View -->
   <div id="dashboard-view" class="dashboard-container" style="display: none;">
+    <!-- Sidebar Overlay for Mobile Drawer -->
+    <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <h3>Lyrica Admin</h3>
       </div>
@@ -47,8 +50,11 @@
         <button class="nav-btn" data-view="tasks-view">My Tasks</button>
         <button class="nav-btn" data-view="qa-view" id="nav-qa" style="display:none;">QA Pending</button>
         <button class="nav-btn" data-view="users-view" id="nav-users" style="display:none;">Manage Users</button>
+        <button class="nav-btn" data-view="history-view" id="nav-history" style="display:none;">History Log</button>
+        <button class="nav-btn" data-view="messages-view" id="nav-messages">Messages <span id="messages-nav-badge" class="chat-unread-badge" style="display: none; margin-left: 0.5rem; padding: 0.1rem 0.35rem; font-size: 0.7rem; line-height: 1; vertical-align: middle;">0</span></button>
       </nav>
       <div class="sidebar-footer">
+        <button id="change-pass-btn" class="btn btn--outline" style="margin-bottom: 0.5rem;">Change Password</button>
         <button id="logout-btn" class="btn btn--outline">Logout</button>
       </div>
     </aside>
@@ -56,6 +62,13 @@
     <!-- Main Content -->
     <main class="main-content">
       <header class="topbar">
+        <button id="mobile-menu-toggle" class="mobile-toggle-btn" aria-label="Toggle Sidebar">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
         <div class="user-info">
           <span id="user-name">Loading...</span> (<span id="user-role">...</span>)
         </div>
@@ -111,6 +124,90 @@
             <div id="create-user-msg" class="mt-4" style="font-size:0.875rem;"></div>
           </div>
           <div id="users-list" class="users-grid mt-4"></div>
+        </section>
+
+        <!-- History View -->
+        <section id="history-view" class="view-section" style="display: none;">
+          <h2>Artist Activity History</h2>
+          <div class="history-filters">
+            <div class="filter-group" id="filter-artist-container" style="display: none;">
+              <label for="history-filter-artist">Artist</label>
+              <select id="history-filter-artist">
+                <option value="">All Artists</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="history-filter-action">Action</label>
+              <select id="history-filter-action">
+                <option value="">All Actions</option>
+                <option value="Accepted Order">Accepted Order</option>
+                <option value="Submitted Lyrics">Submitted Lyrics</option>
+                <option value="Submitted Song">Submitted Song</option>
+                <option value="QA Approved">QA Approved</option>
+                <option value="QA Rejected">QA Rejected</option>
+              </select>
+            </div>
+          </div>
+          <div class="history-table-container">
+            <table class="history-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Artist</th>
+                  <th>Order ID</th>
+                  <th>Action</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody id="history-list">
+                <tr>
+                  <td colspan="5" class="text-center text-muted">Loading history...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Messages View -->
+        <section id="messages-view" class="view-section" style="display: none;">
+          <h2>Messages</h2>
+          <div class="messages-container">
+            <!-- Admin View: Chat Sidebar + Chat Area -->
+            <div id="admin-messages-layout" style="display: none; gap: 1.5rem; height: 600px;">
+              <div class="chat-sidebar" style="width: 250px; border-right: 1px solid var(--border); padding-right: 1rem; display: flex; flex-direction: column; gap: 0.5rem; overflow-y: auto;">
+                <h4 style="margin-bottom: 0.5rem;">Artists</h4>
+                <div id="chat-artist-list" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                  <!-- List of artists loaded dynamically -->
+                </div>
+              </div>
+              <div class="chat-area" style="flex: 1; display: flex; flex-direction: column; height: 100%;">
+                <div class="chat-header" style="padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem;">
+                  <h3 id="chat-active-title" style="font-size: 1.25rem;">Select an artist to start messaging</h3>
+                </div>
+                <div id="admin-chat-messages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem; margin-bottom: 1rem;">
+                  <!-- Chat history loaded dynamically -->
+                </div>
+                <form id="admin-chat-form" style="display: none;">
+                  <input type="text" id="admin-chat-input" placeholder="Type a message..." required autocomplete="off">
+                  <button type="submit" class="btn btn--accent">Send</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Artist View: Just Chat Area with Admin -->
+            <div id="artist-messages-layout" style="display: none; flex-direction: column; height: 600px; max-width: 800px; margin: 0 auto;">
+              <div class="chat-header" style="padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); margin-bottom: 1rem;">
+                <h3 style="font-size: 1.25rem;">Chat with Admin</h3>
+              </div>
+              <div id="artist-chat-messages" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; padding-right: 0.5rem; margin-bottom: 1rem;">
+                <!-- Chat history loaded dynamically -->
+              </div>
+              <form id="artist-chat-form">
+                <input type="text" id="artist-chat-input" placeholder="Type a message..." required autocomplete="off">
+                <button type="submit" class="btn btn--accent">Send</button>
+              </form>
+            </div>
+          </div>
         </section>
       </div>
     </main>
@@ -183,6 +280,127 @@
         <div id="modal-action-area" class="action-area">
           <!-- Dynamically populated based on status and role -->
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Artist Details Modal (Admin Only) -->
+  <div id="artist-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content admin-modal">
+      <div class="modal-header">
+        <h3 id="modal-artist-name">Artist Details</h3>
+        <button class="close-modal" id="close-artist-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="artist-detail-summary">
+          <div class="meta-grid">
+            <div class="meta-item">
+              <span class="meta-label">Email</span>
+              <span class="meta-value" id="modal-artist-email"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Role</span>
+              <span class="meta-value" id="modal-artist-role"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Incentives Earned</span>
+              <span class="meta-value text-success" id="modal-artist-incentives"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Penalties Incurred</span>
+              <span class="meta-value text-danger" id="modal-artist-penalties"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Active Tasks</span>
+              <span class="meta-value" id="modal-artist-active"></span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Total Assigned</span>
+              <span class="meta-value" id="modal-artist-total-assigned">0</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Completed (Done)</span>
+              <span class="meta-value text-success" id="modal-artist-completed">0</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Pending / In Progress</span>
+              <span class="meta-value text-warning" id="modal-artist-pending">0</span>
+            </div>
+          </div>
+          <div style="margin-top: 1rem; border-top: 1px solid var(--border); padding-top: 1rem; display: flex; gap: 0.75rem; justify-content: flex-end; flex-wrap: wrap;">
+            <button id="modal-artist-reset-pass" class="btn btn--outline" style="width: auto; font-size: 0.85rem; padding: 0.5rem 1rem;">Send Password Reset Link</button>
+            <button id="modal-artist-notify" class="btn btn--outline" style="width: auto; font-size: 0.85rem; padding: 0.5rem 1rem; color: var(--accent); border-color: rgba(6, 182, 212, 0.3);">Notify Artist</button>
+            <button id="modal-artist-suspend" class="btn btn--outline" style="width: auto; font-size: 0.85rem; padding: 0.5rem 1rem; color: var(--warning); border-color: rgba(245, 158, 11, 0.3);">Suspend Artist</button>
+            <button id="modal-artist-delete" class="btn btn--outline" style="width: auto; font-size: 0.85rem; padding: 0.5rem 1rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">Delete Artist</button>
+          </div>
+        </div>
+
+        <div class="artist-orders-section mt-4">
+          <h4 style="margin-bottom: 0.75rem;">Assigned Orders (Drag & Drop to Prioritize)</h4>
+          <div id="modal-artist-orders-list" class="order-grid" style="grid-template-columns: 1fr; gap: 0.75rem;">
+            <p class="text-center text-muted" style="width: 100%; padding: 2rem 0;">No orders assigned.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div id="change-password-modal" class="modal-overlay" style="display: none; z-index: 1020;">
+    <div class="modal-content admin-modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <h3>Change Password</h3>
+        <button class="close-modal" id="close-change-pass-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="change-pass-form">
+          <div class="form-group">
+            <label for="new-password">New Password</label>
+            <input type="password" id="new-password" placeholder="At least 6 characters" required>
+          </div>
+          <div class="form-group">
+            <label for="confirm-password">Confirm Password</label>
+            <input type="password" id="confirm-password" placeholder="Confirm new password" required>
+          </div>
+          <button type="submit" class="btn btn--accent">Update Password</button>
+        </form>
+        <div id="change-pass-msg" class="mt-4" style="font-size:0.875rem; text-align: center;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Logout Confirmation Modal -->
+  <div id="logout-confirm-modal" class="modal-overlay" style="display: none; z-index: 1050;">
+    <div class="modal-content admin-modal alert-modal-content" style="max-width: 400px; text-align: center; padding: 2rem;">
+      <div style="margin-bottom: 1rem; font-size: 2.5rem; color: var(--danger);">🚪</div>
+      <h3 style="margin-bottom: 0.75rem; font-size: 1.25rem;">Confirm Logout</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5; font-size: 0.95rem;">Are you sure you want to log out of Lyrica Admin?</p>
+      <div style="display: flex; gap: 1rem;">
+        <button class="btn btn--outline" id="logout-cancel-btn" style="flex: 1;">Cancel</button>
+        <button class="btn btn--accent" id="logout-confirm-btn" style="flex: 1; background: var(--danger);">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reusable Alert Modal -->
+  <div id="alert-modal" class="modal-overlay" style="display: none; z-index: 1100;">
+    <div class="modal-content admin-modal alert-modal-content" style="max-width: 400px; text-align: center; padding: 2rem;">
+      <div class="alert-icon-container" id="alert-modal-icon" style="margin-bottom: 1rem; font-size: 2.5rem;">⚠️</div>
+      <h3 id="alert-modal-title" style="margin-bottom: 0.75rem; font-size: 1.25rem;">Notification</h3>
+      <p id="alert-modal-message" style="color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5; font-size: 0.95rem;"></p>
+      <button class="btn btn--accent" id="close-alert-modal-btn" style="width: auto; padding: 0.5rem 2rem; margin: 0 auto;">Dismiss</button>
+    </div>
+  </div>
+
+  <!-- Delete Artist Confirmation Modal -->
+  <div id="delete-artist-confirm-modal" class="modal-overlay" style="display: none; z-index: 1060;">
+    <div class="modal-content admin-modal alert-modal-content" style="max-width: 400px; text-align: center; padding: 2rem;">
+      <div style="margin-bottom: 1rem; font-size: 2.5rem; color: var(--danger);">🗑️</div>
+      <h3 style="margin-bottom: 0.75rem; font-size: 1.25rem;">Delete Artist</h3>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5; font-size: 0.95rem;">Are you sure you want to delete artist <strong id="delete-artist-name-placeholder"></strong>? This will permanently remove their profile and revoke dashboard access. Pending orders assigned to this artist will stay intact.</p>
+      <div style="display: flex; gap: 1rem;">
+        <button class="btn btn--outline" id="delete-artist-cancel-btn" style="flex: 1;">Cancel</button>
+        <button class="btn btn--accent" id="delete-artist-confirm-btn" style="flex: 1; background: var(--danger);">Delete</button>
       </div>
     </div>
   </div>

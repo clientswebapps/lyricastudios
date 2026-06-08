@@ -421,6 +421,8 @@ function initListenButton() {
 function initSmoothScroll() {
   document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
+      if (this.hasAttribute('data-open-modal')) return;
+
       const targetId = this.getAttribute('href');
       if (targetId === '#') return;
 

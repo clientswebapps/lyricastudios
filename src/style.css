@@ -1246,6 +1246,18 @@ ol {
   overflow: hidden;
 }
 
+.category-card__image img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+
+.category-card:hover .category-card__image img {
+  transform: scale(1.03);
+}
+
 .category-placeholder {
   aspect-ratio: 16 / 9;
   background: linear-gradient(135deg,

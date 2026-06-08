@@ -1113,6 +1113,7 @@ if (document.readyState === 'loading') {
 /* ── Hero Title Typewriter ────────────────────────────── */
 function initHeroTypewriter() {
   const typewriterSpan = document.querySelector('.hero__title .typewriter-text');
+  const cursorSpan = document.querySelector('.hero__title .typewriter-cursor');
   if (!typewriterSpan) return;
 
   const words = [
@@ -1127,6 +1128,37 @@ function initHeroTypewriter() {
   let typingSpeed = 100;
   let delayAfterWord = 2000;
 
+  function createSplashNote() {
+    if (!cursorSpan) return;
+    const note = document.createElement('span');
+    const notes = ['♪', '♫', '♬', '♩'];
+    note.textContent = notes[Math.floor(Math.random() * notes.length)];
+    note.classList.add('splash-note', 'text-gradient');
+    
+    const rect = cursorSpan.getBoundingClientRect();
+    const startX = rect.left + window.scrollX + (Math.random() * 10 - 5);
+    const startY = rect.top + window.scrollY - 10;
+    
+    note.style.left = `${startX}px`;
+    note.style.top = `${startY}px`;
+    
+    const tx = (Math.random() * 40 - 20) + 'px';
+    const ty = -(Math.random() * 30 + 20) + 'px';
+    const rot = (Math.random() * 60 - 30) + 'deg';
+    
+    note.style.setProperty('--tx', tx);
+    note.style.setProperty('--ty', ty);
+    note.style.setProperty('--rot', rot);
+    
+    document.body.appendChild(note);
+    
+    setTimeout(() => {
+      if (note.parentNode) {
+        note.remove();
+      }
+    }, 600);
+  }
+
   function type() {
     const currentWord = words[wordIndex];
     
@@ -1138,6 +1170,7 @@ function initHeroTypewriter() {
       typewriterSpan.textContent = currentWord.substring(0, charIndex + 1);
       charIndex++;
       typingSpeed = 80;
+      createSplashNote();
     }
 
     if (!isDeleting && charIndex === currentWord.length) {

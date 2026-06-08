@@ -4074,3 +4074,23 @@ body.nav-open {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
+
+/* ── Typewriter Splashing Notes ── */
+.splash-note {
+  position: absolute;
+  font-size: 1.5rem;
+  pointer-events: none;
+  z-index: 1000;
+  animation: splashNoteAnim 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes splashNoteAnim {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.5) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--tx), var(--ty)) scale(1.5) rotate(var(--rot));
+  }
+}

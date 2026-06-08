@@ -404,14 +404,14 @@ function initListenButton() {
           <rect x="14" y="4" width="4" height="16"/>
         </svg>
       `;
-      listenBtn.querySelector('span:last-child').textContent = 'Now Playing...';
+      listenBtn.querySelector('.listen-text').textContent = 'Now Playing...';
     } else {
       listenIcon.innerHTML = `
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <polygon points="5 3 19 12 5 21 5 3"/>
         </svg>
       `;
-      listenBtn.querySelector('span:last-child').textContent = 'Listen to a Sample';
+      listenBtn.querySelector('.listen-text').textContent = 'Listen to a Sample';
     }
   });
 }

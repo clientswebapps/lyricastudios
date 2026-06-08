@@ -3,9 +3,9 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import { db } from './firebase.js';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, setDoc } from 'firebase/firestore';
 
-document.addEventListener('DOMContentLoaded', () => {
+const initAll = () => {
   initPromoBanner();
   initStickyHeader();
   initMobileNav();
@@ -16,7 +16,14 @@ document.addEventListener('DOMContentLoaded', () => {
   initSmoothScroll();
   initHeroSlideshow();
   initSongModal();
-});
+  initHeroTitleRotator();
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initAll);
+} else {
+  initAll();
+}
 
 
 /* ── Promo Banner — Close on click, hide on scroll ─────────── */
@@ -546,14 +553,83 @@ function initSongModal() {
     }
   });
 
+  // ── Hype Intro Elements ─────────────────────────
+  const introScreen = document.getElementById('song-modal-intro');
+  const introContent = document.getElementById('intro-content');
+  const introLoader = document.getElementById('intro-loader');
+  const introLoaderText = document.getElementById('intro-loader-text');
+  const btnHypeStart = document.getElementById('btn-hype-start');
+  let introTimers = [];
+
   // ── Open Modal ──────────────────────────────────
   function openModal() {
     resetModal();
     modal.style.display = ''; // Ensure no leftover inline display styles block the modal
     modal.classList.add('is-open');
+    modal.classList.add('has-intro');
     document.body.classList.add('modal-open');
     // Set initial direction
     modal.setAttribute('data-direction', 'forward');
+
+    // Reset intro to initial state
+    if (introContent) {
+      introContent.classList.remove('is-hidden');
+    }
+    if (introLoader) {
+      introLoader.classList.remove('is-active');
+    }
+  }
+
+  // ── Hype Start Button ──────────────────────────
+  if (btnHypeStart) {
+    btnHypeStart.addEventListener('click', () => {
+      startStudioLoader();
+    });
+  }
+
+  function startStudioLoader() {
+    // Clear any previous timers
+    introTimers.forEach(t => clearTimeout(t));
+    introTimers = [];
+
+    // Fade out intro content, show loader
+    if (introContent) introContent.classList.add('is-hidden');
+
+    introTimers.push(setTimeout(() => {
+      if (introLoader) introLoader.classList.add('is-active');
+
+      const messages = [
+        'Tuning the instruments...',
+        'Warming up the microphone...',
+        'Hiring the band...',
+        'Setting the mood lighting...',
+        'Ready! Let\'s create your masterpiece!'
+      ];
+
+      let msgIndex = 0;
+
+      const msgInterval = setInterval(() => {
+        msgIndex++;
+        if (msgIndex < messages.length) {
+          if (introLoaderText) {
+            introLoaderText.style.opacity = '0';
+            setTimeout(() => {
+              introLoaderText.textContent = messages[msgIndex];
+              introLoaderText.style.opacity = '1';
+            }, 150);
+          }
+        }
+        if (msgIndex >= messages.length - 1) {
+          clearInterval(msgInterval);
+        }
+      }, 350);
+
+      // After all messages, transition to Step 1
+      introTimers.push(setTimeout(() => {
+        modal.classList.remove('has-intro');
+        goToStep(1, 'forward');
+      }, 1800));
+    }, 380));
   }
 
   // ── Close Modal ─────────────────────────────────
@@ -692,6 +768,19 @@ function initSongModal() {
   function resetModal() {
     currentStep = 1;
 
+    // Clear intro timers
+    introTimers.forEach(t => clearTimeout(t));
+    introTimers = [];
+
+    // Reset intro screen
+    modal.classList.remove('has-intro');
+    if (introContent) introContent.classList.remove('is-hidden');
+    if (introLoader) introLoader.classList.remove('is-active');
+    if (introLoaderText) {
+      introLoaderText.textContent = 'Setting up your private studio...';
+      introLoaderText.style.opacity = '1';
+    }
+
     // Reset steps visibility
     const steps = modal.querySelectorAll('.song-modal__step');
     steps.forEach(s => s.classList.remove('is-active'));
@@ -824,3 +913,236 @@ function initPaymentModal() {
 }
 
 document.addEventListener('DOMContentLoaded', initPaymentModal);
+
+/* ── Live Support Widget Logic ────────────────────────────── */
+function initSupportWidget() {
+  const widget = document.getElementById('support-widget');
+  const fab = document.getElementById('support-fab');
+  const closeBtn = document.getElementById('close-support');
+  const messagesContainer = document.getElementById('support-messages');
+  const form = document.getElementById('support-form');
+  const input = document.getElementById('support-input');
+  const iconChat = fab.querySelector('.icon-chat');
+  const iconClose = fab.querySelector('.icon-close');
+
+  if (!widget || !fab || !form) return;
+
+  // Session Management
+  let sessionId = localStorage.getItem('supportSessionId');
+  if (!sessionId) {
+    sessionId = 'session_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    localStorage.setItem('supportSessionId', sessionId);
+  }
+
+  let unsubscribe = null;
+  let hasOpened = false;
+
+  const toggleWidget = () => {
+    const isOpen = widget.classList.contains('is-open');
+    if (isOpen) {
+      widget.classList.remove('is-open');
+      iconChat.style.display = 'block';
+      iconClose.style.display = 'none';
+    } else {
+      widget.classList.add('is-open');
+      iconChat.style.display = 'none';
+      iconClose.style.display = 'block';
+      input.focus();
+      
+      if (!hasOpened) {
+        hasOpened = true;
+        listenToMessages();
+      }
+      setTimeout(() => scrollToBottom(), 100);
+    }
+  };
+
+  fab.addEventListener('click', toggleWidget);
+  closeBtn.addEventListener('click', toggleWidget);
+
+  const scrollToBottom = () => {
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  };
+
+  const renderMessage = (text, sender) => {
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('support-msg');
+    msgDiv.classList.add(sender === 'user' ? 'user' : 'bot');
+    msgDiv.textContent = text;
+    messagesContainer.appendChild(msgDiv);
+    scrollToBottom();
+  };
+
+  const listenToMessages = () => {
+    const messagesRef = collection(db, 'support_messages');
+    const q = query(messagesRef, where('sessionId', '==', sessionId));
+    
+    unsubscribe = onSnapshot(q, (snapshot) => {
+      messagesContainer.innerHTML = '';
+      
+      if (snapshot.empty) {
+        // Initial bot greeting
+        renderMessage("Hi there! Welcome to Lyricastudios. How can we help you create your perfect song today?", 'bot');
+        renderQuickReplies();
+      } else {
+        if (quickRepliesContainer) quickRepliesContainer.style.display = 'none';
+        const msgs = [];
+        snapshot.forEach(docSnap => {
+          msgs.push(docSnap.data());
+        });
+        msgs.sort((a, b) => {
+          const tA = a.timestamp && typeof a.timestamp.toMillis === 'function' ? a.timestamp.toMillis() : Date.now();
+          const tB = b.timestamp && typeof b.timestamp.toMillis === 'function' ? b.timestamp.toMillis() : Date.now();
+          return tA - tB;
+        });
+
+        msgs.forEach(data => {
+          renderMessage(data.text, data.sender);
+        });
+      }
+    }, (error) => {
+      console.error("Support widget snapshot error:", error);
+    });
+  };
+
+  const quickRepliesContainer = document.getElementById('support-quick-replies');
+  const presets = [
+    { label: 'Pricing & Plans', question: 'What are your pricing and plans?', answer: 'Our standard plan is $79 for a full custom song. We also offer premium options during checkout!' },
+    { label: 'Turnaround Time', question: 'How long does it take?', answer: 'Usually, our artists deliver your custom song within 3-5 days!' },
+    { label: 'Revisions', question: 'Do you offer revisions?', answer: 'Yes! We want you to be 100% happy, so we offer reasonable revisions to get the song just right.' },
+  ];
+
+  const renderQuickReplies = () => {
+    if (!quickRepliesContainer) return;
+    quickRepliesContainer.innerHTML = '';
+    quickRepliesContainer.style.display = 'flex';
+    presets.forEach(preset => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'quick-reply-btn';
+      btn.textContent = preset.label;
+      btn.onclick = () => handlePresetClick(preset);
+      quickRepliesContainer.appendChild(btn);
+    });
+  };
+
+  const handlePresetClick = async (preset) => {
+    if (quickRepliesContainer) quickRepliesContainer.style.display = 'none';
+    
+    renderMessage(preset.question, 'user');
+    
+    try {
+      const sessionRef = doc(db, 'support_sessions', sessionId);
+      await setDoc(sessionRef, {
+        lastMessage: preset.question,
+        lastMessageTime: serverTimestamp(),
+        createdAt: serverTimestamp()
+      }, { merge: true });
+
+      await addDoc(collection(db, 'support_messages'), {
+        sessionId,
+        sender: 'user',
+        text: preset.question,
+        timestamp: serverTimestamp()
+      });
+
+      // Simulate bot typing delay
+      setTimeout(async () => {
+        renderMessage(preset.answer, 'bot');
+        await setDoc(sessionRef, {
+          lastMessage: preset.answer,
+          lastMessageTime: serverTimestamp()
+        }, { merge: true });
+
+        await addDoc(collection(db, 'support_messages'), {
+          sessionId,
+          sender: 'admin',
+          text: preset.answer,
+          timestamp: serverTimestamp()
+        });
+      }, 1000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    
+    // Optimistic UI
+    renderMessage(text, 'user');
+
+    try {
+      // Create or update session
+      const sessionRef = doc(db, 'support_sessions', sessionId);
+      console.log('[Support Widget] Sending message. SessionId:', sessionId, 'Text:', text);
+      await setDoc(sessionRef, {
+        lastMessage: text,
+        lastMessageTime: serverTimestamp(),
+        createdAt: serverTimestamp() // setDoc with merge will overwrite this if not careful, but for simplicity it's fine
+      }, { merge: true });
+      console.log('[Support Widget] Session doc created/updated successfully.');
+
+      // Add message
+      await addDoc(collection(db, 'support_messages'), {
+        sessionId,
+        sender: 'user',
+        text,
+        timestamp: serverTimestamp()
+      });
+      console.log('[Support Widget] Message doc added successfully.');
+      
+    } catch (err) {
+      console.error("[Support Widget] Error sending message", err);
+    }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initSupportWidget);
+} else {
+  initSupportWidget();
+}
+
+/* ── Hero Title Rotator ────────────────────────────── */
+function initHeroTitleRotator() {
+  const rotatorSpan = document.querySelector('.hero__title .rotator-word');
+  if (!rotatorSpan) return;
+
+  const words = [
+    "Beautiful Song",
+    "Personalized Track",
+    "Custom Song",
+    "Heartfelt Gift"
+  ];
+  let index = 0;
+
+  setInterval(() => {
+    // Phase 1: slide up, fade out, blur
+    rotatorSpan.classList.add('is-transitioning');
+    
+    setTimeout(() => {
+      // Phase 2: change content, jump to bottom state instantly without transition
+      index = (index + 1) % words.length;
+      rotatorSpan.textContent = words[index];
+      
+      rotatorSpan.classList.add('no-transition');
+      rotatorSpan.classList.remove('is-transitioning');
+      rotatorSpan.classList.add('is-hidden-bottom');
+      
+      // Force reflow
+      rotatorSpan.offsetHeight;
+      
+      rotatorSpan.classList.remove('no-transition');
+      
+      // Phase 3: slide up to center and fade/unblur in the next frame
+      requestAnimationFrame(() => {
+        rotatorSpan.classList.remove('is-hidden-bottom');
+      });
+    }, 600); // matches CSS transition duration
+  }, 3500);
+}

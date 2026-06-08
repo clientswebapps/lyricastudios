@@ -80,7 +80,7 @@
       <div class="container hero__inner">
         <div class="hero__content" data-animate="fade-up">
           <span class="badge">✨ THE #1 CUSTOM SONG STUDIO</span>
-          <h1 class="hero__title">Turn Your Love Story Into a <span class="text-gradient">Beautiful Song</span></h1>
+          <h1 class="hero__title">Turn Your Love Story Into a <span class="text-gradient rotator-word">Beautiful Song</span></h1>
           <p class="hero__subtitle">We craft personalized lyrics and studio-quality compositions for life's most
             meaningful moments — anniversaries, weddings, birthdays, and beyond.</p>
 
@@ -941,6 +941,93 @@
         </svg>
       </button>
 
+      <!-- ── Hype Intro Screen ────────────────────── -->
+      <div class="song-modal__intro" id="song-modal-intro">
+        <!-- Ambient glow blobs -->
+        <div class="intro__glow intro__glow--1"></div>
+        <div class="intro__glow intro__glow--2"></div>
+        <div class="intro__glow intro__glow--3"></div>
+
+        <!-- Intro Content -->
+        <div class="intro__content" id="intro-content">
+          <!-- Pulsing badge -->
+          <div class="intro__badge-wrap">
+            <span class="intro__pulse-ring"></span>
+            <span class="intro__pulse-ring intro__pulse-ring--2"></span>
+            <span class="intro__badge">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+              </svg>
+            </span>
+          </div>
+
+          <h2 class="intro__title">Your Song Journey<br><span class="intro__title-accent">Starts Now</span></h2>
+          <p class="intro__subtitle">In just a few minutes, you'll have a one-of-a-kind, studio-quality song crafted from your personal story.</p>
+
+          <!-- Feature highlights -->
+          <div class="intro__features">
+            <div class="intro__feature">
+              <span class="intro__feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                  <line x1="12" x2="12" y1="19" y2="22" />
+                </svg>
+              </span>
+              <span class="intro__feature-text">Professional Vocals</span>
+            </div>
+            <div class="intro__feature">
+              <span class="intro__feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9" />
+                  <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                </svg>
+              </span>
+              <span class="intro__feature-text">100% Custom Lyrics</span>
+            </div>
+            <div class="intro__feature">
+              <span class="intro__feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+                </svg>
+              </span>
+              <span class="intro__feature-text">Guaranteed Tears of Joy</span>
+            </div>
+          </div>
+
+          <button type="button" class="intro__cta" id="btn-hype-start">
+            <span>Begin the Magic</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </button>
+
+          <p class="intro__trust-line">
+            <svg class="intro__trust-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+            <span>Trusted by 2,000+ happy families worldwide</span>
+          </p>
+        </div>
+
+        <!-- Studio Loader Phase -->
+        <div class="intro__loader" id="intro-loader">
+          <div class="intro__equalizer">
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+            <span class="eq-bar"></span>
+          </div>
+          <p class="intro__loader-text" id="intro-loader-text">Setting up your private studio...</p>
+        </div>
+      </div>
+
       <!-- Progress -->
       <div class="song-modal__progress">
         <div class="song-modal__progress-track">
@@ -1176,7 +1263,7 @@
           <!-- Guarantee Banner -->
           <div class="song-modal__guarantee">
             <div class="song-modal__guarantee-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00c896" stroke-width="2">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 <path d="m9 11 2 2 4-4" />
               </svg>
@@ -1318,6 +1405,43 @@
 
     </div>
   </div>
+  <!-- Live Support Widget -->
+  <div class="support-widget" id="support-widget">
+    <div class="support-window" id="support-window">
+      <div class="support-header">
+        <div class="support-header__info">
+          <h4>Live Support</h4>
+          <span class="support-status">We typically reply in a few minutes</span>
+        </div>
+        <button id="close-support" class="support-close-btn" aria-label="Close support">&times;</button>
+      </div>
+      <div class="support-messages" id="support-messages">
+        <!-- Messages will be populated here by JS -->
+      </div>
+      <div class="support-quick-replies" id="support-quick-replies">
+        <!-- Filled via JS -->
+      </div>
+      <form class="support-form" id="support-form">
+        <input type="text" id="support-input" placeholder="Type a message..." required autocomplete="off">
+        <button type="submit" aria-label="Send Message">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </form>
+    </div>
+    <button class="support-fab" id="support-fab" aria-label="Open support">
+      <svg class="icon-chat" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <svg class="icon-close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
 
   <script type="module" src="/src/main.js"></script>
 </body>

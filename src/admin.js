@@ -137,6 +137,7 @@ const chatActiveTitle = document.getElementById('chat-active-title');
 const adminChatMessages = document.getElementById('admin-chat-messages');
 const adminChatForm = document.getElementById('admin-chat-form');
 const adminChatInput = document.getElementById('admin-chat-input');
+const adminChatDeleteAllBtn = document.getElementById('admin-chat-delete-all-btn');
 const artistChatMessages = document.getElementById('artist-chat-messages');
 const artistChatForm = document.getElementById('artist-chat-form');
 const artistChatInput = document.getElementById('artist-chat-input');
@@ -445,6 +446,9 @@ function setupListeners() {
   // Set up drag and drop reordering
   setupDragAndDrop(tasksList, handleTasksReorder);
   setupDragAndDrop(modalArtistOrdersList, () => handleArtistModalReorder(modalArtistOrdersList.dataset.artistId));
+
+  // Initialize support query listeners
+  setupSupportListeners();
 }
 
 function clearListeners() {
@@ -470,6 +474,9 @@ function clearListeners() {
     unsubscribeUnreadCount = null;
   }
   alertedMessageIds.clear();
+  
+  // Unsubscribe support query listeners
+  clearSupportListeners();
 }
 
 // --- UI Components ---
@@ -710,11 +717,210 @@ function openOrderModal(id, data) {
   orderModal.style.display = 'flex';
 }
 
-closeOrderModalBtn.onclick = () => {
+function closeOrderModal() {
   orderModal.style.display = 'none';
   currentModalOrderId = null;
   currentModalOrderData = null;
-};
+}
+
+// Global exposure for onClick handlers
+
+// Initialize Live Support Admin logic
+let unsubscribeSupportSessions = null;
+let unsubscribeSupportChatMessages = null;
+let currentSupportSessionId = null;
+
+function selectSupportSession(sId) {
+  const supportActiveTitle = document.getElementById('support-active-title');
+  const adminSupportForm = document.getElementById('admin-support-form');
+  const adminSupportMessages = document.getElementById('admin-support-messages');
+  
+  if (!adminSupportMessages) return;
+
+  currentSupportSessionId = sId;
+  if (supportActiveTitle) supportActiveTitle.innerText = `Chatting with Visitor`;
+  if (adminSupportForm) adminSupportForm.style.display = 'flex';
+  
+  const layout = document.getElementById('support-messages-layout');
+  if (layout) layout.classList.add('mobile-chat-active');
+
+  if (unsubscribeSupportChatMessages) {
+    unsubscribeSupportChatMessages();
+  }
+
+  const messagesRef = collection(db, 'support_messages');
+  const q = query(messagesRef, where('sessionId', '==', sId));
+
+  unsubscribeSupportChatMessages = onSnapshot(q, (snapshot) => {
+    adminSupportMessages.innerHTML = '';
+    const msgs = [];
+    snapshot.forEach(docSnap => {
+      msgs.push(docSnap.data());
+    });
+    msgs.sort((a, b) => {
+      const tA = a.timestamp && typeof a.timestamp.toMillis === 'function' ? a.timestamp.toMillis() : Date.now();
+      const tB = b.timestamp && typeof b.timestamp.toMillis === 'function' ? b.timestamp.toMillis() : Date.now();
+      return tA - tB;
+    });
+
+    msgs.forEach(msg => {
+      const isSent = msg.sender === 'admin';
+      
+      const bubble = document.createElement('div');
+      bubble.className = `chat-bubble ${isSent ? 'sent' : 'received'}`;
+      
+      const timeStr = (msg.timestamp && typeof msg.timestamp.toDate === 'function') 
+        ? msg.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+        : '...';
+      
+      bubble.innerHTML = `
+        <div class="chat-bubble-content">
+          <span class="chat-bubble-text">${msg.text}</span>
+          <span class="chat-bubble-time">${timeStr}</span>
+        </div>
+      `;
+      adminSupportMessages.appendChild(bubble);
+    });
+    adminSupportMessages.scrollTop = adminSupportMessages.scrollHeight;
+  }, (error) => {
+    console.error("Support messages snapshot error:", error);
+  });
+}
+
+function setupSupportListeners() {
+  console.log('[Support Admin] Setting up support listeners...');
+  
+  // Prevent duplicate listener setup
+  clearSupportListeners();
+
+  const supportSessionList = document.getElementById('support-session-list');
+  if (!supportSessionList) {
+    console.warn('[Support Admin] support-session-list element not found, aborting.');
+    return;
+  }
+
+  // Listen to support sessions without orderBy to bypass index errors
+  const sessionsQ = query(collection(db, 'support_sessions'));
+  
+  unsubscribeSupportSessions = onSnapshot(sessionsQ, (snapshot) => {
+    console.log('[Support Admin] Snapshot received. Size:', snapshot.size, 'Empty:', snapshot.empty);
+    supportSessionList.innerHTML = '';
+    
+    if (snapshot.empty) {
+      supportSessionList.innerHTML = '<p style="padding: 1rem; color: var(--text-muted); text-align: center;">No active sessions.</p>';
+      return;
+    }
+    
+    const sessions = [];
+    snapshot.forEach(docSnap => {
+      sessions.push({ id: docSnap.id, ...docSnap.data() });
+    });
+
+    // Sort in memory descending by lastMessageTime
+    sessions.sort((a, b) => {
+      const tA = a.lastMessageTime && typeof a.lastMessageTime.toMillis === 'function' ? a.lastMessageTime.toMillis() : 0;
+      const tB = b.lastMessageTime && typeof b.lastMessageTime.toMillis === 'function' ? b.lastMessageTime.toMillis() : 0;
+      return tB - tA;
+    });
+    
+    sessions.forEach(session => {
+      const data = session;
+      const sId = session.id;
+      
+      const item = document.createElement('div');
+      item.className = `chat-artist-item ${sId === currentSupportSessionId ? 'active' : ''}`;
+      
+      const timeStr = (data.lastMessageTime && typeof data.lastMessageTime.toDate === 'function') 
+        ? data.lastMessageTime.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+        : '';
+      
+      item.innerHTML = `
+        <div class="chat-artist-avatar">
+          <span>U</span>
+        </div>
+        <div class="chat-artist-info">
+          <div class="chat-artist-name-row">
+            <span class="chat-artist-name">Visitor</span>
+            <span class="chat-artist-time">${timeStr}</span>
+          </div>
+          <div class="chat-artist-msg-row">
+            <span class="chat-artist-lastmsg">${data.lastMessage || 'New session'}</span>
+          </div>
+        </div>
+      `;
+      
+      item.onclick = () => {
+        selectSupportSession(sId);
+        document.querySelectorAll('#support-session-list .chat-artist-item').forEach(el => el.classList.remove('active'));
+        item.classList.add('active');
+      };
+      
+      supportSessionList.appendChild(item);
+    });
+  }, (error) => {
+    console.error("Support sessions snapshot error:", error);
+  });
+}
+
+function clearSupportListeners() {
+  console.log('[Support Admin] Clearing support listeners...');
+  if (unsubscribeSupportSessions) {
+    unsubscribeSupportSessions();
+    unsubscribeSupportSessions = null;
+  }
+  if (unsubscribeSupportChatMessages) {
+    unsubscribeSupportChatMessages();
+    unsubscribeSupportChatMessages = null;
+  }
+}
+
+function initSupportAdmin() {
+  console.log('[Support Admin] Initializing static event listeners...');
+  const adminSupportForm = document.getElementById('admin-support-form');
+  const adminSupportInput = document.getElementById('admin-support-input');
+  const mobileSupportBackBtn = document.getElementById('mobile-support-back-btn');
+
+  if (mobileSupportBackBtn) {
+    mobileSupportBackBtn.onclick = () => {
+      const layout = document.getElementById('support-messages-layout');
+      if (layout) layout.classList.remove('mobile-chat-active');
+    };
+  }
+
+  if (adminSupportForm) {
+    adminSupportForm.onsubmit = async (e) => {
+      e.preventDefault();
+      if (!currentSupportSessionId) return;
+      const text = adminSupportInput.value.trim();
+      if (!text) return;
+
+      adminSupportInput.value = '';
+      try {
+        await setDoc(doc(db, 'support_sessions', currentSupportSessionId), {
+          lastMessage: text,
+          lastMessageTime: serverTimestamp()
+        }, { merge: true });
+
+        await addDoc(collection(db, 'support_messages'), {
+          sessionId: currentSupportSessionId,
+          sender: 'admin',
+          text: text,
+          timestamp: serverTimestamp()
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    };
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    try { initSupportAdmin(); } catch (e) { console.error('[Support Admin] Init error:', e); }
+  });
+} else {
+  try { initSupportAdmin(); } catch (e) { console.error('[Support Admin] Init error:', e); }
+}
 
 window.onclick = (e) => {
   if (e.target === orderModal) {
@@ -1157,6 +1363,12 @@ if (closeArtistModalBtn) {
   };
 }
 
+if (closeOrderModalBtn) {
+  closeOrderModalBtn.onclick = () => {
+    closeOrderModal();
+  };
+}
+
 // --- Reusable Alert Modal ---
 function showAlertModal(message, title = 'Notification', type = 'info') {
   if (!alertModal || !alertModalMessage || !alertModalTitle || !alertModalIcon) return;
@@ -1401,11 +1613,25 @@ function selectChatArtist(artistId, name) {
   currentChatArtistId = artistId;
   if (chatActiveTitle) chatActiveTitle.innerText = `Chat with ${name}`;
   if (adminChatForm) adminChatForm.style.display = 'flex';
+  if (adminChatDeleteAllBtn) adminChatDeleteAllBtn.style.display = 'inline-flex';
   
   // Highlight active item
   renderChatArtistList();
   
+  // Mobile: Switch to chat area view
+  const layout = document.getElementById('admin-messages-layout');
+  if (layout) layout.classList.add('mobile-chat-active');
+  
   listenToChat(artistId, adminChatMessages);
+}
+
+// Mobile Back Button for Chat Area
+const mobileChatBackBtn = document.getElementById('mobile-chat-back-btn');
+if (mobileChatBackBtn) {
+  mobileChatBackBtn.addEventListener('click', () => {
+    const layout = document.getElementById('admin-messages-layout');
+    if (layout) layout.classList.remove('mobile-chat-active');
+  });
 }
 
 function renderChatArtistList() {
@@ -1498,6 +1724,39 @@ if (adminChatForm) {
       console.error(err);
     }
   };
+}
+
+if (adminChatDeleteAllBtn) {
+  adminChatDeleteAllBtn.addEventListener('click', async () => {
+    if (!currentChatArtistId) return;
+    
+    if (confirm("Are you sure you want to delete all messages in this conversation? This cannot be undone.")) {
+      try {
+        adminChatDeleteAllBtn.disabled = true;
+        adminChatDeleteAllBtn.innerText = 'Deleting...';
+        
+        const chatQ = query(
+          collection(db, 'messages'),
+          where('artistId', '==', currentChatArtistId)
+        );
+        const snapshot = await getDocs(chatQ);
+        
+        const deletePromises = [];
+        snapshot.forEach(docSnap => {
+          deletePromises.push(deleteDoc(doc(db, 'messages', docSnap.id)));
+        });
+        
+        await Promise.all(deletePromises);
+        
+      } catch (err) {
+        console.error("Error deleting messages: ", err);
+        showAlertModal("Failed to delete messages.", "Error", "error");
+      } finally {
+        adminChatDeleteAllBtn.disabled = false;
+        adminChatDeleteAllBtn.innerText = 'Delete All';
+      }
+    }
+  });
 }
 
 if (artistChatForm) {

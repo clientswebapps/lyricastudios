@@ -16,7 +16,7 @@ const initAll = () => {
   initSmoothScroll();
   initHeroSlideshow();
   initSongModal();
-  initHeroTitleRotator();
+  initHeroTypewriter();
 };
 
 if (document.readyState === 'loading') {
@@ -1110,10 +1110,10 @@ if (document.readyState === 'loading') {
   initSupportWidget();
 }
 
-/* ── Hero Title Rotator ────────────────────────────── */
-function initHeroTitleRotator() {
-  const rotatorSpan = document.querySelector('.hero__title .rotator-word');
-  if (!rotatorSpan) return;
+/* ── Hero Title Typewriter ────────────────────────────── */
+function initHeroTypewriter() {
+  const typewriterSpan = document.querySelector('.hero__title .typewriter-text');
+  if (!typewriterSpan) return;
 
   const words = [
     "Beautiful Song",
@@ -1121,30 +1121,36 @@ function initHeroTitleRotator() {
     "Custom Song",
     "Heartfelt Gift"
   ];
-  let index = 0;
+  let wordIndex = 0;
+  let charIndex = words[0].length;
+  let isDeleting = true;
+  let typingSpeed = 100;
+  let delayAfterWord = 2000;
 
-  setInterval(() => {
-    // Phase 1: slide up, fade out, blur
-    rotatorSpan.classList.add('is-transitioning');
+  function type() {
+    const currentWord = words[wordIndex];
     
-    setTimeout(() => {
-      // Phase 2: change content, jump to bottom state instantly without transition
-      index = (index + 1) % words.length;
-      rotatorSpan.textContent = words[index];
-      
-      rotatorSpan.classList.add('no-transition');
-      rotatorSpan.classList.remove('is-transitioning');
-      rotatorSpan.classList.add('is-hidden-bottom');
-      
-      // Force reflow
-      rotatorSpan.offsetHeight;
-      
-      rotatorSpan.classList.remove('no-transition');
-      
-      // Phase 3: slide up to center and fade/unblur in the next frame
-      requestAnimationFrame(() => {
-        rotatorSpan.classList.remove('is-hidden-bottom');
-      });
-    }, 600); // matches CSS transition duration
-  }, 3500);
+    if (isDeleting) {
+      typewriterSpan.textContent = currentWord.substring(0, charIndex - 1);
+      charIndex--;
+      typingSpeed = 30;
+    } else {
+      typewriterSpan.textContent = currentWord.substring(0, charIndex + 1);
+      charIndex++;
+      typingSpeed = 80;
+    }
+
+    if (!isDeleting && charIndex === currentWord.length) {
+      isDeleting = true;
+      setTimeout(type, delayAfterWord);
+    } else if (isDeleting && charIndex === 0) {
+      isDeleting = false;
+      wordIndex = (wordIndex + 1) % words.length;
+      setTimeout(type, 500);
+    } else {
+      setTimeout(type, typingSpeed);
+    }
+  }
+
+  setTimeout(type, delayAfterWord);
 }

@@ -70,6 +70,7 @@ const usersList = document.getElementById('users-list');
 // Order Modal
 const orderModal = document.getElementById('order-modal');
 const closeOrderModalBtn = document.getElementById('close-order-modal');
+const copyDetailsBtn = document.getElementById('copy-details-btn');
 let currentModalOrderId = null;
 let currentModalOrderData = null;
 
@@ -1366,6 +1367,36 @@ if (closeArtistModalBtn) {
 if (closeOrderModalBtn) {
   closeOrderModalBtn.onclick = () => {
     closeOrderModal();
+  };
+}
+
+if (copyDetailsBtn) {
+  copyDetailsBtn.onclick = async () => {
+    if (!currentModalOrderData || !currentModalOrderData.customerData) return;
+    const cd = currentModalOrderData.customerData;
+    const formatted = `recipient: ${cd.recipient || 'N/A'}
+name: ${cd.name || 'N/A'}
+pronouns: ${cd.pronouns || 'N/A'}
+occasion: ${cd.occasion || 'N/A'}
+genre: ${cd.genre || 'N/A'}
+mood: ${cd.mood || 'N/A'}
+plan: ${(cd.plan || 'standard').charAt(0).toUpperCase() + (cd.plan || 'standard').slice(1)}
+price: ${cd.price || '$79'}
+keywords: ${(cd.words && cd.words.length > 0) ? cd.words.join(', ') : 'None'}
+occasion story: ${cd.occasionStory || 'None'}
+memories & jokes: ${cd.memories || 'None'}`;
+    
+    try {
+      await navigator.clipboard.writeText(formatted);
+      const originalText = copyDetailsBtn.innerText;
+      copyDetailsBtn.innerText = 'Copied!';
+      setTimeout(() => {
+        copyDetailsBtn.innerText = originalText;
+      }, 2000);
+    } catch (err) {
+      console.error('Failed to copy details: ', err);
+      showAlertModal('Failed to copy details to clipboard.', 'Error', 'error');
+    }
   };
 }
 

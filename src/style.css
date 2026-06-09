@@ -605,6 +605,7 @@ ol {
   letter-spacing: var(--ls-tight);
   color: var(--color-text);
   margin-bottom: var(--space-lg);
+  min-height: 2.2em; /* Reserve 2 lines on desktop to prevent layout shift */
 }
 
 .text-gradient {
@@ -3457,6 +3458,10 @@ body.modal-open {
 
   .hero {
     padding: 100px 0 48px;
+  }
+
+  .hero__title {
+    min-height: 3.3em; /* Reserve 3 lines on mobile to prevent layout shift */
   }
 
   .hero__image-wrapper {

@@ -5,6 +5,21 @@
 import { db } from './firebase.js';
 import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, setDoc } from 'firebase/firestore';
 
+// Registry to ensure only one audio sample plays at a time
+const activePlayers = [];
+
+function registerPlayer(pauseFn) {
+  activePlayers.push(pauseFn);
+}
+
+function pauseAllPlayers(exceptPauseFn) {
+  activePlayers.forEach(pauseFn => {
+    if (pauseFn !== exceptPauseFn) {
+      pauseFn();
+    }
+  });
+}
+
 const initAll = () => {
   initPromoBanner();
   initStickyHeader();
@@ -423,15 +438,13 @@ function initListenButton() {
   };
 
   const playAudio = async () => {
+    pauseAllPlayers(pauseAudio);
     try {
       await audio.play();
       isPlaying = true;
       updateUI();
     } catch (e) {
       console.log('Audio play failed', e);
-      if (e.name === 'NotAllowedError') {
-        listenBtn.querySelector('.listen-text').textContent = 'Click to Play';
-      }
     }
   };
 
@@ -441,42 +454,17 @@ function initListenButton() {
     updateUI();
   };
 
-  const isTouchDevice = window.matchMedia('(hover: none)').matches;
+  registerPlayer(pauseAudio);
 
-  if (isTouchDevice) {
-    // Mobile behavior: click to toggle
-    listenBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (isPlaying) {
-        pauseAudio();
-      } else {
-        playAudio();
-      }
-    });
-  } else {
-    // Desktop behavior: hover to play
-    listenBtn.addEventListener('mouseenter', () => {
-      if (!isPlaying) {
-        playAudio();
-      }
-    });
-
-    listenBtn.addEventListener('mouseleave', () => {
-      if (isPlaying) {
-        pauseAudio();
-      }
-    });
-
-    // Fallback: allow clicking to toggle if hover playback was blocked
-    listenBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (isPlaying) {
-        pauseAudio();
-      } else {
-        playAudio();
-      }
-    });
-  }
+  // Click to toggle play/pause (same for desktop and mobile)
+  listenBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (isPlaying) {
+      pauseAudio();
+    } else {
+      playAudio();
+    }
+  });
 
   // Handle audio end
   audio.addEventListener('ended', () => {
@@ -539,17 +527,28 @@ function initWygPlayer() {
     });
   }
 
+  const pauseAudio = () => {
+    audio.pause();
+    wygIcon.innerHTML = playSvg;
+    isPlaying = false;
+  };
+
+  const playAudio = () => {
+    pauseAllPlayers(pauseAudio);
+    audio.play().then(() => {
+      wygIcon.innerHTML = pauseSvg;
+      isPlaying = true;
+    }).catch(err => console.log('Audio play failed', err));
+  };
+
+  registerPlayer(pauseAudio);
+
   wygBtn.addEventListener('click', (e) => {
     e.preventDefault();
     if (isPlaying) {
-      audio.pause();
-      wygIcon.innerHTML = playSvg;
-      isPlaying = false;
+      pauseAudio();
     } else {
-      audio.play().then(() => {
-        wygIcon.innerHTML = pauseSvg;
-        isPlaying = true;
-      }).catch(err => console.log('Audio play failed', err));
+      playAudio();
     }
   });
 
@@ -593,21 +592,32 @@ function initSotyPlayer() {
     <rect x="14" y="4" width="4" height="16"/>
   `;
   
+  const pauseAudio = () => {
+    audio.pause();
+    sotyIcon.innerHTML = playSvg;
+    sotyVinyl.classList.remove('is-playing');
+    if (sotyVisualizer) sotyVisualizer.classList.remove('is-playing');
+    isPlaying = false;
+  };
+
+  const playAudio = () => {
+    pauseAllPlayers(pauseAudio);
+    audio.play().then(() => {
+      sotyIcon.innerHTML = pauseSvg;
+      sotyVinyl.classList.add('is-playing');
+      if (sotyVisualizer) sotyVisualizer.classList.add('is-playing');
+      isPlaying = true;
+    }).catch(err => console.log('Audio play failed', err));
+  };
+
+  registerPlayer(pauseAudio);
+
   sotyBtn.addEventListener('click', (e) => {
     e.preventDefault();
     if (isPlaying) {
-      audio.pause();
-      sotyIcon.innerHTML = playSvg;
-      sotyVinyl.classList.remove('is-playing');
-      if (sotyVisualizer) sotyVisualizer.classList.remove('is-playing');
-      isPlaying = false;
+      pauseAudio();
     } else {
-      audio.play().then(() => {
-        sotyIcon.innerHTML = pauseSvg;
-        sotyVinyl.classList.add('is-playing');
-        if (sotyVisualizer) sotyVisualizer.classList.add('is-playing');
-        isPlaying = true;
-      }).catch(err => console.log('Audio play failed', err));
+      playAudio();
     }
   });
 
@@ -1337,16 +1347,22 @@ function initHeroTypewriter() {
     const notes = ['♪', '♫', '♬', '♩'];
     note.textContent = notes[Math.floor(Math.random() * notes.length)];
     note.classList.add('splash-note', 'text-gradient');
-
     const rect = cursorSpan.getBoundingClientRect();
     const startX = rect.left + window.scrollX + (Math.random() * 10 - 5);
-    const startY = rect.top + window.scrollY - 10;
+    
+    // Start notes at the vertical center of the text so they look closer to the baseline
+    const centerY = rect.top + window.scrollY + rect.height / 2;
+    const startY = centerY + (Math.random() * 10 - 5);
 
     note.style.left = `${startX}px`;
     note.style.top = `${startY}px`;
 
+    // 50% chance to splash up, 50% to splash down
+    const splashUp = Math.random() > 0.5;
     const tx = (Math.random() * 40 - 20) + 'px';
-    const ty = -(Math.random() * 30 + 20) + 'px';
+    const ty = splashUp
+      ? -(Math.random() * 35 + 25) + 'px' // move up further
+      : (Math.random() * 25 + 15) + 'px';  // move down
     const rot = (Math.random() * 60 - 30) + 'deg';
 
     note.style.setProperty('--tx', tx);
@@ -1359,7 +1375,7 @@ function initHeroTypewriter() {
       if (note.parentNode) {
         note.remove();
       }
-    }, 600);
+    }, 400);
   }
 
   function type() {

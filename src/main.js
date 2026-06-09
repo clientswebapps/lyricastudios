@@ -13,6 +13,8 @@ const initAll = () => {
   initReviewsCarousel();
   initFAQAccordion();
   initListenButton();
+  initWygPlayer();
+  initSotyPlayer();
   initSmoothScroll();
   initHeroSlideshow();
   initSongModal();
@@ -480,6 +482,140 @@ function initListenButton() {
   audio.addEventListener('ended', () => {
     isPlaying = false;
     updateUI();
+  });
+}
+
+
+/* ── What You Get Audio Player ───────────────────────────── */
+function initWygPlayer() {
+  const wygBtn = document.getElementById('wyg-play-btn');
+  const wygIcon = document.getElementById('wyg-play-icon');
+  const progressBar = document.getElementById('wyg-progress-bar');
+  const progressFill = document.getElementById('wyg-progress-fill');
+  const currentTimeEl = document.getElementById('wyg-current-time');
+  const totalTimeEl = document.getElementById('wyg-total-time');
+  
+  if (!wygBtn || !wygIcon) return;
+  
+  const audio = new Audio('/mp3/The Way Back.mp3');
+  let isPlaying = false;
+  
+  const playSvg = `
+    <polygon points="5 3 19 12 5 21 5 3" />
+  `;
+  
+  const pauseSvg = `
+    <rect x="6" y="4" width="4" height="16"/>
+    <rect x="14" y="4" width="4" height="16"/>
+  `;
+  
+  const formatTime = (time) => {
+    if (isNaN(time)) return '0:00';
+    const mins = Math.floor(time / 60);
+    const secs = Math.floor(time % 60);
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  };
+
+  audio.addEventListener('loadedmetadata', () => {
+    if (totalTimeEl) totalTimeEl.textContent = formatTime(audio.duration);
+  });
+
+  audio.addEventListener('timeupdate', () => {
+    if (currentTimeEl) currentTimeEl.textContent = formatTime(audio.currentTime);
+    if (progressFill && audio.duration) {
+      const progress = (audio.currentTime / audio.duration) * 100;
+      progressFill.style.width = `${progress}%`;
+    }
+  });
+
+  if (progressBar) {
+    progressBar.addEventListener('click', (e) => {
+      if (!audio.duration) return;
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const width = rect.width;
+      const skipTo = (clickX / width) * audio.duration;
+      audio.currentTime = skipTo;
+    });
+  }
+
+  wygBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (isPlaying) {
+      audio.pause();
+      wygIcon.innerHTML = playSvg;
+      isPlaying = false;
+    } else {
+      audio.play().then(() => {
+        wygIcon.innerHTML = pauseSvg;
+        isPlaying = true;
+      }).catch(err => console.log('Audio play failed', err));
+    }
+  });
+
+  audio.addEventListener('ended', () => {
+    wygIcon.innerHTML = playSvg;
+    isPlaying = false;
+    if (progressFill) progressFill.style.width = '0%';
+    if (currentTimeEl) currentTimeEl.textContent = '0:00';
+  });
+}
+
+/* ── Song of the Year Player ────────────────────────────── */
+function initSotyPlayer() {
+  const sotyBtn = document.getElementById('soty-play-btn');
+  const sotyIcon = document.getElementById('soty-play-icon');
+  const sotyVinyl = document.getElementById('soty-vinyl-wrapper')?.querySelector('.soty-vinyl');
+  const sotyVisualizer = document.getElementById('soty-visualizer');
+  const glassCard = document.querySelector('.soty-player__glass');
+  
+  if (!sotyBtn || !sotyIcon || !sotyVinyl) return;
+  
+  if (glassCard) {
+    glassCard.addEventListener('mousemove', (e) => {
+      const rect = glassCard.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      glassCard.style.setProperty('--mouse-x', `${x}px`);
+      glassCard.style.setProperty('--mouse-y', `${y}px`);
+    });
+  }
+  
+  const audio = new Audio('/mp3/Grace In Your Smile.mp3');
+  let isPlaying = false;
+  
+  const playSvg = `
+    <polygon points="5 3 19 12 5 21 5 3" />
+  `;
+  
+  const pauseSvg = `
+    <rect x="6" y="4" width="4" height="16"/>
+    <rect x="14" y="4" width="4" height="16"/>
+  `;
+  
+  sotyBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (isPlaying) {
+      audio.pause();
+      sotyIcon.innerHTML = playSvg;
+      sotyVinyl.classList.remove('is-playing');
+      if (sotyVisualizer) sotyVisualizer.classList.remove('is-playing');
+      isPlaying = false;
+    } else {
+      audio.play().then(() => {
+        sotyIcon.innerHTML = pauseSvg;
+        sotyVinyl.classList.add('is-playing');
+        if (sotyVisualizer) sotyVisualizer.classList.add('is-playing');
+        isPlaying = true;
+      }).catch(err => console.log('Audio play failed', err));
+    }
+  });
+
+  audio.addEventListener('ended', () => {
+    sotyIcon.innerHTML = playSvg;
+    sotyVinyl.classList.remove('is-playing');
+    if (sotyVisualizer) sotyVisualizer.classList.remove('is-playing');
+    isPlaying = false;
   });
 }
 

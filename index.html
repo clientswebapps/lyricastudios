@@ -129,8 +129,15 @@
                   </svg>
                 </span>
                 <span class="listen-icon-disc">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#accentGradient)" stroke-width="1.5"
                     stroke-linecap="round" stroke-linejoin="round">
+                    <defs>
+                      <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00c896" />
+                        <stop offset="50%" stop-color="#0ea5e9" />
+                        <stop offset="100%" stop-color="#6366f1" />
+                      </linearGradient>
+                    </defs>
                     <circle cx="12" cy="12" r="10" />
                     <circle cx="12" cy="12" r="3" />
                     <circle cx="12" cy="12" r="6.5" stroke-width="0.5" stroke-dasharray="1 1" />
@@ -139,14 +146,16 @@
                 </span>
               </span>
               <span class="listen-text-wrapper">
+                <!-- Hidden placeholder locks width so button doesn't expand -->
+                <span style="visibility: hidden; pointer-events: none;" aria-hidden="true">Listen to a Sample</span>
                 <span class="listen-text">Listen to a Sample</span>
                 <span class="listen-melody">
                   <div class="listen-wave-line"></div>
-                  <span class="lnote ln1">&#9834;</span>
-                  <span class="lnote ln2">&#9835;</span>
-                  <span class="lnote ln3">&#9833;</span>
-                  <span class="lnote ln4">&#9836;</span>
-                  <span class="lnote ln5">&#9834;</span>
+                  <span class="lnote ln1 text-gradient">&#9834;</span>
+                  <span class="lnote ln2 text-gradient">&#9835;</span>
+                  <span class="lnote ln3 text-gradient">&#9833;</span>
+                  <span class="lnote ln4 text-gradient">&#9836;</span>
+                  <span class="lnote ln5 text-gradient">&#9834;</span>
                 </span>
               </span>
             </button>
@@ -283,7 +292,7 @@
               </svg>
             </div>
             <h3 class="step-card__title">Receive & Share</h3>
-            <p class="step-card__text">Get your finished song delivered in 7 days (or 24 hours with rush delivery).
+            <p class="step-card__text">Get your finished song delivered in 2-5 days (or 1 day for rush).
               Download, share, and watch their reaction!</p>
           </div>
         </div>
@@ -618,21 +627,18 @@
           <!-- Mock Audio Player -->
           <div class="mock-player" data-animate="fade-up">
             <div class="mock-player__artwork">
-              <div class="player-placeholder">
-                <div class="placeholder-icon">🎧</div>
-                <p>Album Art</p>
-              </div>
+              <img src="/images/way-back-cover.jpg" alt="The Way Back Cover" class="wyg-album-cover" />
             </div>
             <div class="mock-player__info">
-              <h4 class="mock-player__title">Forever Yours</h4>
-              <p class="mock-player__artist">Written for Sarah & Michael</p>
+              <h4 class="mock-player__title">The Way Back</h4>
+              <p class="mock-player__artist">Written for Sarah</p>
               <div class="mock-player__progress">
-                <div class="progress-bar">
-                  <div class="progress-bar__fill" style="width: 35%;"></div>
+                <div class="progress-bar" id="wyg-progress-bar" style="cursor: pointer;">
+                  <div class="progress-bar__fill" id="wyg-progress-fill" style="width: 0%;"></div>
                 </div>
                 <div class="progress-time">
-                  <span>1:12</span>
-                  <span>3:28</span>
+                  <span id="wyg-current-time">0:00</span>
+                  <span id="wyg-total-time">0:00</span>
                 </div>
               </div>
               <div class="mock-player__controls">
@@ -641,8 +647,8 @@
                     <path d="M19 20L9 12l10-8v16zM7 19V5H5v14h2z" />
                   </svg>
                 </button>
-                <button class="player-ctrl player-ctrl--play" aria-label="Play">
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <button class="player-ctrl player-ctrl--play" id="wyg-play-btn" aria-label="Play">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" id="wyg-play-icon">
                     <polygon points="5 3 19 12 5 21 5 3" />
                   </svg>
                 </button>
@@ -698,8 +704,8 @@
                 </svg>
               </div>
               <div>
-                <h4>7-Day Delivery</h4>
-                <p>Standard delivery in 7 days or rush delivery in just 24 hours. One free revision included.</p>
+                <h4>2-5 Day Delivery</h4>
+                <p>Standard delivery in 2-5 days or rush delivery in just 1 day. One free revision included.</p>
               </div>
             </div>
 
@@ -724,22 +730,60 @@
     </section>
 
     <!-- ═══════════════════════════════════════════ -->
-    <!-- CTA BANNER                                  -->
+    <!-- SONG OF THE YEAR                            -->
     <!-- ═══════════════════════════════════════════ -->
-    <section class="cta-banner" data-animate="fade-up">
-      <div class="container cta-banner__inner">
-        <div class="cta-banner__content">
-          <h2>Ready to Create Something Unforgettable?</h2>
-          <p>Give the most personal, meaningful gift imaginable. A song that's 100% about them.</p>
+    <section class="soty-spotlight" id="soty">
+      <div class="soty-glow"></div>
+      <div class="soty-glow soty-glow--right"></div>
+      <div class="container soty-container">
+        
+        <!-- Player Side -->
+        <div class="soty-player" data-animate="fade-up">
+          <div class="soty-player__glass">
+            <div class="soty-vinyl-wrapper" id="soty-vinyl-wrapper">
+              <div class="soty-vinyl">
+                <img src="/images/grace-smile-cover.png" alt="Grace In Your Smile Cover" class="soty-vinyl__cover" />
+                <div class="soty-vinyl__grooves"></div>
+                <div class="soty-vinyl__hole"></div>
+              </div>
+            </div>
+            
+            <div class="soty-info">
+              <h3>Grace In Your Smile</h3>
+              <p>2026 Song of the Year</p>
+            </div>
+
+            <div class="soty-visualizer" id="soty-visualizer">
+              <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+            </div>
+            
+            <div class="soty-controls">
+              <button class="soty-play-btn" id="soty-play-btn" aria-label="Play Song of the Year">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor" id="soty-play-icon">
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
-        <a href="#hero" class="btn btn--white btn--lg" data-open-modal>
-          <span>Get Started Now</span>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 12h14" />
-            <path d="m12 5 7 7-7 7" />
-          </svg>
-        </a>
+
+        <!-- Text Side -->
+        <div class="soty-content" data-animate="fade-up" data-delay="100">
+          <div class="soty-badge">Featured Masterpiece</div>
+          <h2 class="soty-title">Song of the Year</h2>
+          <p class="soty-desc">
+            Experience the magic of a personalized track. "Grace In Your Smile" perfectly captures the emotion, studio-level production, and sheer joy that we pour into every single song. Listen and get inspired!
+          </p>
+          <a href="#hero" class="btn btn--primary btn--lg" data-open-modal>
+            <span>Create Your Masterpiece</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+        
       </div>
     </section>
 
@@ -769,8 +813,8 @@
             <div class="faq-item__answer">
               <p>It's simple! You fill out a short questionnaire telling us about the person, the occasion, your
                 favorite memories together, and any specific phrases or themes you'd like included. Our songwriters then
-                craft original lyrics and compose a unique melody. You'll receive your finished song within 7 days (or
-                24 hours with rush delivery).</p>
+                craft original lyrics and compose a unique melody. You'll receive your finished song within 2-5 days (or
+                1 day for rush).</p>
             </div>
           </div>
 
@@ -819,8 +863,8 @@
               </span>
             </button>
             <div class="faq-item__answer">
-              <p>Standard delivery is within 7 business days. Need it sooner? Our rush delivery option gets your song to
-                you in just 24 hours. We'll email you a preview first, then deliver the final files after your approval.
+              <p>Standard delivery is within 2-5 business days. Need it sooner? Our rush delivery option gets your song to
+                you in just 1 day. We'll email you a preview first, then deliver the final files after your approval.
               </p>
             </div>
           </div>

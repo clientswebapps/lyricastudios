@@ -680,8 +680,8 @@ function initHero3DEffect() {
   const imageWrapper = document.querySelector('.hero__image-wrapper');
   if (!imageWrapper) return;
   
-  // Only apply on screens with hover support to prevent weird touch interactions on mobile
-  if (!window.matchMedia('(hover: hover)').matches) return;
+  // Only apply on screens with hover support and screen width > 768px to prevent weird touch interactions on mobile
+  if (!window.matchMedia('(hover: hover)').matches || window.matchMedia('(max-width: 768px)').matches) return;
   
   imageWrapper.addEventListener('mousemove', (e) => {
     const rect = imageWrapper.getBoundingClientRect();

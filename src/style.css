@@ -3528,7 +3528,11 @@ body.modal-open {
 
   /* Hero */
   .hero {
-    padding: 120px 0 64px;
+    padding: 140px 0 64px;
+  }
+
+  .promo-banner:not(.is-hidden)~main .hero {
+    padding-top: 176px;
   }
 
   .hero__cta-group {
@@ -3545,6 +3549,15 @@ body.modal-open {
     gap: var(--space-sm);
   }
 
+  .hero__visual,
+  .hero__image-wrapper,
+  .hero__slideshow,
+  .floating-card-wrapper {
+    transform: none !important;
+    transform-style: flat !important;
+    perspective: none !important;
+  }
+
   .hero__image-wrapper {
     max-width: 320px;
   }
@@ -3552,6 +3565,8 @@ body.modal-open {
   .floating-card {
     padding: 6px 12px;
     gap: 8px;
+    animation: none !important;
+    transform: none !important;
   }
 
   .floating-card__icon {
@@ -3606,6 +3621,38 @@ body.modal-open {
   /* Categories */
   .categories-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* Disable category card fill animation and color changes on mobile */
+  .category-card__hover-bg {
+    display: none !important;
+  }
+
+  .category-card:hover .category-card__icon,
+  .category-card.is-active .category-card__icon {
+    transform: none !important;
+    background: var(--color-accent-light) !important;
+    color: var(--color-accent) !important;
+  }
+
+  .category-card:hover .category-card__body h3,
+  .category-card.is-active .category-card__body h3 {
+    color: var(--color-text) !important;
+  }
+
+  .category-card:hover .category-card__body p,
+  .category-card.is-active .category-card__body p {
+    color: var(--color-text-secondary) !important;
+  }
+
+  .category-card:hover .category-card__link,
+  .category-card.is-active .category-card__link {
+    color: var(--color-text) !important;
+  }
+
+  .category-card:hover .category-card__link svg,
+  .category-card.is-active .category-card__link svg {
+    transform: none !important;
   }
 
   /* CTA Banner */
@@ -3668,7 +3715,11 @@ body.modal-open {
   }
 
   .hero {
-    padding: 100px 0 48px;
+    padding: 128px 0 48px;
+  }
+
+  .promo-banner:not(.is-hidden)~main .hero {
+    padding-top: 164px;
   }
 
   .hero__title {
@@ -4064,7 +4115,7 @@ body.nav-open {
   position: fixed;
   bottom: 2rem;
   right: 2rem;
-  z-index: 1000;
+  z-index: 1500;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -4293,8 +4344,8 @@ body.nav-open {
 
   .support-window {
     width: calc(100vw - 2rem);
-    height: calc(100vh - 100px);
-    max-height: calc(100vh - 100px);
+    height: 450px;
+    max-height: calc(100vh - 150px);
   }
 }
 

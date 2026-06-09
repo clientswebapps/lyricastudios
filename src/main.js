@@ -34,6 +34,7 @@ const initAll = () => {
   initHeroSlideshow();
   initSongModal();
   initHeroTypewriter();
+  initCategoryCards();
 };
 
 if (document.readyState === 'loading') {
@@ -1406,3 +1407,43 @@ function initHeroTypewriter() {
 
   setTimeout(type, delayAfterWord);
 }
+
+/* ── Category Cards Touch/Tap Toggle ─────────────────────────── */
+function initCategoryCards() {
+  const cards = document.querySelectorAll('.category-card');
+  if (!cards.length) return;
+
+  cards.forEach(card => {
+    card.addEventListener('click', (e) => {
+      // If the target is the CTA button link, let data-open-modal handle it
+      if (e.target.closest('.category-card__link')) {
+        return;
+      }
+
+      // Check if touch device (no hover pointer)
+      const isTouch = window.matchMedia('(hover: none)').matches;
+      if (isTouch) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const isActive = card.classList.contains('is-active');
+
+        // Close all other active cards
+        cards.forEach(c => {
+          if (c !== card) c.classList.remove('is-active');
+        });
+
+        // Toggle active state on current card
+        card.classList.toggle('is-active', !isActive);
+      }
+    });
+  });
+
+  // Tap outside to close active cards on touch devices
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.category-card')) {
+      cards.forEach(c => c.classList.remove('is-active'));
+    }
+  });
+}
+

@@ -392,27 +392,94 @@ function initListenButton() {
 
   if (!listenBtn || !listenIcon) return;
 
+  const audio = new Audio('/mp3/Hands That Never Let Go.mp3');
   let isPlaying = false;
 
-  listenBtn.addEventListener('click', () => {
-    isPlaying = !isPlaying;
+  const playSvg = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <polygon points="5 3 19 12 5 21 5 3"/>
+    </svg>
+  `;
 
+  const pauseSvg = `
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="6" y="4" width="4" height="16"/>
+      <rect x="14" y="4" width="4" height="16"/>
+    </svg>
+  `;
+
+  const updateUI = () => {
     if (isPlaying) {
-      listenIcon.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <rect x="6" y="4" width="4" height="16"/>
-          <rect x="14" y="4" width="4" height="16"/>
-        </svg>
-      `;
+      listenIcon.innerHTML = pauseSvg;
       listenBtn.querySelector('.listen-text').textContent = 'Now Playing...';
+      listenBtn.classList.add('is-playing');
     } else {
-      listenIcon.innerHTML = `
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-          <polygon points="5 3 19 12 5 21 5 3"/>
-        </svg>
-      `;
+      listenIcon.innerHTML = playSvg;
       listenBtn.querySelector('.listen-text').textContent = 'Listen to a Sample';
+      listenBtn.classList.remove('is-playing');
     }
+  };
+
+  const playAudio = async () => {
+    try {
+      await audio.play();
+      isPlaying = true;
+      updateUI();
+    } catch (e) {
+      console.log('Audio play failed', e);
+      if (e.name === 'NotAllowedError') {
+        listenBtn.querySelector('.listen-text').textContent = 'Click to Play';
+      }
+    }
+  };
+
+  const pauseAudio = () => {
+    audio.pause();
+    isPlaying = false;
+    updateUI();
+  };
+
+  const isTouchDevice = window.matchMedia('(hover: none)').matches;
+
+  if (isTouchDevice) {
+    // Mobile behavior: click to toggle
+    listenBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isPlaying) {
+        pauseAudio();
+      } else {
+        playAudio();
+      }
+    });
+  } else {
+    // Desktop behavior: hover to play
+    listenBtn.addEventListener('mouseenter', () => {
+      if (!isPlaying) {
+        playAudio();
+      }
+    });
+
+    listenBtn.addEventListener('mouseleave', () => {
+      if (isPlaying) {
+        pauseAudio();
+      }
+    });
+
+    // Fallback: allow clicking to toggle if hover playback was blocked
+    listenBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isPlaying) {
+        pauseAudio();
+      } else {
+        playAudio();
+      }
+    });
+  }
+
+  // Handle audio end
+  audio.addEventListener('ended', () => {
+    isPlaying = false;
+    updateUI();
   });
 }
 
@@ -702,7 +769,7 @@ function initSongModal() {
     if (step === 3) {
       const genreSelected = modal.querySelector('[data-group="genre"] .song-modal__chip.is-selected');
       const moodSelected = modal.querySelector('[data-group="mood"] .song-modal__chip.is-selected');
-      
+
       let isValid = true;
       if (!genreSelected) {
         shakeElement(modal.querySelector('[data-group="genre"]'));
@@ -753,13 +820,13 @@ function initSongModal() {
     };
 
     console.log('Song Creation Checkout Form Submitted:', formData);
-    
+
     // Instead of writing to DB right away, we intercept and open the payment modal
     // We store the data globally to be used by the payment script
     window.currentOrderData = formData;
-    
+
     const paymentModal = document.getElementById('payment-modal');
-    if(paymentModal) {
+    if (paymentModal) {
       paymentModal.style.display = 'flex';
     } else {
       alert("We just deployed the new payment system! Please completely refresh your browser page (F5 or Ctrl+R) to load the new checkout interface.");
@@ -837,7 +904,7 @@ function initPaymentModal() {
   const closePayment = () => {
     modal.style.display = 'none';
     errorMsg.style.display = 'none';
-    if(payForm) payForm.reset();
+    if (payForm) payForm.reset();
   };
 
   closeBtn.addEventListener('click', closePayment);
@@ -876,28 +943,28 @@ function initPaymentModal() {
         // Success
         try {
           if (!window.currentOrderData) throw new Error("No order data found");
-          
+
           await addDoc(collection(db, 'orders'), {
             customerData: window.currentOrderData,
             status: 'Pending Assignment',
             assignedArtistId: null,
             timestamps: {
-                createdAt: serverTimestamp()
+              createdAt: serverTimestamp()
             },
             assets: {}
           });
-          
+
           loadingOverlay.style.display = 'none';
           alert('Payment Successful! Your song order has been sent to our artists.');
           closePayment();
-          
+
           // Close the original song modal too
           const songModal = document.getElementById('song-modal');
           if (songModal) {
             songModal.classList.remove('is-open');
             document.body.classList.remove('modal-open');
           }
-          
+
           window.currentOrderData = null;
         } catch (error) {
           loadingOverlay.style.display = 'none';
@@ -909,9 +976,9 @@ function initPaymentModal() {
     }, 2000); // 2 second mock delay
   };
 
-  if(payForm) payForm.addEventListener('submit', processPayment);
-  if(btnPayStripe) btnPayStripe.addEventListener('click', processPayment);
-  if(btnPayPaypal) btnPayPaypal.addEventListener('click', processPayment);
+  if (payForm) payForm.addEventListener('submit', processPayment);
+  if (btnPayStripe) btnPayStripe.addEventListener('click', processPayment);
+  if (btnPayPaypal) btnPayPaypal.addEventListener('click', processPayment);
 }
 
 document.addEventListener('DOMContentLoaded', initPaymentModal);
@@ -950,7 +1017,7 @@ function initSupportWidget() {
       iconChat.style.display = 'none';
       iconClose.style.display = 'block';
       input.focus();
-      
+
       if (!hasOpened) {
         hasOpened = true;
         listenToMessages();
@@ -978,10 +1045,10 @@ function initSupportWidget() {
   const listenToMessages = () => {
     const messagesRef = collection(db, 'support_messages');
     const q = query(messagesRef, where('sessionId', '==', sessionId));
-    
+
     unsubscribe = onSnapshot(q, (snapshot) => {
       messagesContainer.innerHTML = '';
-      
+
       if (snapshot.empty) {
         // Initial bot greeting
         renderMessage("Hi there! Welcome to Lyricastudios. How can we help you create your perfect song today?", 'bot');
@@ -1030,9 +1097,9 @@ function initSupportWidget() {
 
   const handlePresetClick = async (preset) => {
     if (quickRepliesContainer) quickRepliesContainer.style.display = 'none';
-    
+
     renderMessage(preset.question, 'user');
-    
+
     try {
       const sessionRef = doc(db, 'support_sessions', sessionId);
       await setDoc(sessionRef, {
@@ -1074,7 +1141,7 @@ function initSupportWidget() {
     if (!text) return;
 
     input.value = '';
-    
+
     // Optimistic UI
     renderMessage(text, 'user');
 
@@ -1097,7 +1164,7 @@ function initSupportWidget() {
         timestamp: serverTimestamp()
       });
       console.log('[Support Widget] Message doc added successfully.');
-      
+
     } catch (err) {
       console.error("[Support Widget] Error sending message", err);
     }
@@ -1134,24 +1201,24 @@ function initHeroTypewriter() {
     const notes = ['♪', '♫', '♬', '♩'];
     note.textContent = notes[Math.floor(Math.random() * notes.length)];
     note.classList.add('splash-note', 'text-gradient');
-    
+
     const rect = cursorSpan.getBoundingClientRect();
     const startX = rect.left + window.scrollX + (Math.random() * 10 - 5);
     const startY = rect.top + window.scrollY - 10;
-    
+
     note.style.left = `${startX}px`;
     note.style.top = `${startY}px`;
-    
+
     const tx = (Math.random() * 40 - 20) + 'px';
     const ty = -(Math.random() * 30 + 20) + 'px';
     const rot = (Math.random() * 60 - 30) + 'deg';
-    
+
     note.style.setProperty('--tx', tx);
     note.style.setProperty('--ty', ty);
     note.style.setProperty('--rot', rot);
-    
+
     document.body.appendChild(note);
-    
+
     setTimeout(() => {
       if (note.parentNode) {
         note.remove();
@@ -1161,7 +1228,7 @@ function initHeroTypewriter() {
 
   function type() {
     const currentWord = words[wordIndex];
-    
+
     if (isDeleting) {
       typewriterSpan.textContent = currentWord.substring(0, charIndex - 1);
       charIndex--;

@@ -605,7 +605,6 @@ ol {
   letter-spacing: var(--ls-tight);
   color: var(--color-text);
   margin-bottom: var(--space-lg);
-  min-height: 2.2em; /* Reserve 2 lines on desktop to prevent layout shift */
 }
 
 .text-gradient {
@@ -4275,6 +4274,18 @@ body.nav-open {
   }
 }
 
+#listen-btn.is-playing .listen-icon {
+  opacity: 0;
+  transform: scale(0.5) rotate(90deg);
+}
+#listen-btn.is-playing .listen-icon-disc {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+#listen-btn.is-playing .listen-icon-disc svg {
+  animation: discSpin 2s linear infinite;
+}
+
 @keyframes discSpin {
   to { transform: rotate(360deg); }
 }
@@ -4328,6 +4339,15 @@ body.nav-open {
     opacity: 1;
     transform: scaleY(1);
   }
+}
+
+#listen-btn.is-playing .listen-text {
+  opacity: 0;
+  transform: scale(0.5);
+}
+#listen-btn.is-playing .listen-melody {
+  opacity: 1;
+  transform: scaleY(1);
 }
 
 .listen-wave-line {

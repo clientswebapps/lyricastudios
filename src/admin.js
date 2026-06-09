@@ -1380,8 +1380,6 @@ pronouns: ${cd.pronouns || 'N/A'}
 occasion: ${cd.occasion || 'N/A'}
 genre: ${cd.genre || 'N/A'}
 mood: ${cd.mood || 'N/A'}
-plan: ${(cd.plan || 'standard').charAt(0).toUpperCase() + (cd.plan || 'standard').slice(1)}
-price: ${cd.price || '$79'}
 keywords: ${(cd.words && cd.words.length > 0) ? cd.words.join(', ') : 'None'}
 occasion story: ${cd.occasionStory || 'None'}
 memories & jokes: ${cd.memories || 'None'}`;

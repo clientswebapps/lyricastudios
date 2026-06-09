@@ -35,6 +35,7 @@ const initAll = () => {
   initSongModal();
   initHeroTypewriter();
   initCategoryCards();
+  initHero3DEffect();
 };
 
 if (document.readyState === 'loading') {
@@ -672,6 +673,47 @@ function initHeroSlideshow() {
     slides[currentSlide].classList.add('is-active');
   }, 3000);
 }
+
+
+/* ── Hero 3D Card Hover Effect ───────────────────────────────── */
+function initHero3DEffect() {
+  const imageWrapper = document.querySelector('.hero__image-wrapper');
+  if (!imageWrapper) return;
+  
+  // Only apply on screens with hover support to prevent weird touch interactions on mobile
+  if (!window.matchMedia('(hover: hover)').matches) return;
+  
+  imageWrapper.addEventListener('mousemove', (e) => {
+    const rect = imageWrapper.getBoundingClientRect();
+    const width = rect.width;
+    const height = rect.height;
+    
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Normalize coordinates to [-0.5, 0.5] range
+    const xPct = (mouseX / width) - 0.5;
+    const yPct = (mouseY / height) - 0.5;
+    
+    // Calculate rotation angles (max 10.5 degrees, same as registry item)
+    const rotateX = yPct * -21; // Maps [-0.5, 0.5] to [10.5deg, -10.5deg]
+    const rotateY = xPct * 21;  // Maps [-0.5, 0.5] to [-10.5deg, 10.5deg]
+    
+    imageWrapper.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+  });
+  
+  imageWrapper.addEventListener('mouseleave', () => {
+    // Reset to center smoothly
+    imageWrapper.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+    imageWrapper.style.transform = 'rotateX(0deg) rotateY(0deg)';
+  });
+  
+  imageWrapper.addEventListener('mouseenter', () => {
+    // Quick transition response during active tracking
+    imageWrapper.style.transition = 'transform 0.1s cubic-bezier(0.25, 1, 0.5, 1)';
+  });
+}
+
 
 
 /* ── Song Creation Modal ───────────────────────────────────────── */

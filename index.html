@@ -133,9 +133,9 @@
                     stroke-linecap="round" stroke-linejoin="round">
                     <defs>
                       <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#00c896" />
-                        <stop offset="50%" stop-color="#0ea5e9" />
-                        <stop offset="100%" stop-color="#6366f1" />
+                        <stop offset="0%" stop-color="#6366f1" />
+                        <stop offset="50%" stop-color="#ec4899" />
+                        <stop offset="100%" stop-color="#f43f5e" />
                       </linearGradient>
                     </defs>
                     <circle cx="12" cy="12" r="10" />
@@ -191,18 +191,22 @@
 
             </div>
             <!-- Floating cards -->
-            <div class="floating-card floating-card--1" data-animate="fade-up" data-delay="400">
-              <span class="floating-card__icon">🎵</span>
-              <div>
-                <strong>New Song Ready!</strong>
-                <small>"Forever Yours"</small>
+            <div class="floating-card-wrapper floating-card-wrapper--1" data-animate="fade-up" data-delay="400">
+              <div class="floating-card">
+                <span class="floating-card__icon">🎵</span>
+                <div>
+                  <strong>New Song Ready!</strong>
+                  <small>"Forever Yours"</small>
+                </div>
               </div>
             </div>
-            <div class="floating-card floating-card--2" data-animate="fade-up" data-delay="600">
-              <span class="floating-card__icon">⭐</span>
-              <div>
-                <strong>5-Star Review</strong>
-                <small>"Made her cry happy tears!"</small>
+            <div class="floating-card-wrapper floating-card-wrapper--2" data-animate="fade-up" data-delay="600">
+              <div class="floating-card">
+                <span class="floating-card__icon">⭐</span>
+                <div>
+                  <strong>5-Star Review</strong>
+                  <small>"Made her cry happy tears!"</small>
+                </div>
               </div>
             </div>
           </div>
@@ -778,8 +782,6 @@
     <!-- SONG OF THE YEAR                            -->
     <!-- ═══════════════════════════════════════════ -->
     <section class="soty-spotlight" id="soty">
-      <div class="soty-glow"></div>
-      <div class="soty-glow soty-glow--right"></div>
       <div class="container soty-container">
         
         <!-- Player Side -->

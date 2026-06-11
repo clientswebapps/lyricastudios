@@ -1208,9 +1208,21 @@
               <button type="button" class="song-modal__chip" data-value="Other">Other</button>
             </div>
           </div>
+          <div class="song-modal__field is-hidden" id="recipient-other-wrapper">
+            <label class="song-modal__label" for="recipient-other">Specify Relationship <span class="song-modal__required">*</span></label>
+            <input type="text" class="song-modal__input" id="recipient-other" placeholder="e.g. Mentor, Coworker, Coach" />
+          </div>
           <div class="song-modal__field">
             <label class="song-modal__label" for="recipient-name">Their Name</label>
             <input type="text" class="song-modal__input" id="recipient-name" placeholder="e.g. Sarah" />
+            <span class="song-modal__hint">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 4px; opacity: 0.7;">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+              </svg>
+              Tip: Help our vocalists pronounce the name perfectly by adding a phonetic guide (e.g., Sarah: sa-rah).
+            </span>
           </div>
           <div class="song-modal__field">
             <label class="song-modal__label">Their Pronouns</label>
@@ -1241,6 +1253,10 @@
               <button type="button" class="song-modal__chip" data-value="Other">Other</button>
             </div>
           </div>
+          <div class="song-modal__field is-hidden" id="occasion-other-wrapper">
+            <label class="song-modal__label" for="occasion-other">Specify Occasion <span class="song-modal__required">*</span></label>
+            <input type="text" class="song-modal__input" id="occasion-other" placeholder="e.g. Graduation, Retirement, New Home" />
+          </div>
           <div class="song-modal__field">
             <label class="song-modal__label" for="occasion-story">Describe the Occasion / Story</label>
             <textarea class="song-modal__textarea" id="occasion-story" rows="4"
@@ -1248,10 +1264,10 @@
           </div>
         </div>
 
-        <!-- Step 3: Mood & Genre -->
+        <!-- Step 3: Genre & Voice -->
         <div class="song-modal__step" data-step="3">
           <div class="song-modal__step-header">
-            <h2>Choose the Mood & Genre</h2>
+            <h2>Choose the Genre & Preferred Voice</h2>
             <p>How should the song sound?</p>
           </div>
           <div class="song-modal__field">
@@ -1284,13 +1300,11 @@
             </div>
           </div>
           <div class="song-modal__field">
-            <label class="song-modal__label">Select Mood <span class="song-modal__required">*</span></label>
-            <div class="song-modal__chips" data-group="mood">
-              <button type="button" class="song-modal__chip" data-value="Heartfelt">Heartfelt</button>
-              <button type="button" class="song-modal__chip" data-value="Happy / Upbeat">Happy / Upbeat</button>
-              <button type="button" class="song-modal__chip" data-value="Melancholy">Melancholy</button>
-              <button type="button" class="song-modal__chip" data-value="Romantic">Romantic</button>
-              <button type="button" class="song-modal__chip" data-value="Funny / Playful">Funny / Playful</button>
+            <label class="song-modal__label">Preferred Voice <span class="song-modal__required">*</span></label>
+            <div class="song-modal__chips" data-group="voice">
+              <button type="button" class="song-modal__chip" data-value="Male">Male</button>
+              <button type="button" class="song-modal__chip" data-value="Female">Female</button>
+              <button type="button" class="song-modal__chip" data-value="Any">Any</button>
             </div>
           </div>
         </div>
@@ -1409,19 +1423,17 @@
             </div>
           </div>
 
-          <!-- Guarantee Banner -->
-          <div class="song-modal__guarantee">
-            <div class="song-modal__guarantee-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                <path d="m9 11 2 2 4-4" />
+          <!-- Delivery Email Field -->
+          <div class="song-modal__field" style="margin-top: 1.5rem; margin-bottom: 1.5rem; text-align: left;">
+            <label class="song-modal__label" for="delivery-email">Where should we send your song? <span class="song-modal__required">*</span></label>
+            <input type="email" class="song-modal__input" id="delivery-email" placeholder="your.email@example.com" required />
+            <span class="song-modal__hint">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 4px; opacity: 0.7;">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                <polyline points="22,6 12,13 2,6" />
               </svg>
-            </div>
-            <div class="song-modal__guarantee-content">
-              <strong>30-Day Money-Back Guarantee</strong>
-              <p>We're confident you'll love your custom song. If you're not satisfied, email us and we'll give you a
-                full refund.</p>
-            </div>
+              We will send your high-quality MP3 file directly to this email address.
+            </span>
           </div>
 
           <!-- Checkout Action Area -->
@@ -1436,6 +1448,21 @@
             <button type="button" class="song-modal__checkout-back" id="checkout-back-link">
               ← Edit details & memories
             </button>
+          </div>
+
+          <!-- Guarantee Banner -->
+          <div class="song-modal__guarantee">
+            <div class="song-modal__guarantee-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="m9 11 2 2 4-4" />
+              </svg>
+            </div>
+            <div class="song-modal__guarantee-content">
+              <strong>30-Day Money-Back Guarantee</strong>
+              <p>We're confident you'll love your custom song. If you're not satisfied, email us and we'll give you a
+                full refund.</p>
+            </div>
           </div>
 
           <!-- News Logos -->
@@ -1512,6 +1539,10 @@
           <!-- Card Form -->
           <div id="pay-method-card" class="pay-method-section active">
             <form id="payment-form">
+              <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" id="pay-email" placeholder="your.email@example.com" readonly required>
+              </div>
               <div class="form-group">
                 <label>Cardholder Name</label>
                 <input type="text" id="pay-name" placeholder="John Doe" required>

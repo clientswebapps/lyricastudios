@@ -1942,9 +1942,12 @@ body.modal-open {
 
 /* Close button */
 .song-modal__close {
-  position: absolute;
-  top: var(--space-lg);
-  right: var(--space-lg);
+  position: sticky;
+  top: var(--space-sm);
+  margin-left: auto;
+  margin-top: calc(-1 * var(--space-md));
+  margin-right: calc(-1 * var(--space-md));
+  margin-bottom: -36px;
   width: 36px;
   height: 36px;
   border-radius: 50%;
@@ -1952,9 +1955,11 @@ body.modal-open {
   align-items: center;
   justify-content: center;
   color: var(--color-text-muted);
-  background: transparent;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
   transition: all var(--duration-fast);
-  z-index: 10;
+  z-index: 100;
 }
 
 .song-modal__close:hover {
@@ -2067,6 +2072,26 @@ body.modal-open {
 /* ── Fields ──────────────────────────────────────────────────── */
 .song-modal__field {
   margin-bottom: var(--space-xl);
+}
+
+.song-modal__field.is-hidden {
+  display: none !important;
+}
+
+.song-modal__field.is-visible {
+  display: block !important;
+  animation: fieldFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fieldFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .song-modal__field:last-child {
@@ -2284,7 +2309,7 @@ body.modal-open {
   }
 }
 
-.song-modal__chips.shake {
+.shake, .song-modal__chips.shake {
   animation: modalShake 0.4s ease-out;
 }
 
@@ -3999,6 +4024,18 @@ body.nav-open {
   font-size: var(--fs-sm);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
+}
+
+.pay-method-section .form-group input[readonly] {
+  background: var(--color-bg-alt);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+  border-color: var(--color-border);
+}
+
+.pay-method-section .form-group input[readonly]:focus {
+  border-color: var(--color-border);
+  box-shadow: none;
 }
 
 .pay-method-section .form-group input::placeholder {

@@ -789,6 +789,42 @@ function initSongModal() {
         group.querySelectorAll('.song-modal__chip').forEach(c => c.classList.remove('is-selected'));
         // Select clicked
         chip.classList.add('is-selected');
+
+        // Check if group is recipient to toggle the "Other" textfield
+        if (group.dataset.group === 'recipient') {
+          const otherWrapper = document.getElementById('recipient-other-wrapper');
+          if (otherWrapper) {
+            if (chip.dataset.value === 'Other') {
+              otherWrapper.classList.remove('is-hidden');
+              otherWrapper.classList.add('is-visible');
+              const input = document.getElementById('recipient-other');
+              if (input) input.focus();
+            } else {
+              otherWrapper.classList.remove('is-visible');
+              otherWrapper.classList.add('is-hidden');
+              const input = document.getElementById('recipient-other');
+              if (input) input.value = '';
+            }
+          }
+        }
+
+        // Check if group is occasion to toggle the "Other" textfield
+        if (group.dataset.group === 'occasion') {
+          const occasionOtherWrapper = document.getElementById('occasion-other-wrapper');
+          if (occasionOtherWrapper) {
+            if (chip.dataset.value === 'Other') {
+              occasionOtherWrapper.classList.remove('is-hidden');
+              occasionOtherWrapper.classList.add('is-visible');
+              const input = document.getElementById('occasion-other');
+              if (input) input.focus();
+            } else {
+              occasionOtherWrapper.classList.remove('is-visible');
+              occasionOtherWrapper.classList.add('is-hidden');
+              const input = document.getElementById('occasion-other');
+              if (input) input.value = '';
+            }
+          }
+        }
       });
     });
   });
@@ -947,6 +983,13 @@ function initSongModal() {
         shakeElement(modal.querySelector('[data-group="recipient"]'));
         return false;
       }
+      if (selected.dataset.value === 'Other') {
+        const otherInput = document.getElementById('recipient-other');
+        if (!otherInput || !otherInput.value.trim()) {
+          shakeElement(otherInput);
+          return false;
+        }
+      }
     }
     if (step === 2) {
       const selected = modal.querySelector('[data-group="occasion"] .song-modal__chip.is-selected');
@@ -954,18 +997,25 @@ function initSongModal() {
         shakeElement(modal.querySelector('[data-group="occasion"]'));
         return false;
       }
+      if (selected.dataset.value === 'Other') {
+        const otherInput = document.getElementById('occasion-other');
+        if (!otherInput || !otherInput.value.trim()) {
+          shakeElement(otherInput);
+          return false;
+        }
+      }
     }
     if (step === 3) {
       const genreSelected = modal.querySelector('[data-group="genre"] .song-modal__chip.is-selected');
-      const moodSelected = modal.querySelector('[data-group="mood"] .song-modal__chip.is-selected');
+      const voiceSelected = modal.querySelector('[data-group="voice"] .song-modal__chip.is-selected');
 
       let isValid = true;
       if (!genreSelected) {
         shakeElement(modal.querySelector('[data-group="genre"]'));
         isValid = false;
       }
-      if (!moodSelected) {
-        shakeElement(modal.querySelector('[data-group="mood"]'));
+      if (!voiceSelected) {
+        shakeElement(modal.querySelector('[data-group="voice"]'));
         isValid = false;
       }
       return isValid;
@@ -988,16 +1038,41 @@ function initSongModal() {
     const pronounsChip = modal.querySelector('[data-group="pronouns"] .song-modal__chip.is-selected');
     const occasionChip = modal.querySelector('[data-group="occasion"] .song-modal__chip.is-selected');
     const genreChip = modal.querySelector('[data-group="genre"] .song-modal__chip.is-selected');
-    const moodChip = modal.querySelector('[data-group="mood"] .song-modal__chip.is-selected');
+    const voiceChip = modal.querySelector('[data-group="voice"] .song-modal__chip.is-selected');
+
+    let recipientVal = recipientChip ? recipientChip.dataset.value : '';
+    if (recipientVal === 'Other') {
+      const otherInput = document.getElementById('recipient-other');
+      if (otherInput && otherInput.value.trim()) {
+        recipientVal = otherInput.value.trim();
+      }
+    }
+
+    let occasionVal = occasionChip ? occasionChip.dataset.value : '';
+    if (occasionVal === 'Other') {
+      const otherInput = document.getElementById('occasion-other');
+      if (otherInput && otherInput.value.trim()) {
+        occasionVal = otherInput.value.trim();
+      }
+    }
+
+    const emailInput = document.getElementById('delivery-email');
+    const emailVal = emailInput ? emailInput.value.trim() : '';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailVal || !emailRegex.test(emailVal)) {
+      shakeElement(emailInput);
+      return;
+    }
 
     const formData = {
-      recipient: recipientChip ? recipientChip.dataset.value : '',
+      recipient: recipientVal,
       name: (document.getElementById('recipient-name') || {}).value || '',
       pronouns: pronounsChip ? pronounsChip.dataset.value : '',
-      occasion: occasionChip ? occasionChip.dataset.value : '',
+      occasion: occasionVal,
       occasionStory: (document.getElementById('occasion-story') || {}).value || '',
       genre: genreChip ? genreChip.dataset.value : '',
-      mood: moodChip ? moodChip.dataset.value : '',
+      preferredVoice: voiceChip ? voiceChip.dataset.value : '',
+      email: emailVal,
       memories: (document.getElementById('memories-jokes') || {}).value || '',
       words: [
         (document.getElementById('word-1') || {}).value || '',
@@ -1016,6 +1091,10 @@ function initSongModal() {
 
     const paymentModal = document.getElementById('payment-modal');
     if (paymentModal) {
+      const payEmailInput = document.getElementById('pay-email');
+      if (payEmailInput) {
+        payEmailInput.value = emailVal;
+      }
       paymentModal.style.display = 'flex';
     } else {
       alert("We just deployed the new payment system! Please completely refresh your browser page (F5 or Ctrl+R) to load the new checkout interface.");
@@ -1072,6 +1151,20 @@ function initSongModal() {
     modal.querySelectorAll('.song-modal__input, .song-modal__textarea').forEach(input => {
       input.value = '';
     });
+
+    // Hide other recipient wrapper
+    const otherWrapper = document.getElementById('recipient-other-wrapper');
+    if (otherWrapper) {
+      otherWrapper.classList.remove('is-visible');
+      otherWrapper.classList.add('is-hidden');
+    }
+
+    // Hide other occasion wrapper
+    const occasionOtherWrapper = document.getElementById('occasion-other-wrapper');
+    if (occasionOtherWrapper) {
+      occasionOtherWrapper.classList.remove('is-visible');
+      occasionOtherWrapper.classList.add('is-hidden');
+    }
   }
 }
 
@@ -1118,6 +1211,11 @@ function initPaymentModal() {
     if (e) e.preventDefault();
     errorMsg.style.display = 'none';
     loadingOverlay.style.display = 'flex';
+
+    const payEmailInput = document.getElementById('pay-email');
+    if (payEmailInput && window.currentOrderData) {
+      window.currentOrderData.email = payEmailInput.value.trim();
+    }
 
     // Check for the mock failure card
     const cardInput = document.getElementById('pay-card');

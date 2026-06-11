@@ -575,8 +575,9 @@ function createOrderCard(id, data, draggable = false) {
       <span class="status-badge ${statusClass}">${data.status}</span>
     </div>
     <div class="order-details">
+      <div class="order-id" style="margin-bottom: 0.5rem; text-transform: none;">${data.customerData?.email || 'N/A'}</div>
       <p><strong>Genre:</strong> ${data.customerData?.genre || 'N/A'}</p>
-      <p><strong>Mood:</strong> ${data.customerData?.mood || 'N/A'}</p>
+      <p><strong>Voice:</strong> ${data.customerData?.preferredVoice || data.customerData?.mood || 'N/A'}</p>
     </div>
     <div class="order-timer">
       <span>Time Left:</span>
@@ -665,7 +666,8 @@ function openOrderModal(id, data) {
   document.getElementById('modal-order-pronouns').innerText = data.customerData?.pronouns || 'N/A';
   document.getElementById('modal-order-occasion').innerText = data.customerData?.occasion || 'N/A';
   document.getElementById('modal-order-genre').innerText = data.customerData?.genre || 'N/A';
-  document.getElementById('modal-order-mood').innerText = data.customerData?.mood || 'N/A';
+  document.getElementById('modal-order-voice').innerText = data.customerData?.preferredVoice || data.customerData?.mood || 'N/A';
+  document.getElementById('modal-order-email').innerText = data.customerData?.email || 'N/A';
   document.getElementById('modal-order-plan').innerText = (data.customerData?.plan || 'standard').charAt(0).toUpperCase() + (data.customerData?.plan || 'standard').slice(1);
   document.getElementById('modal-order-price').innerText = data.customerData?.price || '$79';
   document.getElementById('modal-order-words').innerText = (data.customerData?.words && data.customerData.words.length > 0) ? data.customerData.words.join(', ') : 'None';
@@ -1379,7 +1381,7 @@ name: ${cd.name || 'N/A'}
 pronouns: ${cd.pronouns || 'N/A'}
 occasion: ${cd.occasion || 'N/A'}
 genre: ${cd.genre || 'N/A'}
-mood: ${cd.mood || 'N/A'}
+voice: ${cd.preferredVoice || cd.mood || 'N/A'}
 keywords: ${(cd.words && cd.words.length > 0) ? cd.words.join(', ') : 'None'}
 occasion story: ${cd.occasionStory || 'None'}
 memories & jokes: ${cd.memories || 'None'}`;

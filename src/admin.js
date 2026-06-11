@@ -37,6 +37,7 @@ let unsubscribeUserDoc = null;
 let unsubscribeNotifications = null;
 let unsubscribeChatMessages = null;
 let unsubscribeUnreadCount = null;
+let unsubscribeBanner = null;
 let currentChatArtistId = null;
 const alertedMessageIds = new Set(); // track which background alerts were displayed locally
 let unreadMessagesCount = {}; // map of artistId -> unread count for admin
@@ -206,11 +207,15 @@ function listenToUserDoc(uid) {
       if (userData.role === 'admin') {
         document.getElementById('nav-qa').style.display = 'block';
         document.getElementById('nav-users').style.display = 'block';
+        const navBanner = document.getElementById('nav-banner');
+        if (navBanner) navBanner.style.display = 'block';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'flex';
         if (artistMessagesLayout) artistMessagesLayout.style.display = 'none';
       } else {
         document.getElementById('nav-qa').style.display = 'none';
         document.getElementById('nav-users').style.display = 'none';
+        const navBanner = document.getElementById('nav-banner');
+        if (navBanner) navBanner.style.display = 'none';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'none';
         if (artistMessagesLayout) artistMessagesLayout.style.display = 'flex';
         // For artist, load chat with Admin
@@ -450,6 +455,11 @@ function setupListeners() {
 
   // Initialize support query listeners
   setupSupportListeners();
+
+  // Initialize Admin Banner settings
+  if (userData && userData.role === 'admin') {
+    initAdminBannerSettings();
+  }
 }
 
 function clearListeners() {
@@ -473,6 +483,10 @@ function clearListeners() {
   if (unsubscribeUnreadCount) {
     unsubscribeUnreadCount();
     unsubscribeUnreadCount = null;
+  }
+  if (unsubscribeBanner) {
+    unsubscribeBanner();
+    unsubscribeBanner = null;
   }
   alertedMessageIds.clear();
   
@@ -1960,4 +1974,144 @@ function showReorderToast(message) {
     });
   }, 2000);
 }
+
+// --- Promo Banner Settings (Admin Only) ---
+function initAdminBannerSettings() {
+  const form = document.getElementById('banner-settings-form');
+  const activeInput = document.getElementById('banner-active');
+  const htmlInput = document.getElementById('banner-html');
+  const preview = document.getElementById('admin-banner-preview');
+  const previewText = preview ? preview.querySelector('.container p') : null;
+  const placeholder = document.getElementById('admin-banner-preview-placeholder');
+  const msgEl = document.getElementById('banner-settings-msg');
+  const submitBtn = document.getElementById('banner-settings-submit');
+  
+  if (!form || !activeInput || !htmlInput) return;
+
+  // Function to update preview
+  function updateLivePreview() {
+    const isActive = activeInput.checked;
+    const htmlVal = htmlInput.value.trim();
+    
+    if (isActive && htmlVal) {
+      if (preview) preview.style.display = 'block';
+      if (placeholder) placeholder.style.display = 'none';
+      if (previewText) previewText.innerHTML = htmlVal;
+    } else {
+      if (preview) preview.style.display = 'none';
+      if (placeholder) placeholder.style.display = 'block';
+    }
+  }
+
+  // Bind real-time input events for live preview
+  activeInput.addEventListener('change', updateLivePreview);
+  htmlInput.addEventListener('input', updateLivePreview);
+
+  // Formatting helper toolbar buttons
+  const toolbarBtns = form.querySelectorAll('.toolbar-helpers button');
+  toolbarBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tagType = btn.dataset.tag;
+      let openTag = '';
+      let closeTag = '';
+      
+      switch (tagType) {
+        case 'strong':
+          openTag = '<strong>';
+          closeTag = '</strong>';
+          break;
+        case 'em':
+          openTag = '<em>';
+          closeTag = '</em>';
+          break;
+        case 'link':
+          openTag = '<a href="#hero" class="promo-link">';
+          closeTag = '</a>';
+          break;
+        case 'code':
+          openTag = '<span class="promo-code">';
+          closeTag = '</span>';
+          break;
+      }
+      
+      insertTagAtCursor(htmlInput, openTag, closeTag);
+    });
+  });
+
+  function insertTagAtCursor(textarea, openTag, closeTag) {
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+    const selectedText = text.substring(start, end);
+    const replacement = openTag + selectedText + closeTag;
+    textarea.value = text.substring(0, start) + replacement + text.substring(end);
+    
+    textarea.focus();
+    textarea.selectionStart = start + openTag.length;
+    textarea.selectionEnd = start + openTag.length + selectedText.length;
+    
+    updateLivePreview();
+  }
+
+  // Load existing configuration in real-time
+  if (unsubscribeBanner) unsubscribeBanner();
+  unsubscribeBanner = onSnapshot(doc(db, 'settings', 'promo_banner'), (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      // Only update fields if they aren't currently focused to prevent cursor jumping
+      if (document.activeElement !== activeInput) {
+        activeInput.checked = !!data.isActive;
+      }
+      if (document.activeElement !== htmlInput) {
+        htmlInput.value = data.html || '';
+      }
+    }
+    updateLivePreview();
+  });
+
+  // Handle Form Submission
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Saving...';
+    
+    try {
+      await setDoc(doc(db, 'settings', 'promo_banner'), {
+        isActive: activeInput.checked,
+        html: htmlInput.value,
+        updatedAt: serverTimestamp(),
+        updatedBy: currentUser ? currentUser.email : 'admin'
+      }, { merge: true });
+      
+      showStatusMessage('Banner settings saved successfully.', 'success');
+    } catch (error) {
+      console.error('Error saving banner settings:', error);
+      showStatusMessage('Error saving settings: ' + error.message, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Save Banner Settings';
+    }
+  });
+
+  function showStatusMessage(text, type) {
+    if (!msgEl) return;
+    msgEl.innerText = text;
+    msgEl.style.display = 'block';
+    
+    if (type === 'success') {
+      msgEl.style.background = 'rgba(16, 185, 129, 0.15)';
+      msgEl.style.color = 'var(--success)';
+      msgEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+    } else {
+      msgEl.style.background = 'rgba(239, 68, 68, 0.15)';
+      msgEl.style.color = 'var(--danger)';
+      msgEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+    }
+    
+    setTimeout(() => {
+      msgEl.style.display = 'none';
+    }, 4000);
+  }
+}
+
 

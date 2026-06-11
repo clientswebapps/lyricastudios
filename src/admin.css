@@ -1197,3 +1197,47 @@ body {
 .order-card.card-danger:hover, .compact-order-card.card-danger:hover {
   border-color: var(--danger) !important;
 }
+
+/* Promo Banner Live Preview Styles in Admin */
+#admin-banner-preview {
+  background: #111111;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-family: 'Inter', sans-serif;
+  text-align: center;
+  border-radius: 6px;
+  width: 100%;
+  padding: 0.75rem 1rem;
+}
+#admin-banner-preview .promo-code {
+  background: rgba(255, 255, 255, 0.15);
+  padding: 0.15em 0.5em;
+  border-radius: 4px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+  display: inline-block;
+}
+#admin-banner-preview .promo-link {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  margin-left: 0.5rem;
+  font-weight: 600;
+}
+#admin-banner-preview .promo-link:hover {
+  opacity: 0.8;
+}
+
+.toolbar-helpers button.btn-toolbar {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+.toolbar-helpers button.btn-toolbar:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+

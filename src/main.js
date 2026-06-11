@@ -49,37 +49,56 @@ if (document.readyState === 'loading') {
 function initPromoBanner() {
   const banner = document.getElementById('promo-banner');
   const closeBtn = document.getElementById('promo-close');
+  const bannerText = banner ? banner.querySelector('.container p') : null;
 
-  if (!banner || !closeBtn) return;
+  if (!banner || !closeBtn || !bannerText) return;
 
-  // Close on button click
-  closeBtn.addEventListener('click', () => {
-    banner.classList.add('is-hidden');
-  });
-
-  // Hide on scroll down, show on scroll up
-  let lastScroll = 0;
+  let isBannerActive = false;
   const scrollThreshold = 80;
 
-  window.addEventListener('scroll', () => {
-    if (banner.classList.contains('is-closed')) return; // permanently closed
-
-    const currentScroll = window.scrollY;
-
-    if (currentScroll > scrollThreshold) {
-      banner.classList.add('is-hidden');
+  // Listen to Firestore config in real-time
+  onSnapshot(doc(db, 'settings', 'promo_banner'), (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      isBannerActive = !!data.isActive;
+      bannerText.innerHTML = data.html || '';
     } else {
-      banner.classList.remove('is-hidden');
+      // Default fallback
+      isBannerActive = true;
+      bannerText.innerHTML = `🎵 <strong>Limited Offer</strong> — Get 20% off your first custom song! Use code <span class="promo-code">FIRSTSONG</span> at checkout <a href="#hero" class="promo-link">Start Now →</a>`;
     }
 
-    lastScroll = currentScroll;
+    updateVisibility();
+  });
+
+  function updateVisibility() {
+    if (!isBannerActive || banner.classList.contains('is-closed')) {
+      banner.classList.add('is-hidden');
+      banner.style.display = 'none';
+    } else {
+      banner.style.display = '';
+      const currentScroll = window.scrollY;
+      if (currentScroll > scrollThreshold) {
+        banner.classList.add('is-hidden');
+      } else {
+        banner.classList.remove('is-hidden');
+      }
+    }
+  }
+
+  // Hide on scroll down, show on scroll up
+  window.addEventListener('scroll', () => {
+    updateVisibility();
   }, { passive: true });
 
   // Mark as permanently closed when X is clicked
   closeBtn.addEventListener('click', () => {
+    banner.classList.add('is-hidden');
     banner.classList.add('is-closed');
+    banner.style.display = 'none';
   });
 }
+
 
 
 /* ── Sticky Header — Scroll state for CTA reveal ──────────── */

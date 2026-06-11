@@ -50,6 +50,7 @@
         <button class="nav-btn" data-view="tasks-view">My Tasks</button>
         <button class="nav-btn" data-view="qa-view" id="nav-qa" style="display:none;">QA Pending</button>
         <button class="nav-btn" data-view="users-view" id="nav-users" style="display:none;">Manage Users</button>
+        <button class="nav-btn" data-view="banner-view" id="nav-banner" style="display:none;">Promo Banner</button>
         <button class="nav-btn" data-view="history-view" id="nav-history" style="display:none;">History Log</button>
         <button class="nav-btn" data-view="messages-view" id="nav-messages">Messages <span id="messages-nav-badge" class="chat-unread-badge" style="display: none; margin-left: 0.5rem; padding: 0.1rem 0.35rem; font-size: 0.7rem; line-height: 1; vertical-align: middle;">0</span></button>
         <button class="nav-btn" data-view="support-view" id="nav-support">Live Support</button>
@@ -251,6 +252,58 @@
                   <button type="submit" class="btn btn--accent">Send</button>
                 </form>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Promo Banner View (Admin Only) -->
+        <section id="banner-view" class="view-section" style="display: none;">
+          <h2>Promo Banner Customization</h2>
+          
+          <div class="banner-settings-container" style="max-width: 800px; display: flex; flex-direction: column; gap: 2rem; margin-top: 1.5rem;">
+            <!-- Live Preview Block -->
+            <div class="preview-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
+              <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main);">Live Preview</h3>
+              <div class="admin-banner-preview-wrapper" style="border: 1px dashed var(--border); border-radius: 8px; padding: 1rem; background: rgba(0,0,0,0.2); min-height: 60px; display: flex; align-items: center; justify-content: center; position: relative;">
+                <div id="admin-banner-preview" class="promo-banner" style="width: 100%; border-radius: 6px; padding: 0.75rem 1rem; display: none;">
+                  <div class="container">
+                    <p style="margin: 0; color: #fff; font-size: 0.85rem; text-align: center; font-family: 'Inter', sans-serif;"></p>
+                  </div>
+                </div>
+                <div id="admin-banner-preview-placeholder" style="color: var(--text-muted); font-size: 0.9rem;">Banner is currently disabled or empty.</div>
+              </div>
+            </div>
+
+            <!-- Form Block -->
+            <div class="settings-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
+              <form id="banner-settings-form">
+                <div class="form-group" style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
+                  <input type="checkbox" id="banner-active" style="width: 18px; height: 18px; cursor: pointer;">
+                  <label for="banner-active" style="margin-bottom: 0; cursor: pointer; font-weight: 500; user-select: none;">Enable promo banner on website</label>
+                </div>
+
+                <div class="form-group">
+                  <label for="banner-html" style="font-weight: 500; display: flex; justify-content: space-between; align-items: center;">
+                    <span>Banner HTML Content</span>
+                    <span style="font-size: 0.8rem; font-weight: normal; color: var(--text-muted);">HTML allowed</span>
+                  </label>
+                  
+                  <!-- Toolbar helper buttons -->
+                  <div class="toolbar-helpers" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" class="btn btn--outline btn-toolbar" data-tag="strong" style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.8rem; font-weight: bold;">Bold</button>
+                    <button type="button" class="btn btn--outline btn-toolbar" data-tag="em" style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.8rem; font-style: italic;">Italic</button>
+                    <button type="button" class="btn btn--outline btn-toolbar" data-tag="link" style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.8rem; text-decoration: underline;">Link</button>
+                    <button type="button" class="btn btn--outline btn-toolbar" data-tag="code" style="width: auto; padding: 0.3rem 0.6rem; font-size: 0.8rem; font-family: monospace;">Promo Code</button>
+                  </div>
+                  
+                  <textarea id="banner-html" rows="5" placeholder="e.g. 🎵 &lt;strong&gt;Limited Offer&lt;/strong&gt; — Get 20% off your first custom song! &lt;a href='#hero' class='promo-link'&gt;Start Now →&lt;/a&gt;" required style="font-family: monospace; font-size: 0.9rem; line-height: 1.4;"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
+                  <button type="submit" class="btn btn--accent" id="banner-settings-submit" style="width: auto; padding: 0.75rem 2rem;">Save Banner Settings</button>
+                  <div id="banner-settings-msg" style="font-size: 0.9rem; display: none; padding: 0.5rem 1rem; border-radius: 6px;"></div>
+                </div>
+              </form>
             </div>
           </div>
         </section>

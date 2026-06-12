@@ -1,6 +1,10 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    match /used_promos/{userPromoId} {
+      allow create: if !exists(/databases/$(database)/documents/used_promos/$(userPromoId));
+      allow read, update, delete: if false;
+    }
     match /{document=**} {
       allow read, write: if true;
     }

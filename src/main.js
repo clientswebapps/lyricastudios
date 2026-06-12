@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import { db } from './firebase.js';
-import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, setDoc, getDoc, writeBatch } from 'firebase/firestore';
 
 // Registry to ensure only one audio sample plays at a time
 const activePlayers = [];
@@ -1256,6 +1256,22 @@ function initPaymentModal() {
       promoApplyBtn.textContent = 'Applying...';
 
       try {
+        const emailVal = window.currentOrderData ? (window.currentOrderData.email || '').trim().toLowerCase() : '';
+        if (emailVal) {
+          const userPromoId = `${emailVal}_${codeVal}`;
+          const usedPromoRef = doc(db, 'used_promos', userPromoId);
+          const usedSnap = await getDoc(usedPromoRef);
+          if (usedSnap.exists()) {
+            resetPromo();
+            if (promoMessage) {
+              promoMessage.textContent = 'This promo code has already been applied by this email address.';
+              promoMessage.classList.add('error');
+              promoMessage.style.display = 'block';
+            }
+            return;
+          }
+        }
+
         const promoDocRef = doc(db, 'promo_codes', codeVal);
         const docSnap = await getDoc(promoDocRef);
 
@@ -1300,6 +1316,7 @@ function initPaymentModal() {
           if (promoMessage) {
             promoMessage.textContent = `Promo code applied successfully! Discount: -$${discountAmount.toFixed(2)}`;
             promoMessage.classList.add('success');
+            promoMessage.style.display = 'block';
           }
         } else {
           // Invalid code
@@ -1307,6 +1324,7 @@ function initPaymentModal() {
           if (promoMessage) {
             promoMessage.textContent = 'Invalid promo code. Please check and try again.';
             promoMessage.classList.add('error');
+            promoMessage.style.display = 'block';
           }
         }
       } catch (err) {
@@ -1314,6 +1332,7 @@ function initPaymentModal() {
         if (promoMessage) {
           promoMessage.textContent = 'Error verifying promo code. Please try again.';
           promoMessage.classList.add('error');
+          promoMessage.style.display = 'block';
         }
       } finally {
         promoApplyBtn.disabled = false;
@@ -1359,15 +1378,45 @@ function initPaymentModal() {
         try {
           if (!window.currentOrderData) throw new Error("No order data found");
 
-          await addDoc(collection(db, 'orders'), {
-            customerData: window.currentOrderData,
-            status: 'Pending Assignment',
-            assignedArtistId: null,
-            timestamps: {
-              createdAt: serverTimestamp()
-            },
-            assets: {}
-          });
+          const email = (window.currentOrderData.email || '').trim().toLowerCase();
+          const promoCode = window.currentOrderData.promoCodeUsed;
+
+          if (promoCode && email) {
+            const userPromoId = `${email}_${promoCode}`;
+            const batch = writeBatch(db);
+
+            // Create reference for order document
+            const orderDocRef = doc(collection(db, 'orders'));
+            batch.set(orderDocRef, {
+              customerData: window.currentOrderData,
+              status: 'Pending Assignment',
+              assignedArtistId: null,
+              timestamps: {
+                createdAt: serverTimestamp()
+              },
+              assets: {}
+            });
+
+            // Create reference for used promo document
+            const usedPromoDocRef = doc(db, 'used_promos', userPromoId);
+            batch.set(usedPromoDocRef, {
+              email: email,
+              promoCode: promoCode,
+              usedAt: serverTimestamp()
+            });
+
+            await batch.commit();
+          } else {
+            await addDoc(collection(db, 'orders'), {
+              customerData: window.currentOrderData,
+              status: 'Pending Assignment',
+              assignedArtistId: null,
+              timestamps: {
+                createdAt: serverTimestamp()
+              },
+              assets: {}
+            });
+          }
 
           loadingOverlay.style.display = 'none';
           alert('Payment Successful! Your song order has been sent to our artists.');
@@ -1384,7 +1433,11 @@ function initPaymentModal() {
         } catch (error) {
           loadingOverlay.style.display = 'none';
           console.error("Error creating order: ", error);
-          errorMsg.textContent = "An error occurred while creating your order. Please try again.";
+          if (error.code === 'permission-denied') {
+            errorMsg.textContent = "This promo code has already been used by this email address.";
+          } else {
+            errorMsg.textContent = "An error occurred while creating your order. Please try again.";
+          }
           errorMsg.style.display = 'block';
         }
       }

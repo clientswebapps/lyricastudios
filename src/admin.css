@@ -159,6 +159,57 @@ body {
   flex: 1;
 }
 
+.nav-group {
+  margin-bottom: 0.5rem;
+}
+
+.nav-group-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.875rem 1.5rem 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.nav-group-header:hover {
+  color: var(--text-main);
+}
+
+.nav-group-header:hover .nav-group-chevron {
+  color: var(--text-main);
+}
+
+.nav-group-title {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.nav-group-chevron {
+  color: var(--text-muted);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: rotate(0deg);
+}
+
+.nav-group.is-closed .nav-group-chevron {
+  transform: rotate(-90deg);
+}
+
+.nav-group-content {
+  max-height: 500px;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nav-group.is-closed .nav-group-content {
+  max-height: 0;
+}
+
 .nav-btn {
   width: 100%;
   text-align: left;
@@ -1239,5 +1290,178 @@ body {
   color: var(--text-main);
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* View Header and Controls */
+.view-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.view-header h2 {
+  margin-bottom: 0 !important;
+}
+
+.view-controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.search-bar {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  min-width: 200px;
+  transition: all 0.2s ease;
+}
+
+.search-bar:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(107, 76, 255, 0.2);
+}
+
+.view-dropdown {
+  appearance: none;
+  background-color: rgba(255, 255, 255, 0.05);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23a0aec0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.8rem;
+  border: 1px solid var(--border);
+  color: var(--text-main);
+  padding: 0.5rem 2rem 0.5rem 1rem;
+  border-radius: 8px;
+  font-family: var(--font-family);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.view-dropdown:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.view-dropdown:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.view-dropdown option {
+  background-color: #181b21;
+  color: var(--text-main);
+  padding: 0.5rem;
+}
+
+/* Table view layouts for orders lists */
+.orders-table-wrapper {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow-x: auto;
+  width: 100%;
+  margin-top: 0.5rem;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.9rem;
+  min-width: 800px;
+}
+
+.orders-table th, .orders-table td {
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.orders-table th {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.orders-table tbody tr {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.orders-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.orders-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.orders-table tbody tr.dragging {
+  opacity: 0.5;
+  background: rgba(107, 76, 255, 0.1);
+}
+
+.orders-table tbody tr.drag-over {
+  border-top: 2px solid var(--accent);
+}
+
+/* Drag handle on row */
+.orders-table td .drag-handle {
+  cursor: grab;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  user-select: none;
+  margin-right: 0.5rem;
+}
+
+/* Global App Loader Overlay */
+.app-loader-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.app-loader-overlay .spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-left-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+.app-loader-overlay p {
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
 }
 

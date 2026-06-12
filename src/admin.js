@@ -39,9 +39,13 @@ let unsubscribeChatMessages = null;
 let unsubscribeUnreadCount = null;
 let unsubscribeBanner = null;
 let unsubscribePromoCodes = null;
+let unsubscribePromoUsage = null;
 let isAdminSettingsInitialized = false;
 let unsubscribeAllOrders = null;
 let allOrdersCache = [];
+let poolOrdersCache = [];
+let tasksOrdersCache = [];
+let qaOrdersCache = [];
 let currentChatArtistId = null;
 const alertedMessageIds = new Set(); // track which background alerts were displayed locally
 let unreadMessagesCount = {}; // map of artistId -> unread count for admin
@@ -71,6 +75,7 @@ const poolList = document.getElementById('pool-list');
 const tasksList = document.getElementById('tasks-list');
 const qaList = document.getElementById('qa-list');
 const usersList = document.getElementById('users-list');
+const allOrdersList = document.getElementById('all-orders-list');
 
 // Order Modal
 const orderModal = document.getElementById('order-modal');
@@ -151,6 +156,11 @@ const messagesNavBadge = document.getElementById('messages-nav-badge');
 
 // --- Authentication & Initialization ---
 onAuthStateChanged(auth, (user) => {
+  const loader = document.getElementById('admin-app-loader');
+  if (loader) {
+    loader.style.display = 'none';
+  }
+
   if (user) {
     currentUser = user;
     listenToUserDoc(user.uid);
@@ -215,6 +225,8 @@ function listenToUserDoc(uid) {
         if (navBanner) navBanner.style.display = 'block';
         const navPromoCodes = document.getElementById('nav-promo-codes');
         if (navPromoCodes) navPromoCodes.style.display = 'block';
+        const navPromoUsage = document.getElementById('nav-promo-usage');
+        if (navPromoUsage) navPromoUsage.style.display = 'block';
         const navAllOrders = document.getElementById('nav-all-orders');
         if (navAllOrders) navAllOrders.style.display = 'block';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'flex';
@@ -224,6 +236,7 @@ function listenToUserDoc(uid) {
           isAdminSettingsInitialized = true;
           initAdminBannerSettings();
           initAdminPromoCodesSettings();
+          initAdminPromoUsage();
           initAdminAllOrders();
         }
       } else {
@@ -233,6 +246,8 @@ function listenToUserDoc(uid) {
         if (navBanner) navBanner.style.display = 'none';
         const navPromoCodes = document.getElementById('nav-promo-codes');
         if (navPromoCodes) navPromoCodes.style.display = 'none';
+        const navPromoUsage = document.getElementById('nav-promo-usage');
+        if (navPromoUsage) navPromoUsage.style.display = 'none';
         const navAllOrders = document.getElementById('nav-all-orders');
         if (navAllOrders) navAllOrders.style.display = 'none';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'none';
@@ -245,6 +260,9 @@ function listenToUserDoc(uid) {
       // Show History tab for everyone
       const navHistory = document.getElementById('nav-history');
       if (navHistory) navHistory.style.display = 'block';
+
+      // Keep active group expanded
+      updateSidebarAccordionStates();
     } else {
       // User document does not exist (deleted by admin)
       signOut(auth);
@@ -272,7 +290,40 @@ function showDashboard() {
   dashboardView.style.display = 'flex';
 }
 
-// --- Navigation ---
+// --- Navigation & Accordions ---
+function initSidebarAccordions() {
+  const groups = document.querySelectorAll('.nav-group');
+  groups.forEach(group => {
+    const header = group.querySelector('.nav-group-header');
+    if (header && !header.dataset.listenerBound) {
+      header.dataset.listenerBound = 'true';
+      header.addEventListener('click', (e) => {
+        // Toggle this group
+        group.classList.toggle('is-closed');
+      });
+    }
+
+    // Default to open if it contains the active nav button, else collapse
+    const hasActiveBtn = group.querySelector('.nav-btn.active');
+    if (hasActiveBtn) {
+      group.classList.remove('is-closed');
+    } else {
+      group.classList.add('is-closed');
+    }
+  });
+}
+
+// Ensure active groups stay open
+function updateSidebarAccordionStates() {
+  const groups = document.querySelectorAll('.nav-group');
+  groups.forEach(group => {
+    const hasActiveBtn = group.querySelector('.nav-btn.active');
+    if (hasActiveBtn) {
+      group.classList.remove('is-closed');
+    }
+  });
+}
+
 navBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     navBtns.forEach(b => b.classList.remove('active'));
@@ -282,6 +333,9 @@ navBtns.forEach(btn => {
     const targetSection = document.getElementById(btn.dataset.view);
     if (targetSection) targetSection.style.display = 'block';
 
+    // Keep active group expanded
+    updateSidebarAccordionStates();
+
     // Close mobile menu if open
     if (sidebar && sidebarOverlay) {
       sidebar.classList.remove('open');
@@ -289,6 +343,9 @@ navBtns.forEach(btn => {
     }
   });
 });
+
+// Initialize sidebar accordions
+initSidebarAccordions();
 
 // Mobile Toggles Event Handlers
 if (mobileMenuToggle && sidebar && sidebarOverlay) {
@@ -304,38 +361,69 @@ if (mobileMenuToggle && sidebar && sidebarOverlay) {
   };
 }
 
+// --- Search & View Layout Controls ---
+function initSearchAndViewControls() {
+  const controls = [
+    { searchId: 'pool-search', selectId: 'pool-view-mode', renderFn: () => renderOrdersSection(poolOrdersCache, poolList, false, 'pool-search', 'pool-view-mode') },
+    { searchId: 'tasks-search', selectId: 'tasks-view-mode', renderFn: () => renderOrdersSection(tasksOrdersCache, tasksList, true, 'tasks-search', 'tasks-view-mode') },
+    { searchId: 'qa-search', selectId: 'qa-view-mode', renderFn: () => renderOrdersSection(qaOrdersCache, qaList, false, 'qa-search', 'qa-view-mode') },
+    { searchId: 'all-orders-search', selectId: 'all-orders-view-mode', renderFn: () => {
+        const filterSelect = document.getElementById('all-orders-status-filter');
+        const filterVal = filterSelect ? filterSelect.value : 'All';
+        const filtered = allOrdersCache.filter(order => {
+          if (filterVal === 'All') return true;
+          return order.status === filterVal;
+        });
+        renderOrdersSection(filtered, allOrdersList, false, 'all-orders-search', 'all-orders-view-mode');
+      } 
+    }
+  ];
+
+  controls.forEach(ctrl => {
+    const sInput = document.getElementById(ctrl.searchId);
+    const vSelect = document.getElementById(ctrl.selectId);
+
+    if (sInput && !sInput.dataset.listenerBound) {
+      sInput.dataset.listenerBound = 'true';
+      sInput.addEventListener('input', ctrl.renderFn);
+    }
+    if (vSelect && !vSelect.dataset.listenerBound) {
+      vSelect.dataset.listenerBound = 'true';
+      vSelect.addEventListener('change', ctrl.renderFn);
+    }
+  });
+}
+
 // --- Listeners ---
 function setupListeners() {
+  // Initialize controls bounding
+  initSearchAndViewControls();
+
   // Order Pool (Pending)
   const poolQ = query(collection(db, 'orders'), where('status', '==', 'Pending Assignment'));
   unsubscribePool = onSnapshot(poolQ, (snapshot) => {
-    poolList.innerHTML = '';
-    if (snapshot.empty) {
-      poolList.innerHTML = '<p class="text-muted">No pending orders.</p>';
-      return;
-    }
-    snapshot.forEach(doc => {
-      poolList.appendChild(createOrderCard(doc.id, doc.data()));
+    poolOrdersCache = [];
+    snapshot.forEach(docSnap => {
+      poolOrdersCache.push({ id: docSnap.id, ...docSnap.data() });
     });
+    renderOrdersSection(poolOrdersCache, poolList, false, 'pool-search', 'pool-view-mode');
   });
 
   // My Tasks
   const tasksQ = query(collection(db, 'orders'), where('assignedArtistId', '==', currentUser.uid));
   unsubscribeTasks = onSnapshot(tasksQ, (snapshot) => {
-    tasksList.innerHTML = '';
-    // Let's recalculate active tasks for the user dynamically
     let activeCount = 0;
-    const orders = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
+    tasksOrdersCache = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
       if (data.status !== 'Completed' && data.status !== 'Delivered') {
         activeCount++;
       }
-      orders.push({ id: doc.id, ...data });
+      tasksOrdersCache.push({ id: docSnap.id, ...data });
     });
 
     // Sort in-memory by priority, with creation timestamp fallback
-    orders.sort((a, b) => {
+    tasksOrdersCache.sort((a, b) => {
       const pA = a.priority !== undefined ? a.priority : 1000;
       const pB = b.priority !== undefined ? b.priority : 1000;
       if (pA !== pB) return pA - pB;
@@ -345,9 +433,7 @@ function setupListeners() {
       return timeA - timeB;
     });
 
-    orders.forEach(order => {
-      tasksList.appendChild(createOrderCard(order.id, order, true));
-    });
+    renderOrdersSection(tasksOrdersCache, tasksList, true, 'tasks-search', 'tasks-view-mode');
     
     if (userData && userData.activeTasks !== activeCount) {
       updateDoc(doc(db, 'users', currentUser.uid), { activeTasks: activeCount });
@@ -360,12 +446,12 @@ function setupListeners() {
   if (userData && userData.role === 'admin') {
     const qaQ = query(collection(db, 'orders'), where('status', '==', 'Awaiting QA'));
     unsubscribeQA = onSnapshot(qaQ, (snapshot) => {
-      qaList.innerHTML = '';
-      snapshot.forEach(doc => {
-        qaList.appendChild(createOrderCard(doc.id, doc.data()));
+      qaOrdersCache = [];
+      snapshot.forEach(docSnap => {
+        qaOrdersCache.push({ id: docSnap.id, ...docSnap.data() });
       });
+      renderOrdersSection(qaOrdersCache, qaList, false, 'qa-search', 'qa-view-mode');
     });
-
   }
 
   // Users list (admin) and artist history dropdown (everyone)
@@ -507,6 +593,10 @@ function clearListeners() {
     unsubscribePromoCodes();
     unsubscribePromoCodes = null;
   }
+  if (unsubscribePromoUsage) {
+    unsubscribePromoUsage();
+    unsubscribePromoUsage = null;
+  }
   if (unsubscribeAllOrders) {
     unsubscribeAllOrders();
     unsubscribeAllOrders = null;
@@ -623,6 +713,171 @@ function createOrderCard(id, data, draggable = false) {
     </div>
   `;
   return card;
+}
+
+function createOrderRow(id, data, draggable = false) {
+  const tr = document.createElement('tr');
+  tr.className = 'order-row';
+  if (draggable) {
+    tr.setAttribute('draggable', 'true');
+    tr.dataset.id = id;
+  }
+  tr.onclick = (e) => {
+    if (e.target.classList.contains('drag-handle')) {
+      e.stopPropagation();
+      return;
+    }
+    openOrderModal(id, data);
+  };
+
+  const timerInfo = getTimerInfo(data);
+  const statusClasses = {
+    'Pending Assignment': 'status-pending',
+    'Lyrics In Progress': 'status-lyrics',
+    'Song In Production': 'status-production',
+    'Awaiting QA': 'status-qa',
+    'Ready for Delivery': 'status-completed',
+    'Completed': 'status-completed',
+    'Delivered': 'status-completed'
+  };
+  const statusClass = statusClasses[data.status] || 'status-pending';
+
+  const dragHandleHtml = draggable 
+    ? `<span class="drag-handle" title="Drag to reorder">☰</span>` 
+    : '';
+
+  const timerTextHtml = timerInfo.className === 'card-danger'
+    ? `<span class="timer-text timer-danger" style="font-family: monospace; font-size: 0.85rem; font-weight: 600;">${timerInfo.text}</span>`
+    : `<span class="timer-text" style="font-family: monospace; font-size: 0.85rem;">${timerInfo.text}</span>`;
+
+  const shortId = id.slice(0, 8).toUpperCase();
+  const email = data.customerData?.email || 'N/A';
+  const recipient = data.customerData?.recipient || 'N/A';
+  const genre = data.customerData?.genre || 'N/A';
+  const voice = data.customerData?.preferredVoice || data.customerData?.mood || 'N/A';
+
+  tr.innerHTML = `
+    <td>
+      <div style="display: flex; align-items: center;">
+        ${dragHandleHtml}
+        <strong style="font-family: monospace; font-size: 0.9rem; color: var(--accent);">#${shortId}</strong>
+      </div>
+    </td>
+    <td><strong>${email}</strong></td>
+    <td>${recipient}</td>
+    <td>${genre}</td>
+    <td>${voice}</td>
+    <td><span class="status-badge ${statusClass}">${data.status}</span></td>
+    <td>${timerTextHtml}</td>
+  `;
+  return tr;
+}
+
+function renderOrdersSection(orders, listElement, isDraggable, searchInputId, viewDropdownId) {
+  if (!listElement) return;
+
+  const searchInput = document.getElementById(searchInputId);
+  const viewDropdown = document.getElementById(viewDropdownId);
+
+  const queryText = searchInput ? searchInput.value.toLowerCase().trim() : '';
+  const viewMode = viewDropdown ? viewDropdown.value : 'grid';
+
+  // Filter orders based on search query
+  const filtered = orders.filter(order => {
+    if (!queryText) return true;
+    const cd = order.customerData || {};
+    const email = (cd.email || '').toLowerCase();
+    const id = (order.id || '').toLowerCase();
+    const genre = (cd.genre || '').toLowerCase();
+    const voice = (cd.preferredVoice || cd.mood || '').toLowerCase();
+    const recipient = (cd.recipient || '').toLowerCase();
+    const name = (cd.name || '').toLowerCase();
+
+    return email.includes(queryText) || 
+           id.includes(queryText) || 
+           genre.includes(queryText) || 
+           voice.includes(queryText) || 
+           recipient.includes(queryText) ||
+           name.includes(queryText);
+  });
+
+  listElement.innerHTML = '';
+
+  if (filtered.length === 0) {
+    if (viewMode === 'grid') {
+      listElement.className = 'order-grid';
+      listElement.innerHTML = '<p class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 2rem 0; width: 100%;">No orders found.</p>';
+    } else {
+      listElement.className = '';
+      listElement.innerHTML = `
+        <div class="orders-table-wrapper">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Email</th>
+                <th>Recipient</th>
+                <th>Genre</th>
+                <th>Voice</th>
+                <th>Status</th>
+                <th>Time Left</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td colspan="7" class="text-center text-muted" style="padding: 2rem 0;">No orders found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    return;
+  }
+
+  if (viewMode === 'grid') {
+    listElement.className = 'order-grid';
+    filtered.forEach(order => {
+      listElement.appendChild(createOrderCard(order.id, order, isDraggable));
+    });
+  } else {
+    // List / Table view
+    listElement.className = '';
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = 'orders-table-wrapper';
+    
+    const table = document.createElement('table');
+    table.className = 'orders-table';
+    
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Email</th>
+          <th>Recipient</th>
+          <th>Genre</th>
+          <th>Voice</th>
+          <th>Status</th>
+          <th>Time Left</th>
+        </tr>
+      </thead>
+      <tbody class="table-body-target"></tbody>
+    `;
+    
+    const tbody = table.querySelector('.table-body-target');
+    filtered.forEach(order => {
+      tbody.appendChild(createOrderRow(order.id, order, isDraggable));
+    });
+    
+    wrapper.appendChild(table);
+    listElement.appendChild(wrapper);
+
+    // If draggable (like My Tasks), set up drag & drop on the tbody container
+    if (isDraggable) {
+      setupDragAndDrop(tbody, isDraggable === true ? handleTasksReorder : null);
+    }
+  }
 }
 
 function createCompactOrderCard(id, data) {
@@ -1900,7 +2155,7 @@ function setupDragAndDrop(container, onReorder) {
   let draggedEl = null;
 
   container.addEventListener('dragstart', (e) => {
-    const card = e.target.closest('.order-card, .compact-order-card');
+    const card = e.target.closest('.order-card, .compact-order-card, .order-row');
     if (!card) return;
     draggedEl = card;
     card.classList.add('dragging');
@@ -1908,7 +2163,7 @@ function setupDragAndDrop(container, onReorder) {
   });
 
   container.addEventListener('dragend', (e) => {
-    const card = e.target.closest('.order-card, .compact-order-card');
+    const card = e.target.closest('.order-card, .compact-order-card, .order-row');
     if (card) {
       card.classList.remove('dragging');
     }
@@ -1925,7 +2180,7 @@ function setupDragAndDrop(container, onReorder) {
 
   container.addEventListener('dragover', (e) => {
     e.preventDefault();
-    const card = e.target.closest('.order-card, .compact-order-card');
+    const card = e.target.closest('.order-card, .compact-order-card, .order-row');
     if (!card || card === draggedEl) return;
 
     card.classList.add('drag-over');
@@ -1940,7 +2195,7 @@ function setupDragAndDrop(container, onReorder) {
   });
 
   container.addEventListener('dragleave', (e) => {
-    const card = e.target.closest('.order-card, .compact-order-card');
+    const card = e.target.closest('.order-card, .compact-order-card, .order-row');
     if (card && card !== draggedEl) {
       card.classList.remove('drag-over');
     }
@@ -1948,7 +2203,7 @@ function setupDragAndDrop(container, onReorder) {
 }
 
 async function handleTasksReorder() {
-  const cards = Array.from(tasksList.querySelectorAll('.order-card'));
+  const cards = Array.from(tasksList.querySelectorAll('.order-card, .order-row'));
   const orderIds = cards.map(c => c.dataset.id).filter(Boolean);
   
   try {
@@ -2259,25 +2514,14 @@ function initAdminAllOrders() {
 
   if (!filterSelect || !listEl) return;
 
-  // Render orders from cache based on selected filter
+  // Render orders from cache based on selected filter and search/view settings
   function renderOrders() {
-    listEl.innerHTML = '';
-    const filterVal = filterSelect.value;
-    
+    const filterVal = filterSelect ? filterSelect.value : 'All';
     const filtered = allOrdersCache.filter(order => {
       if (filterVal === 'All') return true;
       return order.status === filterVal;
     });
-
-    if (filtered.length === 0) {
-      listEl.innerHTML = `<p class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 2rem 0; width: 100%;">No orders found with status "${filterVal}".</p>`;
-      return;
-    }
-
-    filtered.forEach(order => {
-      // Create a standard order card (non-draggable)
-      listEl.appendChild(createOrderCard(order.id, order, false));
-    });
+    renderOrdersSection(filtered, allOrdersList, false, 'all-orders-search', 'all-orders-view-mode');
   }
 
   // Bind change event listener on status filter
@@ -2318,6 +2562,58 @@ function initAdminAllOrders() {
     } else {
       listEl.innerHTML = `<p class="text-danger" style="grid-column: 1 / -1; text-align: center; padding: 2rem 0; width: 100%;">Failed to load orders: ${error.message}</p>`;
     }
+  });
+}
+
+// --- Promo Usage View (Admin Only) ---
+function initAdminPromoUsage() {
+  const listEl = document.getElementById('promo-usage-list');
+  if (!listEl) return;
+
+  if (unsubscribePromoUsage) unsubscribePromoUsage();
+
+  const ordersRef = collection(db, 'orders');
+
+  unsubscribePromoUsage = onSnapshot(ordersRef, (snapshot) => {
+    listEl.innerHTML = '';
+    const ordersWithPromos = [];
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      if (data.customerData && data.customerData.promoCodeUsed) {
+        ordersWithPromos.push({ id: docSnap.id, ...data.customerData });
+      }
+    });
+
+    if (ordersWithPromos.length === 0) {
+      listEl.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No promo code usage recorded yet.</td></tr>';
+      return;
+    }
+
+    // Sort by email
+    ordersWithPromos.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
+
+    ordersWithPromos.forEach(order => {
+      const tr = document.createElement('tr');
+      
+      const email = order.email || 'N/A';
+      const code = order.promoCodeUsed || 'N/A';
+      const discount = order.discountApplied || 'N/A';
+      const originalPrice = order.originalPrice || '$79.00';
+      const finalPrice = order.price || 'N/A';
+
+      tr.innerHTML = `
+        <td><strong>${email}</strong></td>
+        <td><span class="promo-code" style="font-family: monospace; font-size: 1rem; padding: 0.2rem 0.5rem; background: rgba(6, 182, 212, 0.1); color: var(--accent); border-radius: 4px; border: 1px solid rgba(6, 182, 212, 0.2); text-transform: uppercase;">${code}</span></td>
+        <td style="color: var(--success); font-weight: 500;">${discount}</td>
+        <td style="text-decoration: line-through; opacity: 0.6;">${originalPrice}</td>
+        <td style="font-weight: 600; color: var(--text-main);">${finalPrice}</td>
+      `;
+      listEl.appendChild(tr);
+    });
+  }, (error) => {
+    console.error("Error fetching promo usage:", error);
+    listEl.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error loading promo usage: ${error.message}</td></tr>`;
   });
 }
 

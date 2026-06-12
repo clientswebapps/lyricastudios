@@ -10,8 +10,14 @@
   <link rel="stylesheet" href="/src/admin.css">
 </head>
 <body>
+  <!-- Global App Loader -->
+  <div id="admin-app-loader" class="app-loader-overlay">
+    <div class="spinner"></div>
+    <p>Verifying session...</p>
+  </div>
+
   <!-- Authentication View -->
-  <div id="auth-view" class="auth-container">
+  <div id="auth-view" class="auth-container" style="display: none;">
     <div class="auth-box">
       <h2>Admin Login</h2>
       <form id="login-form">
@@ -46,16 +52,46 @@
         <h3>Lyrica Admin</h3>
       </div>
       <nav class="sidebar-nav">
-        <button class="nav-btn active" data-view="pool-view">Order Pool</button>
-        <button class="nav-btn" data-view="tasks-view">My Tasks</button>
-        <button class="nav-btn" data-view="qa-view" id="nav-qa" style="display:none;">QA Pending</button>
-        <button class="nav-btn" data-view="users-view" id="nav-users" style="display:none;">Manage Users</button>
-        <button class="nav-btn" data-view="banner-view" id="nav-banner" style="display:none;">Promo Banner</button>
-        <button class="nav-btn" data-view="promo-codes-view" id="nav-promo-codes" style="display:none;">Promo Codes</button>
-        <button class="nav-btn" data-view="all-orders-view" id="nav-all-orders" style="display:none;">All Orders</button>
-        <button class="nav-btn" data-view="history-view" id="nav-history" style="display:none;">History Log</button>
-        <button class="nav-btn" data-view="messages-view" id="nav-messages">Messages <span id="messages-nav-badge" class="chat-unread-badge" style="display: none; margin-left: 0.5rem; padding: 0.1rem 0.35rem; font-size: 0.7rem; line-height: 1; vertical-align: middle;">0</span></button>
-        <button class="nav-btn" data-view="support-view" id="nav-support">Live Support</button>
+        <!-- Group 1: Orders -->
+        <div class="nav-group">
+          <div class="nav-group-header">
+            <span class="nav-group-title">Orders</span>
+            <svg class="nav-group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="nav-group-content">
+            <button class="nav-btn active" data-view="pool-view">Order Pool</button>
+            <button class="nav-btn" data-view="tasks-view">My Tasks</button>
+            <button class="nav-btn" data-view="qa-view" id="nav-qa" style="display:none;">QA Pending</button>
+            <button class="nav-btn" data-view="history-view" id="nav-history" style="display:none;">History Log</button>
+            <button class="nav-btn" data-view="all-orders-view" id="nav-all-orders" style="display:none;">All Orders</button>
+          </div>
+        </div>
+
+        <!-- Group 2: Promotions -->
+        <div class="nav-group">
+          <div class="nav-group-header">
+            <span class="nav-group-title">Promotions</span>
+            <svg class="nav-group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="nav-group-content">
+            <button class="nav-btn" data-view="banner-view" id="nav-banner" style="display:none;">Promo Banner</button>
+            <button class="nav-btn" data-view="promo-codes-view" id="nav-promo-codes" style="display:none;">Promo Codes</button>
+            <button class="nav-btn" data-view="promo-usage-view" id="nav-promo-usage" style="display:none;">Promo Usage</button>
+          </div>
+        </div>
+
+        <!-- Group 3: Staff & Support -->
+        <div class="nav-group">
+          <div class="nav-group-header">
+            <span class="nav-group-title">Staff & Support</span>
+            <svg class="nav-group-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </div>
+          <div class="nav-group-content">
+            <button class="nav-btn" data-view="users-view" id="nav-users" style="display:none;">Manage Users</button>
+            <button class="nav-btn" data-view="messages-view" id="nav-messages">Messages <span id="messages-nav-badge" class="chat-unread-badge" style="display: none; margin-left: 0.5rem; padding: 0.1rem 0.35rem; font-size: 0.7rem; line-height: 1; vertical-align: middle;">0</span></button>
+            <button class="nav-btn" data-view="support-view" id="nav-support">Live Support</button>
+          </div>
+        </div>
       </nav>
       <div class="sidebar-footer">
         <button id="change-pass-btn" class="btn btn--outline" style="margin-bottom: 0.5rem;">Change Password</button>
@@ -92,19 +128,46 @@
       <div class="content-area">
         <!-- Order Pool View -->
         <section id="pool-view" class="view-section active">
-          <h2>Order Pool (Pending Assignment)</h2>
+          <div class="view-header">
+            <h2>Order Pool (Pending Assignment)</h2>
+            <div class="view-controls">
+              <input type="text" id="pool-search" placeholder="Search orders..." class="search-bar" autocomplete="off">
+              <select id="pool-view-mode" class="view-dropdown">
+                <option value="grid">Cards</option>
+                <option value="list">Detailed List</option>
+              </select>
+            </div>
+          </div>
           <div id="pool-list" class="order-grid"></div>
         </section>
 
         <!-- My Tasks View -->
         <section id="tasks-view" class="view-section" style="display: none;">
-          <h2>My Active Tasks</h2>
+          <div class="view-header">
+            <h2>My Active Tasks</h2>
+            <div class="view-controls">
+              <input type="text" id="tasks-search" placeholder="Search tasks..." class="search-bar" autocomplete="off">
+              <select id="tasks-view-mode" class="view-dropdown">
+                <option value="grid">Cards</option>
+                <option value="list">Detailed List</option>
+              </select>
+            </div>
+          </div>
           <div id="tasks-list" class="order-grid"></div>
         </section>
 
         <!-- QA View (Admin Only) -->
         <section id="qa-view" class="view-section" style="display: none;">
-          <h2>QA Pending Orders</h2>
+          <div class="view-header">
+            <h2>QA Pending Orders</h2>
+            <div class="view-controls">
+              <input type="text" id="qa-search" placeholder="Search QA..." class="search-bar" autocomplete="off">
+              <select id="qa-view-mode" class="view-dropdown">
+                <option value="grid">Cards</option>
+                <option value="list">Detailed List</option>
+              </select>
+            </div>
+          </div>
           <div id="qa-list" class="order-grid"></div>
         </section>
 
@@ -350,9 +413,45 @@
           </div>
         </section>
 
+        <!-- Promo Usage View (Admin Only) -->
+        <section id="promo-usage-view" class="view-section" style="display: none;">
+          <h2>Promo Code Usage</h2>
+          <div class="banner-settings-container" style="max-width: 1000px; margin-top: 1.5rem;">
+            <div class="settings-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
+              <div class="history-table-container">
+                <table class="history-table">
+                  <thead>
+                    <tr>
+                      <th>Email</th>
+                      <th>Promo Code</th>
+                      <th>Discount</th>
+                      <th>Original Price</th>
+                      <th>Final Price</th>
+                    </tr>
+                  </thead>
+                  <tbody id="promo-usage-list">
+                    <tr>
+                      <td colspan="5" class="text-center text-muted">Loading promo code usage...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <!-- All Orders Database View (Admin Only) -->
         <section id="all-orders-view" class="view-section" style="display: none;">
-          <h2>All Orders Database</h2>
+          <div class="view-header">
+            <h2>All Orders Database</h2>
+            <div class="view-controls">
+              <input type="text" id="all-orders-search" placeholder="Search database..." class="search-bar" autocomplete="off">
+              <select id="all-orders-view-mode" class="view-dropdown">
+                <option value="grid">Cards</option>
+                <option value="list">Detailed List</option>
+              </select>
+            </div>
+          </div>
           
           <div class="history-filters" style="margin-bottom: 1.5rem;">
             <div class="filter-group">

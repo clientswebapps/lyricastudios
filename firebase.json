@@ -5,6 +5,7 @@
   "hosting": {
     "public": "dist",
     "site": "lyricastudios-2026",
+    "cleanUrls": true,
     "ignore": [
       "firebase.json",
       "**/.*",

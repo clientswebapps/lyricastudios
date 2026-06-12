@@ -40,6 +40,8 @@ let unsubscribeUnreadCount = null;
 let unsubscribeBanner = null;
 let unsubscribePromoCodes = null;
 let isAdminSettingsInitialized = false;
+let unsubscribeAllOrders = null;
+let allOrdersCache = [];
 let currentChatArtistId = null;
 const alertedMessageIds = new Set(); // track which background alerts were displayed locally
 let unreadMessagesCount = {}; // map of artistId -> unread count for admin
@@ -213,6 +215,8 @@ function listenToUserDoc(uid) {
         if (navBanner) navBanner.style.display = 'block';
         const navPromoCodes = document.getElementById('nav-promo-codes');
         if (navPromoCodes) navPromoCodes.style.display = 'block';
+        const navAllOrders = document.getElementById('nav-all-orders');
+        if (navAllOrders) navAllOrders.style.display = 'block';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'flex';
         if (artistMessagesLayout) artistMessagesLayout.style.display = 'none';
 
@@ -220,6 +224,7 @@ function listenToUserDoc(uid) {
           isAdminSettingsInitialized = true;
           initAdminBannerSettings();
           initAdminPromoCodesSettings();
+          initAdminAllOrders();
         }
       } else {
         document.getElementById('nav-qa').style.display = 'none';
@@ -228,6 +233,8 @@ function listenToUserDoc(uid) {
         if (navBanner) navBanner.style.display = 'none';
         const navPromoCodes = document.getElementById('nav-promo-codes');
         if (navPromoCodes) navPromoCodes.style.display = 'none';
+        const navAllOrders = document.getElementById('nav-all-orders');
+        if (navAllOrders) navAllOrders.style.display = 'none';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'none';
         if (artistMessagesLayout) artistMessagesLayout.style.display = 'flex';
         // For artist, load chat with Admin
@@ -499,6 +506,10 @@ function clearListeners() {
   if (unsubscribePromoCodes) {
     unsubscribePromoCodes();
     unsubscribePromoCodes = null;
+  }
+  if (unsubscribeAllOrders) {
+    unsubscribeAllOrders();
+    unsubscribeAllOrders = null;
   }
   alertedMessageIds.clear();
   isAdminSettingsInitialized = false;
@@ -2239,6 +2250,75 @@ function initAdminPromoCodesSettings() {
       msgEl.style.display = 'none';
     }, 4000);
   }
+}
+
+// --- All Orders Database View (Admin Only) ---
+function initAdminAllOrders() {
+  const filterSelect = document.getElementById('all-orders-status-filter');
+  const listEl = document.getElementById('all-orders-list');
+
+  if (!filterSelect || !listEl) return;
+
+  // Render orders from cache based on selected filter
+  function renderOrders() {
+    listEl.innerHTML = '';
+    const filterVal = filterSelect.value;
+    
+    const filtered = allOrdersCache.filter(order => {
+      if (filterVal === 'All') return true;
+      return order.status === filterVal;
+    });
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `<p class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 2rem 0; width: 100%;">No orders found with status "${filterVal}".</p>`;
+      return;
+    }
+
+    filtered.forEach(order => {
+      // Create a standard order card (non-draggable)
+      listEl.appendChild(createOrderCard(order.id, order, false));
+    });
+  }
+
+  // Bind change event listener on status filter
+  filterSelect.addEventListener('change', renderOrders);
+
+  // Setup real-time listener for the all orders collection
+  if (unsubscribeAllOrders) unsubscribeAllOrders();
+  
+  const ordersRef = collection(db, 'orders');
+  // Order by createdAt descending if available
+  const q = query(ordersRef, orderBy('timestamps.createdAt', 'desc'));
+
+  unsubscribeAllOrders = onSnapshot(q, (snapshot) => {
+    allOrdersCache = [];
+    snapshot.forEach(docSnap => {
+      allOrdersCache.push({ id: docSnap.id, ...docSnap.data() });
+    });
+    
+    renderOrders();
+  }, (error) => {
+    console.error("Error fetching all orders database:", error);
+    // If ordering failed because of missing index, fallback to unordered snapshot query
+    if (error.code === 'failed-precondition' || error.message.indexOf('index') > -1) {
+      console.warn("Fallback to unordered snapshot query for all orders.");
+      unsubscribeAllOrders = onSnapshot(collection(db, 'orders'), (snap) => {
+        allOrdersCache = [];
+        snap.forEach(d => {
+          allOrdersCache.push({ id: d.id, ...d.data() });
+        });
+        // Sort in memory
+        allOrdersCache.sort((a, b) => {
+          const tA = a.timestamps?.createdAt ? a.timestamps.createdAt.toMillis() : 0;
+          const tB = b.timestamps?.createdAt ? b.timestamps.createdAt.toMillis() : 0;
+          return tB - tA; // descending
+        });
+        renderOrders();
+      });
+    } else {
+      listEl.innerHTML = `<p class="text-danger" style="grid-column: 1 / -1; text-align: center; padding: 2rem 0; width: 100%;">Failed to load orders: ${error.message}</p>`;
+    }
+  });
 }
 
 

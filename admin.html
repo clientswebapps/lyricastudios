@@ -52,6 +52,7 @@
         <button class="nav-btn" data-view="users-view" id="nav-users" style="display:none;">Manage Users</button>
         <button class="nav-btn" data-view="banner-view" id="nav-banner" style="display:none;">Promo Banner</button>
         <button class="nav-btn" data-view="promo-codes-view" id="nav-promo-codes" style="display:none;">Promo Codes</button>
+        <button class="nav-btn" data-view="all-orders-view" id="nav-all-orders" style="display:none;">All Orders</button>
         <button class="nav-btn" data-view="history-view" id="nav-history" style="display:none;">History Log</button>
         <button class="nav-btn" data-view="messages-view" id="nav-messages">Messages <span id="messages-nav-badge" class="chat-unread-badge" style="display: none; margin-left: 0.5rem; padding: 0.1rem 0.35rem; font-size: 0.7rem; line-height: 1; vertical-align: middle;">0</span></button>
         <button class="nav-btn" data-view="support-view" id="nav-support">Live Support</button>
@@ -346,6 +347,31 @@
                 <p class="text-muted">Loading promo codes...</p>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- All Orders Database View (Admin Only) -->
+        <section id="all-orders-view" class="view-section" style="display: none;">
+          <h2>All Orders Database</h2>
+          
+          <div class="history-filters" style="margin-bottom: 1.5rem;">
+            <div class="filter-group">
+              <label for="all-orders-status-filter">Filter by Status</label>
+              <select id="all-orders-status-filter">
+                <option value="All">All Statuses</option>
+                <option value="Pending Assignment">Pending Assignment</option>
+                <option value="Lyrics In Progress">Lyrics In Progress</option>
+                <option value="Song In Production">Song In Production</option>
+                <option value="Awaiting QA">Awaiting QA</option>
+                <option value="Ready for Delivery">Ready for Delivery</option>
+                <option value="Completed">Completed</option>
+                <option value="Delivered">Delivered</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="all-orders-list" class="order-grid">
+            <p class="text-muted">Loading orders...</p>
           </div>
         </section>
       </div>

@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════════════════ */
 
 import { db } from './firebase.js';
-import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, setDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, where, orderBy, onSnapshot, doc, setDoc, getDoc } from 'firebase/firestore';
 
 // Registry to ensure only one audio sample plays at a time
 const activePlayers = [];
@@ -1201,10 +1201,39 @@ function initPaymentModal() {
   const loadingOverlay = document.getElementById('payment-loading');
   const errorMsg = document.getElementById('payment-error');
 
+  // Promo Code elements
+  const promoInput = document.getElementById('promo-code-input');
+  const promoApplyBtn = document.getElementById('promo-apply-btn');
+  const promoMessage = document.getElementById('promo-message');
+  const checkoutTotalVal = document.getElementById('checkout-total-val');
+  const btnPayNow = document.getElementById('btn-pay-now');
+  const discountRow = document.getElementById('checkout-discount-row');
+  const appliedCodeLabel = document.getElementById('applied-code-label');
+  const discountValLabel = document.getElementById('discount-val-label');
+
+  let appliedPromoCode = null;
+  let discountAmount = 0;
+  const originalPrice = 79.00;
+
+  const resetPromo = () => {
+    appliedPromoCode = null;
+    discountAmount = 0;
+    if (promoInput) promoInput.value = '';
+    if (promoMessage) {
+      promoMessage.className = 'promo-message';
+      promoMessage.textContent = '';
+      promoMessage.style.display = 'none';
+    }
+    if (discountRow) discountRow.style.display = 'none';
+    if (checkoutTotalVal) checkoutTotalVal.textContent = `$${originalPrice.toFixed(2)}`;
+    if (btnPayNow) btnPayNow.textContent = `Pay $${originalPrice.toFixed(2)}`;
+  };
+
   // Close Modal
   const closePayment = () => {
     modal.style.display = 'none';
     errorMsg.style.display = 'none';
+    resetPromo();
     if (payForm) payForm.reset();
   };
 
@@ -1212,6 +1241,86 @@ function initPaymentModal() {
   window.addEventListener('click', (e) => {
     if (e.target === modal) closePayment();
   });
+
+  // Apply Promo Code
+  if (promoApplyBtn && promoInput) {
+    promoApplyBtn.addEventListener('click', async () => {
+      const codeVal = promoInput.value.trim().toUpperCase();
+      if (!codeVal) return;
+
+      if (promoMessage) {
+        promoMessage.className = 'promo-message';
+        promoMessage.style.display = 'none';
+      }
+      promoApplyBtn.disabled = true;
+      promoApplyBtn.textContent = 'Applying...';
+
+      try {
+        const promoDocRef = doc(db, 'promo_codes', codeVal);
+        const docSnap = await getDoc(promoDocRef);
+
+        if (docSnap.exists()) {
+          const promoData = docSnap.data();
+          appliedPromoCode = promoData.code;
+          
+          if (promoData.discountType === 'percentage') {
+            discountAmount = originalPrice * (parseFloat(promoData.discountValue) / 100);
+          } else {
+            discountAmount = parseFloat(promoData.discountValue);
+          }
+
+          // Cap discount at original price
+          if (discountAmount > originalPrice) {
+            discountAmount = originalPrice;
+          }
+
+          const finalPrice = originalPrice - discountAmount;
+          
+          if (checkoutTotalVal) {
+            checkoutTotalVal.textContent = `$${finalPrice.toFixed(2)}`;
+          }
+          if (btnPayNow) {
+            btnPayNow.textContent = `Pay $${finalPrice.toFixed(2)}`;
+          }
+
+          if (discountRow && appliedCodeLabel && discountValLabel) {
+            appliedCodeLabel.textContent = appliedPromoCode;
+            discountValLabel.textContent = `-$${discountAmount.toFixed(2)}`;
+            discountRow.style.display = 'flex';
+          }
+
+          // Update currentOrderData details
+          if (window.currentOrderData) {
+            window.currentOrderData.price = `$${finalPrice.toFixed(2)}`;
+            window.currentOrderData.promoCodeUsed = appliedPromoCode;
+            window.currentOrderData.discountApplied = `$${discountAmount.toFixed(2)}`;
+            window.currentOrderData.originalPrice = `$${originalPrice.toFixed(2)}`;
+          }
+
+          if (promoMessage) {
+            promoMessage.textContent = `Promo code applied successfully! Discount: -$${discountAmount.toFixed(2)}`;
+            promoMessage.classList.add('success');
+          }
+        } else {
+          // Invalid code
+          resetPromo();
+          if (promoMessage) {
+            promoMessage.textContent = 'Invalid promo code. Please check and try again.';
+            promoMessage.classList.add('error');
+          }
+        }
+      } catch (err) {
+        console.error("Error applying promo code:", err);
+        if (promoMessage) {
+          promoMessage.textContent = 'Error verifying promo code. Please try again.';
+          promoMessage.classList.add('error');
+        }
+      } finally {
+        promoApplyBtn.disabled = false;
+        promoApplyBtn.textContent = 'Apply';
+      }
+    });
+  }
 
   // Tab Switching
   tabs.forEach(tab => {

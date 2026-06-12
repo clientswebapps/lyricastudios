@@ -1515,8 +1515,19 @@
           <div class="payment-summary">
             <h4>Order Summary</h4>
             <p class="summary-item"><span>Custom Song Generation</span> <span>$79.00</span></p>
+            <p class="summary-item discount-row" id="checkout-discount-row" style="display: none; color: #10b981; font-weight: 500;">
+              <span>Discount (<span id="applied-code-label"></span>)</span>
+              <span id="discount-val-label">-$0.00</span>
+            </p>
             <hr>
-            <p class="summary-total"><span>Total</span> <span>$79.00</span></p>
+            <p class="summary-total"><span>Total</span> <span id="checkout-total-val">$79.00</span></p>
+          </div>
+          <div class="promo-code-container">
+            <div class="promo-input-group">
+              <input type="text" id="promo-code-input" placeholder="PROMO CODE" autocomplete="off" />
+              <button type="button" id="promo-apply-btn">Apply</button>
+            </div>
+            <div id="promo-message" class="promo-message"></div>
           </div>
           <div class="secure-badge">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

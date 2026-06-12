@@ -51,6 +51,7 @@
         <button class="nav-btn" data-view="qa-view" id="nav-qa" style="display:none;">QA Pending</button>
         <button class="nav-btn" data-view="users-view" id="nav-users" style="display:none;">Manage Users</button>
         <button class="nav-btn" data-view="banner-view" id="nav-banner" style="display:none;">Promo Banner</button>
+        <button class="nav-btn" data-view="promo-codes-view" id="nav-promo-codes" style="display:none;">Promo Codes</button>
         <button class="nav-btn" data-view="history-view" id="nav-history" style="display:none;">History Log</button>
         <button class="nav-btn" data-view="messages-view" id="nav-messages">Messages <span id="messages-nav-badge" class="chat-unread-badge" style="display: none; margin-left: 0.5rem; padding: 0.1rem 0.35rem; font-size: 0.7rem; line-height: 1; vertical-align: middle;">0</span></button>
         <button class="nav-btn" data-view="support-view" id="nav-support">Live Support</button>
@@ -304,6 +305,46 @@
                   <div id="banner-settings-msg" style="font-size: 0.9rem; display: none; padding: 0.5rem 1rem; border-radius: 6px;"></div>
                 </div>
               </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- Promo Codes View (Admin Only) -->
+        <section id="promo-codes-view" class="view-section" style="display: none;">
+          <h2>Promo Codes Management</h2>
+          <div class="banner-settings-container" style="max-width: 800px; display: flex; flex-direction: column; gap: 2rem; margin-top: 1.5rem;">
+            <!-- Form Block -->
+            <div class="settings-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
+              <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main);">Create New Promo Code</h3>
+              <form id="promo-code-form">
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                  <label for="promo-code-name" style="font-weight: 500;">Promo Code (e.g. WELCOME10)</label>
+                  <input type="text" id="promo-code-name" placeholder="WELCOME10" required style="text-transform: uppercase;">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                  <label for="promo-code-discount" style="font-weight: 500;">Discount Value</label>
+                  <input type="number" id="promo-code-discount" placeholder="10" required min="0" step="0.01">
+                </div>
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                  <label for="promo-code-type" style="font-weight: 500;">Discount Type</label>
+                  <select id="promo-code-type" required style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: rgba(0, 0, 0, 0.2); color: var(--text-main); font-family: var(--font-family);">
+                    <option value="percentage" style="background-color: #181b21; color: #fff;">Percentage (%)</option>
+                    <option value="fixed" style="background-color: #181b21; color: #fff;">Fixed Amount ($)</option>
+                  </select>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center; margin-top: 1rem;">
+                  <button type="submit" class="btn btn--accent" id="promo-code-submit" style="width: auto; padding: 0.75rem 2rem;">Create Promo Code</button>
+                  <div id="promo-code-msg" style="font-size: 0.9rem; display: none; padding: 0.5rem 1rem; border-radius: 6px;"></div>
+                </div>
+              </form>
+            </div>
+
+            <!-- List of existing promo codes -->
+            <div class="settings-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
+              <h3 style="font-size: 1.1rem; margin-bottom: 1rem; color: var(--text-main);">Existing Promo Codes</h3>
+              <div id="promo-codes-list" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                <p class="text-muted">Loading promo codes...</p>
+              </div>
             </div>
           </div>
         </section>

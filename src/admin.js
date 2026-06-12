@@ -38,6 +38,8 @@ let unsubscribeNotifications = null;
 let unsubscribeChatMessages = null;
 let unsubscribeUnreadCount = null;
 let unsubscribeBanner = null;
+let unsubscribePromoCodes = null;
+let isAdminSettingsInitialized = false;
 let currentChatArtistId = null;
 const alertedMessageIds = new Set(); // track which background alerts were displayed locally
 let unreadMessagesCount = {}; // map of artistId -> unread count for admin
@@ -209,13 +211,23 @@ function listenToUserDoc(uid) {
         document.getElementById('nav-users').style.display = 'block';
         const navBanner = document.getElementById('nav-banner');
         if (navBanner) navBanner.style.display = 'block';
+        const navPromoCodes = document.getElementById('nav-promo-codes');
+        if (navPromoCodes) navPromoCodes.style.display = 'block';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'flex';
         if (artistMessagesLayout) artistMessagesLayout.style.display = 'none';
+
+        if (!isAdminSettingsInitialized) {
+          isAdminSettingsInitialized = true;
+          initAdminBannerSettings();
+          initAdminPromoCodesSettings();
+        }
       } else {
         document.getElementById('nav-qa').style.display = 'none';
         document.getElementById('nav-users').style.display = 'none';
         const navBanner = document.getElementById('nav-banner');
         if (navBanner) navBanner.style.display = 'none';
+        const navPromoCodes = document.getElementById('nav-promo-codes');
+        if (navPromoCodes) navPromoCodes.style.display = 'none';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'none';
         if (artistMessagesLayout) artistMessagesLayout.style.display = 'flex';
         // For artist, load chat with Admin
@@ -456,10 +468,6 @@ function setupListeners() {
   // Initialize support query listeners
   setupSupportListeners();
 
-  // Initialize Admin Banner settings
-  if (userData && userData.role === 'admin') {
-    initAdminBannerSettings();
-  }
 }
 
 function clearListeners() {
@@ -488,7 +496,12 @@ function clearListeners() {
     unsubscribeBanner();
     unsubscribeBanner = null;
   }
+  if (unsubscribePromoCodes) {
+    unsubscribePromoCodes();
+    unsubscribePromoCodes = null;
+  }
   alertedMessageIds.clear();
+  isAdminSettingsInitialized = false;
   
   // Unsubscribe support query listeners
   clearSupportListeners();
@@ -2090,6 +2103,120 @@ function initAdminBannerSettings() {
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerText = 'Save Banner Settings';
+    }
+  });
+
+  function showStatusMessage(text, type) {
+    if (!msgEl) return;
+    msgEl.innerText = text;
+    msgEl.style.display = 'block';
+    
+    if (type === 'success') {
+      msgEl.style.background = 'rgba(16, 185, 129, 0.15)';
+      msgEl.style.color = 'var(--success)';
+      msgEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+    } else {
+      msgEl.style.background = 'rgba(239, 68, 68, 0.15)';
+      msgEl.style.color = 'var(--danger)';
+      msgEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+    }
+    
+    setTimeout(() => {
+      msgEl.style.display = 'none';
+    }, 4000);
+  }
+}
+
+// --- Promo Codes Settings (Admin Only) ---
+function initAdminPromoCodesSettings() {
+  const form = document.getElementById('promo-code-form');
+  const nameInput = document.getElementById('promo-code-name');
+  const discountInput = document.getElementById('promo-code-discount');
+  const typeSelect = document.getElementById('promo-code-type');
+  const listEl = document.getElementById('promo-codes-list');
+  const msgEl = document.getElementById('promo-code-msg');
+  const submitBtn = document.getElementById('promo-code-submit');
+
+  if (!form || !nameInput || !discountInput || !typeSelect || !listEl) return;
+
+  // Real-time listener for existing promo codes
+  if (unsubscribePromoCodes) unsubscribePromoCodes();
+  unsubscribePromoCodes = onSnapshot(collection(db, 'promo_codes'), (snapshot) => {
+    listEl.innerHTML = '';
+    if (snapshot.empty) {
+      listEl.innerHTML = '<p class="text-muted">No promo codes configured yet.</p>';
+      return;
+    }
+
+    snapshot.forEach(docSnap => {
+      const codeData = docSnap.data();
+      const codeItem = document.createElement('div');
+      codeItem.className = 'promo-code-item';
+      codeItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem;';
+      
+      const discountLabel = codeData.discountType === 'percentage' 
+        ? `${codeData.discountValue}% Off` 
+        : `$${parseFloat(codeData.discountValue).toFixed(2)} Off`;
+
+      codeItem.innerHTML = `
+        <div>
+          <strong style="color: var(--accent); font-family: monospace; font-size: 1.1rem; text-transform: uppercase;">${codeData.code}</strong>
+          <span style="margin-left: 1rem; font-size: 0.9rem; color: var(--text-muted);">${discountLabel}</span>
+        </div>
+        <button type="button" class="btn btn--outline delete-promo-btn" data-code="${codeData.code}" style="width: auto; padding: 0.4rem 0.8rem; font-size: 0.8rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">Delete</button>
+      `;
+
+      // Bind delete button handler
+      const deleteBtn = codeItem.querySelector('.delete-promo-btn');
+      deleteBtn.addEventListener('click', async () => {
+        const codeToDelete = deleteBtn.dataset.code;
+        if (confirm(`Are you sure you want to delete promo code "${codeToDelete}"?`)) {
+          try {
+            await deleteDoc(doc(db, 'promo_codes', codeToDelete));
+            showStatusMessage(`Promo code "${codeToDelete}" deleted successfully.`, 'success');
+          } catch (error) {
+            console.error('Error deleting promo code:', error);
+            showStatusMessage('Error deleting code: ' + error.message, 'error');
+          }
+        }
+      });
+
+      listEl.appendChild(codeItem);
+    });
+  });
+
+  // Handle Form Submission
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const codeVal = nameInput.value.trim().toUpperCase();
+    const discountVal = parseFloat(discountInput.value);
+    const typeVal = typeSelect.value;
+
+    if (!codeVal || isNaN(discountVal) || discountVal < 0) {
+      showStatusMessage('Please enter valid promo code settings.', 'error');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.innerText = 'Creating...';
+
+    try {
+      await setDoc(doc(db, 'promo_codes', codeVal), {
+        code: codeVal,
+        discountValue: discountVal,
+        discountType: typeVal,
+        createdAt: serverTimestamp(),
+        createdBy: currentUser ? currentUser.email : 'admin'
+      });
+
+      showStatusMessage(`Promo code "${codeVal}" created successfully.`, 'success');
+      form.reset();
+    } catch (error) {
+      console.error('Error creating promo code:', error);
+      showStatusMessage('Error creating code: ' + error.message, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Create Promo Code';
     }
   });
 

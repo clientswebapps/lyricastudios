@@ -35,7 +35,6 @@ const initAll = () => {
   initSongModal();
   initHeroTypewriter();
   initCategoryCards();
-  initHero3DEffect();
 };
 
 if (document.readyState === 'loading') {
@@ -503,21 +502,21 @@ function initWygPlayer() {
   const progressFill = document.getElementById('wyg-progress-fill');
   const currentTimeEl = document.getElementById('wyg-current-time');
   const totalTimeEl = document.getElementById('wyg-total-time');
-  
+
   if (!wygBtn || !wygIcon) return;
-  
+
   const audio = new Audio('/mp3/The Way Back.mp3');
   let isPlaying = false;
-  
+
   const playSvg = `
     <polygon points="5 3 19 12 5 21 5 3" />
   `;
-  
+
   const pauseSvg = `
     <rect x="6" y="4" width="4" height="16"/>
     <rect x="14" y="4" width="4" height="16"/>
   `;
-  
+
   const formatTime = (time) => {
     if (isNaN(time)) return '0:00';
     const mins = Math.floor(time / 60);
@@ -588,9 +587,9 @@ function initSotyPlayer() {
   const sotyVinyl = document.getElementById('soty-vinyl-wrapper')?.querySelector('.soty-vinyl');
   const sotyVisualizer = document.getElementById('soty-visualizer');
   const glassCard = document.querySelector('.soty-player__glass');
-  
+
   if (!sotyBtn || !sotyIcon || !sotyVinyl) return;
-  
+
   if (glassCard) {
     glassCard.addEventListener('mousemove', (e) => {
       const rect = glassCard.getBoundingClientRect();
@@ -600,19 +599,19 @@ function initSotyPlayer() {
       glassCard.style.setProperty('--mouse-y', `${y}px`);
     });
   }
-  
+
   const audio = new Audio('/mp3/Grace In Your Smile.mp3');
   let isPlaying = false;
-  
+
   const playSvg = `
     <polygon points="5 3 19 12 5 21 5 3" />
   `;
-  
+
   const pauseSvg = `
     <rect x="6" y="4" width="4" height="16"/>
     <rect x="14" y="4" width="4" height="16"/>
   `;
-  
+
   const pauseAudio = () => {
     audio.pause();
     sotyIcon.innerHTML = playSvg;
@@ -692,48 +691,6 @@ function initHeroSlideshow() {
     slides[currentSlide].classList.add('is-active');
   }, 3000);
 }
-
-
-/* ── Hero 3D Card Hover Effect ───────────────────────────────── */
-function initHero3DEffect() {
-  const imageWrapper = document.querySelector('.hero__image-wrapper');
-  if (!imageWrapper) return;
-  
-  // Only apply on screens with hover support and screen width > 768px to prevent weird touch interactions on mobile
-  if (!window.matchMedia('(hover: hover)').matches || window.matchMedia('(max-width: 768px)').matches) return;
-  
-  imageWrapper.addEventListener('mousemove', (e) => {
-    const rect = imageWrapper.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
-    
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
-    
-    // Normalize coordinates to [-0.5, 0.5] range
-    const xPct = (mouseX / width) - 0.5;
-    const yPct = (mouseY / height) - 0.5;
-    
-    // Calculate rotation angles (max 10.5 degrees, same as registry item)
-    const rotateX = yPct * -21; // Maps [-0.5, 0.5] to [10.5deg, -10.5deg]
-    const rotateY = xPct * 21;  // Maps [-0.5, 0.5] to [-10.5deg, 10.5deg]
-    
-    imageWrapper.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-  });
-  
-  imageWrapper.addEventListener('mouseleave', () => {
-    // Reset to center smoothly
-    imageWrapper.style.transition = 'transform 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-    imageWrapper.style.transform = 'rotateX(0deg) rotateY(0deg)';
-  });
-  
-  imageWrapper.addEventListener('mouseenter', () => {
-    // Quick transition response during active tracking
-    imageWrapper.style.transition = 'transform 0.1s cubic-bezier(0.25, 1, 0.5, 1)';
-  });
-}
-
-
 
 /* ── Song Creation Modal ───────────────────────────────────────── */
 function initSongModal() {
@@ -1278,7 +1235,7 @@ function initPaymentModal() {
         if (docSnap.exists()) {
           const promoData = docSnap.data();
           appliedPromoCode = promoData.code;
-          
+
           if (promoData.discountType === 'percentage') {
             discountAmount = originalPrice * (parseFloat(promoData.discountValue) / 100);
           } else {
@@ -1291,7 +1248,7 @@ function initPaymentModal() {
           }
 
           const finalPrice = originalPrice - discountAmount;
-          
+
           if (checkoutTotalVal) {
             checkoutTotalVal.textContent = `$${finalPrice.toFixed(2)}`;
           }
@@ -1671,7 +1628,7 @@ function initHeroTypewriter() {
     note.classList.add('splash-note', 'text-gradient');
     const rect = cursorSpan.getBoundingClientRect();
     const startX = rect.left + window.scrollX + (Math.random() * 10 - 5);
-    
+
     // Start notes at the vertical center of the text so they look closer to the baseline
     const centerY = rect.top + window.scrollY + rect.height / 2;
     const startY = centerY + (Math.random() * 10 - 5);

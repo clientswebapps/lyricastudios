@@ -1751,7 +1751,7 @@ ol {
   justify-content: center;
 }
 
-.faq-guarantee strong {
+.faq-guarantee > div > strong {
   font-size: var(--fs-base);
   display: block;
   margin-bottom: var(--space-xs);
@@ -2584,7 +2584,7 @@ body.modal-open {
   margin-top: 2px;
 }
 
-.song-modal__guarantee-content strong {
+.song-modal__guarantee-content > strong {
   display: block;
   font-size: var(--fs-sm);
   color: var(--color-text);

@@ -1407,56 +1407,7 @@ createArtistForm.addEventListener('submit', async (e) => {
   }
 });
 
-// --- Temporary Bootstrap (Development Only) ---
-const bootstrapBtn = document.getElementById('bootstrap-admin-btn');
-if (bootstrapBtn) {
-  bootstrapBtn.addEventListener('click', async () => {
-    const email = 'admin2@lyricastudios.com';
-    const pass = 'admin123';
-    
-    try {
-      bootstrapBtn.disabled = true;
-      bootstrapBtn.innerText = 'Creating...';
-      
-      let newUid = null;
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-        newUid = userCredential.user.uid;
-      } catch (err) {
-        if (err.code === 'auth/email-already-in-use') {
-          // Auth user exists, let's log in to get the UID
-          const cred = await signInWithEmailAndPassword(auth, email, pass);
-          newUid = cred.user.uid;
-        } else {
-          throw err;
-        }
-      }
-      
-      // Ensure the Firestore document exists
-      await setDoc(doc(db, 'users', newUid), {
-        uid: newUid,
-        email: email,
-        name: 'Head Admin',
-        role: 'admin',
-        activeTasks: 0,
-        incentives: 0,
-        penalties: 0,
-        penaltyStatus: false,
-        createdAt: serverTimestamp()
-      }, { merge: true });
-      
-      showAlertModal(`Success! Head Admin account is ready:\nEmail: ${email}\nPassword: ${pass}\n\nYou can now log in.`, "Admin Seeding Complete", "success");
-      
-      // auth state listener will handle the auto-login
-      bootstrapBtn.style.display = 'none';
-      
-    } catch (error) {
-      showAlertModal('Error creating admin: ' + error.message, "Error", "error");
-      bootstrapBtn.disabled = false;
-      bootstrapBtn.innerText = 'Create Initial Head Admin';
-    }
-  });
-}
+
 
 // --- Activity Logging & History ---
 async function logActivity(artistId, artistName, orderId, action, details) {

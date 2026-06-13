@@ -5,6 +5,10 @@ service cloud.firestore {
       allow create: if !exists(/databases/$(database)/documents/used_promos/$(userPromoId));
       allow read, update, delete: if false;
     }
+    match /orders/{orderId} {
+      allow create: if false;
+      allow read, update, delete: if true;
+    }
     match /{document=**} {
       allow read, write: if true;
     }

@@ -24,6 +24,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
+  <script src="https://js.stripe.com/v3/"></script>
 
   <!-- Schema.org Structured Data -->
   <script type="application/ld+json">
@@ -1817,9 +1818,9 @@
           <div id="payment-phase-1" class="payment-phase active">
             <h4>Select Payment Method</h4>
             <div class="payment-method-selector">
-              <button type="button" class="payment-method-btn payment-method-btn--recommended" data-method="stripe">
-                <div class="payment-method-btn__icon payment-method-btn__icon--stripe">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              <button type="button" class="payment-method-btn payment-method-btn--recommended" data-method="card">
+                <div class="payment-method-btn__icon payment-method-btn__icon--card">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                 </div>
                 <div class="payment-method-btn__info">
                   <strong>Credit / Debit Card</strong>
@@ -1836,17 +1837,6 @@
                 </div>
                 <svg class="payment-method-btn__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
               </button>
-
-              <button type="button" class="payment-method-btn" data-method="card">
-                <div class="payment-method-btn__icon payment-method-btn__icon--card">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-                </div>
-                <div class="payment-method-btn__info">
-                  <strong>Manual Card Entry</strong>
-                  <span>Enter card details securely</span>
-                </div>
-                <svg class="payment-method-btn__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
-              </button>
             </div>
           </div>
 
@@ -1857,7 +1847,7 @@
               Back to payment methods
             </button>
 
-            <!-- Card Form -->
+            <!-- Card Form (Stripe Elements) -->
             <div id="pay-method-card" class="pay-method-section" style="display: none;">
               <form id="payment-form">
                 <div class="form-group">
@@ -1869,18 +1859,11 @@
                   <input type="text" id="pay-name" placeholder="John Doe" required>
                 </div>
                 <div class="form-group">
-                  <label>Card Number</label>
-                  <input type="text" id="pay-card" placeholder="0000 0000 0000 0000" maxlength="19" required>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Expiry Date</label>
-                    <input type="text" id="pay-exp" placeholder="MM/YY" maxlength="5" required>
+                  <label>Card Details</label>
+                  <div id="card-element" class="stripe-card-element">
+                    <!-- Stripe Elements will mount the secure card input here -->
                   </div>
-                  <div class="form-group">
-                    <label>CVC</label>
-                    <input type="text" id="pay-cvc" placeholder="123" maxlength="4" required>
-                  </div>
+                  <div id="card-errors" class="stripe-card-errors" role="alert"></div>
                 </div>
                 <div id="payment-error" class="error-msg"
                   style="display: none; margin-bottom: 1rem; color: #ef4444; font-size: 0.875rem;"></div>
@@ -1888,18 +1871,12 @@
               </form>
             </div>
 
-            <!-- PayPal / Stripe Mock UI -->
+            <!-- PayPal -->
             <div id="pay-method-paypal" class="pay-method-section" style="display:none;">
               <p style="margin-bottom: 1rem; color: #9ba1a6; font-size: 0.9rem;">You will be redirected to PayPal to
                 complete your purchase securely.</p>
               <button type="button" class="btn btn-pay" id="btn-pay-paypal" style="background:#003087; color:#fff;">Pay
                 with PayPal</button>
-            </div>
-
-            <div id="pay-method-stripe" class="pay-method-section" style="display:none;">
-              <p style="margin-bottom: 1rem; color: #9ba1a6; font-size: 0.9rem;">Fast and secure checkout via Stripe.</p>
-              <button type="button" class="btn btn--accent btn-pay" id="btn-pay-stripe" style="background:#635bff;">Pay
-                with Stripe</button>
             </div>
           </div>
         </div>

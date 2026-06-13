@@ -3866,7 +3866,9 @@ body.nav-open {
   border-radius: 20px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 90vh;
   position: relative;
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
   font-family: var(--font-primary);
@@ -4221,6 +4223,38 @@ body.nav-open {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ── Stripe Elements Styling ── */
+.stripe-card-element {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stripe-card-element:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.stripe-card-element.StripeElement--focus {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.15);
+  outline: none;
+}
+
+.stripe-card-element.StripeElement--invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.stripe-card-errors {
+  color: #ef4444;
+  font-size: 0.8rem;
+  margin-top: 0.4rem;
+  min-height: 1.2em;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -5798,4 +5832,44 @@ body.nav-open {
   padding: 0.2rem 0.5rem;
   border-radius: var(--radius-full);
   margin-left: 1rem;
+}
+
+/* ── Mobile Optimization for Promo Code ── */
+.promo-input-group {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.promo-input-group input {
+  flex: 1;
+  min-width: 0; /* Prevents input from breaking flex layout on small screens */
+  width: 100%;
+}
+
+.promo-input-group button {
+  flex-shrink: 0; /* Ensures the Apply button does not shrink and overflow */
+  white-space: nowrap;
+}
+
+/* ── Mobile Optimization for Payment Method Buttons ── */
+@media (max-width: 480px) {
+  .payment-method-btn {
+    padding: 0.75rem;
+    gap: 0.5rem;
+  }
+  .payment-method-btn__info strong {
+    font-size: 0.85rem;
+  }
+  .payment-method-btn__info span {
+    font-size: 0.7rem;
+  }
+  .payment-method-btn__badge {
+    font-size: 0.55rem;
+    padding: 0.2rem 0.4rem;
+  }
+  .payment-method-btn__icon {
+    width: 32px;
+    height: 32px;
+  }
 }

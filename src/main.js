@@ -1509,29 +1509,29 @@ function initSupportWidget() {
       const statusDot = document.getElementById('support-status-dot');
 
       if (isSupportOffline) {
-        if (onlineView) onlineView.style.display = 'none';
-        if (offlineView) offlineView.style.display = 'block';
-        if (statusText) statusText.textContent = "We're currently away";
+        if (statusText) statusText.textContent = "We're currently away - auto answers available";
         if (statusDot) {
           statusDot.classList.remove('support-status-dot--online');
           statusDot.classList.add('support-status-dot--offline');
         }
       } else {
-        if (onlineView) onlineView.style.display = 'block';
-        if (offlineView) offlineView.style.display = 'none';
         if (statusText) statusText.textContent = 'We typically reply in a few minutes';
         if (statusDot) {
           statusDot.classList.add('support-status-dot--online');
           statusDot.classList.remove('support-status-dot--offline');
         }
-        input.focus();
-        
-        if (!hasOpened) {
-          hasOpened = true;
-          listenToMessages();
-        }
-        setTimeout(() => scrollToBottom(), 100);
       }
+      
+      // Always show the chat interface so automated FAQ replies work
+      if (onlineView) onlineView.style.display = 'flex';
+      if (offlineView) offlineView.style.display = 'none';
+      input.focus();
+      
+      if (!hasOpened) {
+        hasOpened = true;
+        listenToMessages();
+      }
+      setTimeout(() => scrollToBottom(), 100);
     }
   };
 

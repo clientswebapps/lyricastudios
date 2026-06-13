@@ -704,7 +704,7 @@ function initSongModal() {
 
   if (!modal || !closeBtn || !backBtn || !nextBtn) return;
 
-  const totalSteps = 5;
+  const totalSteps = 4;
   let currentStep = 1;
 
   // ── Trigger buttons ─────────────────────────────
@@ -802,6 +802,26 @@ function initSongModal() {
           }
         }
       });
+    });
+  });
+
+  // ── Delivery Speed Selection ──────────────────────
+  let selectedDeliveryType = 'standard';
+  let selectedDeliveryPrice = 79;
+  const deliveryBtns = modal.querySelectorAll('.delivery-option-btn');
+  const checkoutBtnText = checkoutSubmitBtn ? checkoutSubmitBtn.querySelector('span') : null;
+
+  deliveryBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      deliveryBtns.forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      
+      selectedDeliveryType = btn.dataset.delivery;
+      selectedDeliveryPrice = parseInt(btn.dataset.price, 10);
+      
+      if (checkoutBtnText) {
+        checkoutBtnText.textContent = `Continue to checkout ($${selectedDeliveryPrice})`;
+      }
     });
   });
 
@@ -925,10 +945,10 @@ function initSongModal() {
     if (stepLabel) stepLabel.textContent = `Step ${step} of ${totalSteps}`;
     if (percentLabel) percentLabel.textContent = `${percent}% Complete`;
 
-    // Show/hide standard footer and terms on step 5
+    // Show/hide standard footer and terms on step 4
     const footer = modal.querySelector('.song-modal__footer');
     const terms = modal.querySelector('.song-modal__terms');
-    if (step === 5) {
+    if (step === 4) {
       if (footer) footer.style.display = 'none';
       if (terms) terms.style.display = 'none';
     } else {
@@ -938,9 +958,9 @@ function initSongModal() {
       // Show/hide back button
       backBtn.classList.toggle('is-hidden', step === 1);
 
-      // Update next button text on Step 4
+      // Update next button text on Step 3
       const nextText = nextBtn.querySelector('span');
-      if (step === 4) {
+      if (step === 3) {
         nextText.textContent = 'Next: Review Order';
       } else {
         nextText.textContent = 'Next';
@@ -954,26 +974,25 @@ function initSongModal() {
   // ── Validation ──────────────────────────────────
   function validateStep(step) {
     if (step === 1) {
-      const selected = modal.querySelector('[data-group="recipient"] .song-modal__chip.is-selected');
-      if (!selected) {
+      const selectedRecipient = modal.querySelector('[data-group="recipient"] .song-modal__chip.is-selected');
+      if (!selectedRecipient) {
         shakeElement(modal.querySelector('[data-group="recipient"]'));
         return false;
       }
-      if (selected.dataset.value === 'Other') {
+      if (selectedRecipient.dataset.value === 'Other') {
         const otherInput = document.getElementById('recipient-other');
         if (!otherInput || !otherInput.value.trim()) {
           shakeElement(otherInput);
           return false;
         }
       }
-    }
-    if (step === 2) {
-      const selected = modal.querySelector('[data-group="occasion"] .song-modal__chip.is-selected');
-      if (!selected) {
+
+      const selectedOccasion = modal.querySelector('[data-group="occasion"] .song-modal__chip.is-selected');
+      if (!selectedOccasion) {
         shakeElement(modal.querySelector('[data-group="occasion"]'));
         return false;
       }
-      if (selected.dataset.value === 'Other') {
+      if (selectedOccasion.dataset.value === 'Other') {
         const otherInput = document.getElementById('occasion-other');
         if (!otherInput || !otherInput.value.trim()) {
           shakeElement(otherInput);
@@ -981,7 +1000,7 @@ function initSongModal() {
         }
       }
     }
-    if (step === 3) {
+    if (step === 2) {
       const genreSelected = modal.querySelector('[data-group="genre"] .song-modal__chip.is-selected');
       const voiceSelected = modal.querySelector('[data-group="voice"] .song-modal__chip.is-selected');
 
@@ -1056,7 +1075,8 @@ function initSongModal() {
         (document.getElementById('word-3') || {}).value || '',
       ].filter(Boolean),
       plan: 'standard',
-      price: '$79'
+      deliveryType: selectedDeliveryType,
+      price: `$${selectedDeliveryPrice}`
     };
 
     console.log('Song Creation Checkout Form Submitted:', formData);
@@ -1071,6 +1091,19 @@ function initSongModal() {
       if (payEmailInput) {
         payEmailInput.value = emailVal;
       }
+
+      // Initialize UI prices before showing modal
+      const originalPrice = parseInt(formData.price.replace('$', ''), 10);
+      const itemNameEl = document.getElementById('summary-item-name');
+      const itemPriceEl = document.getElementById('summary-item-price');
+      const checkoutTotalVal = document.getElementById('checkout-total-val');
+      const btnPayNow = document.getElementById('btn-pay-now');
+
+      if (itemNameEl) itemNameEl.textContent = formData.deliveryType === 'rush' ? 'Custom Song Creation (Rush)' : 'Custom Song Creation';
+      if (itemPriceEl) itemPriceEl.textContent = `$${originalPrice.toFixed(2)}`;
+      if (checkoutTotalVal) checkoutTotalVal.textContent = `$${originalPrice.toFixed(2)}`;
+      if (btnPayNow) btnPayNow.textContent = `Pay $${originalPrice.toFixed(2)}`;
+
       paymentModal.style.display = 'flex';
     } else {
       alert("We just deployed the new payment system! Please completely refresh your browser page (F5 or Ctrl+R) to load the new checkout interface.");
@@ -1150,7 +1183,10 @@ function initPaymentModal() {
   if (!modal) return;
 
   const closeBtn = document.getElementById('close-payment-modal');
-  const tabs = modal.querySelectorAll('.pay-tab');
+  const methodBtns = modal.querySelectorAll('.payment-method-btn');
+  const phase1 = document.getElementById('payment-phase-1');
+  const phase2 = document.getElementById('payment-phase-2');
+  const btnPaymentBack = document.getElementById('btn-payment-back');
   const sections = modal.querySelectorAll('.pay-method-section');
   const payForm = document.getElementById('payment-form');
   const btnPayStripe = document.getElementById('btn-pay-stripe');
@@ -1170,11 +1206,14 @@ function initPaymentModal() {
 
   let appliedPromoCode = null;
   let discountAmount = 0;
-  const originalPrice = 79.00;
 
   const resetPromo = () => {
     appliedPromoCode = null;
     discountAmount = 0;
+    
+    // Use the dynamically selected price from Step 4
+    const originalPrice = window.currentOrderData ? parseInt(window.currentOrderData.price.replace('$', ''), 10) : 79;
+
     if (promoInput) promoInput.value = '';
     if (promoMessage) {
       promoMessage.className = 'promo-message';
@@ -1190,6 +1229,10 @@ function initPaymentModal() {
   const closePayment = () => {
     modal.style.display = 'none';
     errorMsg.style.display = 'none';
+    if (phase1 && phase2) {
+      phase1.style.display = 'block';
+      phase2.style.display = 'none';
+    }
     resetPromo();
     if (payForm) payForm.reset();
   };
@@ -1298,17 +1341,31 @@ function initPaymentModal() {
     });
   }
 
-  // Tab Switching
-  tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-      tabs.forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-
-      const method = tab.dataset.method;
+  // Payment Method Selection (Phase 1 -> Phase 2)
+  methodBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const method = btn.dataset.method;
+      
+      // Hide all sections, show selected
       sections.forEach(sec => sec.style.display = 'none');
-      document.getElementById(`pay-method-${method}`).style.display = 'block';
+      const selectedSection = document.getElementById(`pay-method-${method}`);
+      if (selectedSection) {
+        selectedSection.style.display = 'block';
+      }
+
+      // Switch phases
+      phase1.style.display = 'none';
+      phase2.style.display = 'block';
     });
   });
+
+  // Back Button (Phase 2 -> Phase 1)
+  if (btnPaymentBack) {
+    btnPaymentBack.addEventListener('click', () => {
+      phase2.style.display = 'none';
+      phase1.style.display = 'block';
+    });
+  }
 
   // Mock Payment Processing
   const processPayment = (e) => {
@@ -1441,13 +1498,40 @@ function initSupportWidget() {
       widget.classList.add('is-open');
       iconChat.style.display = 'none';
       iconClose.style.display = 'block';
-      input.focus();
 
-      if (!hasOpened) {
-        hasOpened = true;
-        listenToMessages();
+      // Simple mock state for offline mode demonstration
+      // Set to true to see offline mode, false for normal mode
+      const isSupportOffline = true; 
+
+      const onlineView = document.getElementById('support-online-view');
+      const offlineView = document.getElementById('support-offline-view');
+      const statusText = document.getElementById('support-status-text');
+      const statusDot = document.getElementById('support-status-dot');
+
+      if (isSupportOffline) {
+        if (onlineView) onlineView.style.display = 'none';
+        if (offlineView) offlineView.style.display = 'block';
+        if (statusText) statusText.textContent = "We're currently away";
+        if (statusDot) {
+          statusDot.classList.remove('support-status-dot--online');
+          statusDot.classList.add('support-status-dot--offline');
+        }
+      } else {
+        if (onlineView) onlineView.style.display = 'block';
+        if (offlineView) offlineView.style.display = 'none';
+        if (statusText) statusText.textContent = 'We typically reply in a few minutes';
+        if (statusDot) {
+          statusDot.classList.add('support-status-dot--online');
+          statusDot.classList.remove('support-status-dot--offline');
+        }
+        input.focus();
+        
+        if (!hasOpened) {
+          hasOpened = true;
+          listenToMessages();
+        }
+        setTimeout(() => scrollToBottom(), 100);
       }
-      setTimeout(() => scrollToBottom(), 100);
     }
   };
 
@@ -1594,6 +1678,58 @@ function initSupportWidget() {
       console.error("[Support Widget] Error sending message", err);
     }
   });
+
+  // Offline Form Logic
+  const offlineForm = document.getElementById('support-offline-form');
+  const offlineSubmitBtn = document.getElementById('offline-submit-btn');
+  const offlineSuccessMsg = document.getElementById('offline-success-msg');
+
+  if (offlineForm) {
+    offlineForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const name = document.getElementById('offline-name').value.trim();
+      const email = document.getElementById('offline-email').value.trim();
+      const message = document.getElementById('offline-message').value.trim();
+
+      if (!name || !email || !message) return;
+
+      if (offlineSubmitBtn) {
+        offlineSubmitBtn.disabled = true;
+        offlineSubmitBtn.textContent = 'Sending...';
+      }
+
+      try {
+        await addDoc(collection(db, 'support_offline_messages'), {
+          name,
+          email,
+          message,
+          timestamp: serverTimestamp(),
+          status: 'new'
+        });
+
+        if (offlineSuccessMsg) offlineSuccessMsg.style.display = 'block';
+        offlineForm.reset();
+        
+        setTimeout(() => {
+          if (offlineSuccessMsg) offlineSuccessMsg.style.display = 'none';
+          if (offlineSubmitBtn) {
+            offlineSubmitBtn.disabled = false;
+            offlineSubmitBtn.textContent = 'Send Message';
+          }
+          toggleWidget(); // Close widget after sending
+        }, 3000);
+
+      } catch (err) {
+        console.error("Error sending offline message:", err);
+        if (offlineSubmitBtn) {
+          offlineSubmitBtn.disabled = false;
+          offlineSubmitBtn.textContent = 'Send Message';
+        }
+        alert('There was an error sending your message. Please try again.');
+      }
+    });
+  }
 }
 
 if (document.readyState === 'loading') {

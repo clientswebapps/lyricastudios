@@ -14,12 +14,111 @@
   <meta property="og:description"
     content="Turn your stories into beautiful, studio-quality songs. The perfect heartfelt gift for anyone you love." />
   <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://lyricastudios.com/" />
+  <meta property="og:image" content="https://lyricastudios.com/images/og-preview.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
+
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "LyricaStudios",
+    "url": "https://lyricastudios.com",
+    "logo": "https://lyricastudios.com/favicon.svg",
+    "description": "Custom song creation service. We turn your stories into beautiful, studio-quality songs for weddings, anniversaries, birthdays, memorials, and more.",
+    "email": "info@lyricastudios.com",
+    "sameAs": []
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Custom Song",
+    "description": "A personalized, studio-quality song crafted from your story. Includes MP3/WAV audio file, custom lyrics sheet PDF, and a shareable link.",
+    "brand": { "@type": "Brand", "name": "LyricaStudios" },
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Standard",
+        "price": "79.00",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "deliveryLeadTime": { "@type": "QuantitativeValue", "minValue": 2, "maxValue": 5, "unitCode": "DAY" }
+      },
+      {
+        "@type": "Offer",
+        "name": "Rush Delivery",
+        "price": "89.00",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock",
+        "deliveryLeadTime": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 1, "unitCode": "DAY" }
+      }
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "2000",
+      "bestRating": "5"
+    }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How does the song creation process work?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "You fill out a short questionnaire about the person, the occasion, and your favorite memories. Our musicians then turn your story into original lyrics and a custom melody. Your finished song is delivered within 2 to 5 days, or as fast as 1 day with rush delivery."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What genres and styles are available?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "We offer Pop, R&B, Country, Acoustic, Classical, Jazz, Gospel, Hip-Hop, and more. Each style can be tailored to match the personality of your loved one."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I request revisions?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. Every order includes one free revision. Additional revisions are available for a small fee if needed."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "How long does it take to receive my song?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Standard delivery takes 2 to 5 business days. Rush delivery is available and can be completed in as little as 1 day."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Is there a money back guarantee?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Yes. If there are any errors, we will work with you to fix it or provide a refund. We guarantee a 100% refund if your song is not delivered within 5 days of your order."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 
 <body>
@@ -56,6 +155,7 @@
       <div class="header__nav" id="main-nav" aria-label="Main navigation">
         <a href="#how-it-works" class="nav__link">How It Works</a>
         <a href="#reviews" class="nav__link">Reviews</a>
+        <a href="#pricing" class="nav__link">Pricing</a>
         <a href="#categories" class="nav__link">Song Types</a>
         <a href="#faq" class="nav__link">FAQ</a>
 
@@ -215,22 +315,6 @@
     </section>
 
     <!-- ═══════════════════════════════════════════ -->
-    <!-- MEDIA / TRUST BAR                           -->
-    <!-- ═══════════════════════════════════════════ -->
-    <section class="media-bar" data-animate="fade-up">
-      <div class="container">
-        <p class="media-bar__label">Featured In</p>
-        <div class="media-bar__logos">
-          <div class="media-logo">Billboard</div>
-          <div class="media-logo">Rolling Stone</div>
-          <div class="media-logo">Spotify News</div>
-          <div class="media-logo">The Guardian</div>
-          <div class="media-logo">Vogue</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════════════════════════════════ -->
     <!-- HOW IT WORKS                                -->
     <!-- ═══════════════════════════════════════════ -->
     <section class="how-it-works" id="how-it-works">
@@ -319,19 +403,6 @@
 
             <!-- Review 1 -->
             <div class="review-card">
-              <div class="review-card__song-preview">
-                <div class="song-preview-placeholder">
-                  <div class="placeholder-icon">🎵</div>
-                  <p>Song Cover Art</p>
-                </div>
-                <div class="song-preview__overlay">
-                  <button class="song-preview__play" aria-label="Play sample">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
               <div class="review-card__body">
                 <div class="review-card__stars">★★★★★</div>
                 <p class="review-card__quote">"I gave this to my wife on our 10th anniversary. She cried the moment she
@@ -348,19 +419,6 @@
 
             <!-- Review 2 -->
             <div class="review-card">
-              <div class="review-card__song-preview">
-                <div class="song-preview-placeholder">
-                  <div class="placeholder-icon">🎵</div>
-                  <p>Song Cover Art</p>
-                </div>
-                <div class="song-preview__overlay">
-                  <button class="song-preview__play" aria-label="Play sample">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
               <div class="review-card__body">
                 <div class="review-card__stars">★★★★★</div>
                 <p class="review-card__quote">"I surprised my mom on her 60th birthday. The whole family was in tears.
@@ -377,19 +435,6 @@
 
             <!-- Review 3 -->
             <div class="review-card">
-              <div class="review-card__song-preview">
-                <div class="song-preview-placeholder">
-                  <div class="placeholder-icon">🎵</div>
-                  <p>Song Cover Art</p>
-                </div>
-                <div class="song-preview__overlay">
-                  <button class="song-preview__play" aria-label="Play sample">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
               <div class="review-card__body">
                 <div class="review-card__stars">★★★★★</div>
                 <p class="review-card__quote">"We played it at our wedding reception as our first dance. Not a dry eye
@@ -406,19 +451,6 @@
 
             <!-- Review 4 -->
             <div class="review-card">
-              <div class="review-card__song-preview">
-                <div class="song-preview-placeholder">
-                  <div class="placeholder-icon">🎵</div>
-                  <p>Song Cover Art</p>
-                </div>
-                <div class="song-preview__overlay">
-                  <button class="song-preview__play" aria-label="Play sample">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
               <div class="review-card__body">
                 <div class="review-card__stars">★★★★★</div>
                 <p class="review-card__quote">"After losing my father, I wanted something to remember him by.
@@ -435,19 +467,6 @@
 
             <!-- Review 5 -->
             <div class="review-card">
-              <div class="review-card__song-preview">
-                <div class="song-preview-placeholder">
-                  <div class="placeholder-icon">🎵</div>
-                  <p>Song Cover Art</p>
-                </div>
-                <div class="song-preview__overlay">
-                  <button class="song-preview__play" aria-label="Play sample">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                      <polygon points="5 3 19 12 5 21 5 3" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
               <div class="review-card__body">
                 <div class="review-card__stars">★★★★★</div>
                 <p class="review-card__quote">"I proposed to my girlfriend with a custom song playing in the background.
@@ -861,6 +880,154 @@
     </section>
 
     <!-- ═══════════════════════════════════════════ -->
+    <!-- PRICING                                     -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="pricing" id="pricing">
+      <div class="container">
+        <div class="section-header" data-animate="fade-up">
+          <span class="section-tag">Simple Pricing</span>
+          <h2 class="section-title">One Song, One Price</h2>
+          <p class="section-subtitle">No hidden fees. No subscriptions. Just a beautiful, custom song made for your special someone.</p>
+        </div>
+
+        <div class="pricing-cards" data-animate="fade-up">
+          <!-- Standard -->
+          <div class="pricing-card">
+            <h3 class="pricing-card__name">Standard</h3>
+            <div class="pricing-card__price"><sup>$</sup>79</div>
+            <p class="pricing-card__delivery">Delivered in 2–5 days</p>
+            <ul class="pricing-card__features">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Studio-quality custom song (MP3 + WAV)
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Beautifully designed lyrics sheet (PDF)
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                1 free revision included
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Shareable link to listen online
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                100% satisfaction guarantee
+              </li>
+            </ul>
+            <a href="#categories" class="btn btn--primary btn--lg pricing-card__cta" data-open-modal>
+              <span>Get Started</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+
+          <!-- Rush -->
+          <div class="pricing-card pricing-card--featured">
+            <span class="pricing-card__badge">⚡ Need It Fast?</span>
+            <h3 class="pricing-card__name">Rush Delivery</h3>
+            <div class="pricing-card__price"><sup>$</sup>89</div>
+            <p class="pricing-card__delivery">Delivered in up to 1 day</p>
+            <ul class="pricing-card__features">
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Everything in Standard
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Priority production queue
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Express delivery in up to 1 day
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                Perfect for last-minute gifts
+              </li>
+              <li>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                100% satisfaction guarantee
+              </li>
+            </ul>
+            <a href="#categories" class="btn btn--accent btn--lg pricing-card__cta" data-open-modal>
+              <span>Rush My Song</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- ABOUT US                                    -->
+    <!-- ═══════════════════════════════════════════ -->
+    <section class="about-us" id="about">
+      <div class="container">
+        <div class="about-us__layout" data-animate="fade-up">
+          <div class="about-us__text">
+            <span class="section-tag">Our Story</span>
+            <h2 class="about-us__title">The People Behind Your Song</h2>
+            <p class="about-us__desc">At LyricaStudios, we believe every love story, every friendship, and every milestone deserves its own soundtrack. Our team of passionate songwriters and music producers combines state-of-the-art music technology with genuine human creativity to craft songs that capture the emotions words alone can't express.</p>
+
+            <div class="about-us__values">
+              <div class="about-value">
+                <div class="about-value__icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+                </div>
+                <div class="about-value__text">
+                  <strong>Heartfelt Craftsmanship</strong>
+                  <span>Every song is carefully composed to reflect the real emotions and memories you share with us.</span>
+                </div>
+              </div>
+              <div class="about-value">
+                <div class="about-value__icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                </div>
+                <div class="about-value__text">
+                  <strong>Studio-Quality Sound</strong>
+                  <span>Professional-grade production that sounds like it belongs on the radio — because your story deserves nothing less.</span>
+                </div>
+              </div>
+              <div class="about-value">
+                <div class="about-value__icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></svg>
+                </div>
+                <div class="about-value__text">
+                  <strong>Your Story First</strong>
+                  <span>We don't do generic. Every lyric, melody, and arrangement is built from the details you share with us.</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="about-us__visual">
+            <div class="about-us__stat-grid">
+              <div class="about-stat-card" data-animate="fade-up" data-delay="0">
+                <div class="about-stat-card__number">2,000+</div>
+                <div class="about-stat-card__label">Songs Created</div>
+              </div>
+              <div class="about-stat-card" data-animate="fade-up" data-delay="100">
+                <div class="about-stat-card__number">4.9★</div>
+                <div class="about-stat-card__label">Average Rating</div>
+              </div>
+              <div class="about-stat-card" data-animate="fade-up" data-delay="200">
+                <div class="about-stat-card__number">50+</div>
+                <div class="about-stat-card__label">Countries Served</div>
+              </div>
+              <div class="about-stat-card" data-animate="fade-up" data-delay="300">
+                <div class="about-stat-card__number">98%</div>
+                <div class="about-stat-card__label">Happy Customers</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════ -->
     <!-- SONG OF THE YEAR                            -->
     <!-- ═══════════════════════════════════════════ -->
     <section class="soty-spotlight" id="soty">
@@ -878,7 +1045,7 @@
             </div>
 
             <div class="soty-info">
-              <h3>Grace In Your Smile</h3>
+              <h3>Healing Through You</h3>
               <p>2026 Song of the Year</p>
             </div>
 
@@ -901,9 +1068,18 @@
           <div class="soty-badge">Featured Masterpiece</div>
           <h2 class="soty-title">Song of the Year</h2>
           <p class="soty-desc">
-            Experience the magic of a personalized track. "Grace In Your Smile" perfectly captures the emotion,
-            studio-level production, and sheer joy that we pour into every single song. Listen and get inspired!
+            "Healing Through You" was written for Isabella. Her partner wanted to capture how her gentle love, patience, and faith became peace after exhausting, lonely days. From simple coffee shop conversations to small prayers together, Isabella healed places nobody else could reach. When our team heard the raw emotion in the final mix, the entire studio was moved, and we unanimously voted it our <strong style="color: var(--color-accent);">2026 Song of the Year</strong>.
           </p>
+          <div class="soty-lyrics" style="margin-top: 1.5rem; margin-bottom: 2rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-left: 3px solid var(--color-accent); border-radius: 0 12px 12px 0; font-style: italic; color: var(--color-text-muted); font-size: 0.95rem; line-height: 1.6;">
+            "Rainy evenings somehow felt warmer holding your hand.<br>
+            Your voice became peace after exhausting lonely days.<br>
+            Coffee shop conversations turned into unforgettable memories.<br>
+            God slowly healed my heart through loving you...<br><br>
+            Isabella, thank you for loving me with gentle patience.<br>
+            You turned ordinary days into memories worth keeping forever.<br>
+            No distance or hardship could lessen what we've built.<br>
+            Your love will always feel like Heaven's sweetest blessing."
+          </div>
           <a href="#hero" class="btn btn--primary btn--lg" data-open-modal>
             <span>Create Your Masterpiece</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -1118,25 +1294,16 @@
           <ul>
             <li><a href="#how-it-works">How It Works</a></li>
             <li><a href="#reviews">Reviews</a></li>
+            <li><a href="#pricing">Pricing</a></li>
             <li><a href="#categories">Song Types</a></li>
             <li><a href="#faq">FAQ</a></li>
           </ul>
         </div>
 
         <div class="footer__links">
-          <h4>Song Types</h4>
-          <ul>
-            <li><a href="#">Wedding Songs</a></li>
-            <li><a href="#">Anniversary Songs</a></li>
-            <li><a href="#">Birthday Songs</a></li>
-            <li><a href="#">Memorial Songs</a></li>
-          </ul>
-        </div>
-
-        <div class="footer__links">
           <h4>Contact</h4>
           <ul>
-            <li><a href="mailto:hello@lyricastudios.com">hello@lyricastudios.com</a></li>
+            <li><a href="mailto:info@lyricastudios.com">info@lyricastudios.com</a></li>
             <li><a href="/privacy.html">Privacy Policy</a></li>
             <li><a href="/terms.html">Terms of Service</a></li>
           </ul>
@@ -1266,7 +1433,7 @@
           <div class="song-modal__progress-fill" id="modal-progress-fill" style="width: 20%;"></div>
         </div>
         <div class="song-modal__progress-meta">
-          <span id="modal-step-label">Step 1 of 5</span>
+          <span id="modal-step-label">Step 1 of 4</span>
           <span id="modal-percent-label">20% Complete</span>
         </div>
       </div>
@@ -1274,11 +1441,11 @@
       <!-- Steps -->
       <div class="song-modal__body">
 
-        <!-- Step 1: Recipient & Pronouns -->
+        <!-- Step 1: Recipient, Pronouns & Occasion -->
         <div class="song-modal__step is-active" data-step="1">
           <div class="song-modal__step-header">
-            <h2 id="song-modal-title">Who is this song for?</h2>
-            <p>Tell us about the recipient</p>
+            <h2 id="song-modal-title">Who is this song for & what's the occasion?</h2>
+            <p>Tell us about the recipient and the vibe</p>
           </div>
           <div class="song-modal__field">
             <label class="song-modal__label">Who's this for? <span class="song-modal__required">*</span></label>
@@ -1318,15 +1485,7 @@
               <button type="button" class="song-modal__chip" data-value="They/Them">They / Them</button>
             </div>
           </div>
-        </div>
-
-        <!-- Step 2: Occasion -->
-        <div class="song-modal__step" data-step="2">
-          <div class="song-modal__step-header">
-            <h2>What's the occasion?</h2>
-            <p>Help us understand the vibe</p>
-          </div>
-          <div class="song-modal__field">
+          <div class="song-modal__field" style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.05);">
             <label class="song-modal__label">What's the occasion? <span class="song-modal__required">*</span></label>
             <div class="song-modal__chips" data-group="occasion">
               <button type="button" class="song-modal__chip" data-value="Anniversary">Anniversary</button>
@@ -1352,8 +1511,8 @@
           </div>
         </div>
 
-        <!-- Step 3: Genre & Voice -->
-        <div class="song-modal__step" data-step="3">
+        <!-- Step 2: Genre & Voice -->
+        <div class="song-modal__step" data-step="2">
           <div class="song-modal__step-header">
             <h2>Choose the Genre & Preferred Voice</h2>
             <p>How should the song sound?</p>
@@ -1397,8 +1556,8 @@
           </div>
         </div>
 
-        <!-- Step 4: Key Details & Memories -->
-        <div class="song-modal__step" data-step="4">
+        <!-- Step 3: Key Details & Memories -->
+        <div class="song-modal__step" data-step="3">
           <div class="song-modal__step-header">
             <h2>Add Key Details & Memories</h2>
             <p>The more specific, the better the lyrics!</p>
@@ -1418,8 +1577,8 @@
           </div>
         </div>
 
-        <!-- Step 5: Review & Checkout Screen -->
-        <div class="song-modal__step" data-step="5">
+        <!-- Step 4: Review & Checkout Screen -->
+        <div class="song-modal__step" data-step="4">
           <div class="song-modal__step-header">
             <h2 class="song-modal__checkout-heading">You're just a few clicks away from ordering your Custom Song!</h2>
           </div>
@@ -1527,6 +1686,29 @@
             </span>
           </div>
 
+          <!-- Delivery Speed Selection -->
+          <div class="song-modal__field" style="margin-top: 2rem; margin-bottom: 2rem; text-align: left; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05);">
+            <label class="song-modal__label">Choose Delivery Speed <span class="song-modal__required">*</span></label>
+            <div class="delivery-speed-options">
+              <button type="button" class="delivery-option-btn is-active" data-delivery="standard" data-price="79">
+                <div class="delivery-option-btn__info">
+                  <strong>Standard Delivery</strong>
+                  <span>2–5 Days</span>
+                </div>
+                <div class="delivery-option-btn__price">$79</div>
+              </button>
+
+              <button type="button" class="delivery-option-btn" data-delivery="rush" data-price="89">
+                <div class="delivery-option-btn__info">
+                  <strong>Rush Delivery</strong>
+                  <span>Up to 1 Day</span>
+                </div>
+                <div class="delivery-option-btn__price">$89</div>
+                <span class="delivery-option-btn__badge">Need It Fast?</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Checkout Action Area -->
           <div class="song-modal__checkout-actions">
             <button type="button" class="song-modal__btn-checkout btn btn--accent" id="checkout-submit-btn">
@@ -1604,7 +1786,7 @@
         <div class="payment-left">
           <div class="payment-summary">
             <h4>Order Summary</h4>
-            <p class="summary-item"><span>Custom Song Generation</span> <span>$79.00</span></p>
+            <p class="summary-item"><span id="summary-item-name">Custom Song Creation</span> <span id="summary-item-price">$79.00</span></p>
             <p class="summary-item discount-row" id="checkout-discount-row"
               style="display: none; color: #10b981; font-weight: 500;">
               <span>Discount (<span id="applied-code-label"></span>)</span>
@@ -1630,59 +1812,96 @@
         </div>
 
         <div class="payment-right">
-          <h4>Payment Method</h4>
+          
+          <!-- Phase 1: Select Method -->
+          <div id="payment-phase-1" class="payment-phase active">
+            <h4>Select Payment Method</h4>
+            <div class="payment-method-selector">
+              <button type="button" class="payment-method-btn payment-method-btn--recommended" data-method="stripe">
+                <div class="payment-method-btn__icon payment-method-btn__icon--stripe">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                </div>
+                <div class="payment-method-btn__info">
+                  <strong>Credit / Debit Card</strong>
+                  <span>Fast and secure via Stripe</span>
+                </div>
+                <span class="payment-method-btn__badge">Recommended</span>
+              </button>
 
-          <div class="payment-tabs">
-            <button class="pay-tab active" data-method="card">Card</button>
-            <button class="pay-tab" data-method="paypal">PayPal</button>
-            <button class="pay-tab" data-method="stripe">Stripe</button>
+              <button type="button" class="payment-method-btn" data-method="paypal">
+                <div class="payment-method-btn__icon payment-method-btn__icon--paypal">P</div>
+                <div class="payment-method-btn__info">
+                  <strong>PayPal</strong>
+                  <span>Pay with your PayPal balance or linked card</span>
+                </div>
+                <svg class="payment-method-btn__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </button>
+
+              <button type="button" class="payment-method-btn" data-method="card">
+                <div class="payment-method-btn__icon payment-method-btn__icon--card">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </div>
+                <div class="payment-method-btn__info">
+                  <strong>Manual Card Entry</strong>
+                  <span>Enter card details securely</span>
+                </div>
+                <svg class="payment-method-btn__arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </button>
+            </div>
           </div>
 
-          <!-- Card Form -->
-          <div id="pay-method-card" class="pay-method-section active">
-            <form id="payment-form">
-              <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" id="pay-email" placeholder="your.email@example.com" readonly required>
-              </div>
-              <div class="form-group">
-                <label>Cardholder Name</label>
-                <input type="text" id="pay-name" placeholder="John Doe" required>
-              </div>
-              <div class="form-group">
-                <label>Card Number</label>
-                <input type="text" id="pay-card" placeholder="0000 0000 0000 0000" maxlength="19" required>
-              </div>
-              <div class="form-row">
+          <!-- Phase 2: Payment Form/Redirect -->
+          <div id="payment-phase-2" class="payment-phase" style="display: none;">
+            <button type="button" id="btn-payment-back" class="payment-back-btn">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              Back to payment methods
+            </button>
+
+            <!-- Card Form -->
+            <div id="pay-method-card" class="pay-method-section" style="display: none;">
+              <form id="payment-form">
                 <div class="form-group">
-                  <label>Expiry Date</label>
-                  <input type="text" id="pay-exp" placeholder="MM/YY" maxlength="5" required>
+                  <label>Email Address</label>
+                  <input type="email" id="pay-email" placeholder="your.email@example.com" readonly required>
                 </div>
                 <div class="form-group">
-                  <label>CVC</label>
-                  <input type="text" id="pay-cvc" placeholder="123" maxlength="4" required>
+                  <label>Cardholder Name</label>
+                  <input type="text" id="pay-name" placeholder="John Doe" required>
                 </div>
-              </div>
-              <div id="payment-error" class="error-msg"
-                style="display: none; margin-bottom: 1rem; color: #ef4444; font-size: 0.875rem;"></div>
-              <button type="submit" class="btn btn--accent btn-pay" id="btn-pay-now">Pay $79.00</button>
-            </form>
-          </div>
+                <div class="form-group">
+                  <label>Card Number</label>
+                  <input type="text" id="pay-card" placeholder="0000 0000 0000 0000" maxlength="19" required>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Expiry Date</label>
+                    <input type="text" id="pay-exp" placeholder="MM/YY" maxlength="5" required>
+                  </div>
+                  <div class="form-group">
+                    <label>CVC</label>
+                    <input type="text" id="pay-cvc" placeholder="123" maxlength="4" required>
+                  </div>
+                </div>
+                <div id="payment-error" class="error-msg"
+                  style="display: none; margin-bottom: 1rem; color: #ef4444; font-size: 0.875rem;"></div>
+                <button type="submit" class="btn btn--accent btn-pay" id="btn-pay-now">Pay Now</button>
+              </form>
+            </div>
 
-          <!-- PayPal / Stripe Mock UI -->
-          <div id="pay-method-paypal" class="pay-method-section" style="display:none;">
-            <p style="margin-bottom: 1rem; color: #9ba1a6; font-size: 0.9rem;">You will be redirected to PayPal to
-              complete your purchase securely.</p>
-            <button type="button" class="btn btn-pay" id="btn-pay-paypal" style="background:#003087; color:#fff;">Pay
-              with PayPal</button>
-          </div>
+            <!-- PayPal / Stripe Mock UI -->
+            <div id="pay-method-paypal" class="pay-method-section" style="display:none;">
+              <p style="margin-bottom: 1rem; color: #9ba1a6; font-size: 0.9rem;">You will be redirected to PayPal to
+                complete your purchase securely.</p>
+              <button type="button" class="btn btn-pay" id="btn-pay-paypal" style="background:#003087; color:#fff;">Pay
+                with PayPal</button>
+            </div>
 
-          <div id="pay-method-stripe" class="pay-method-section" style="display:none;">
-            <p style="margin-bottom: 1rem; color: #9ba1a6; font-size: 0.9rem;">Fast and secure checkout via Stripe.</p>
-            <button type="button" class="btn btn--accent btn-pay" id="btn-pay-stripe" style="background:#635bff;">Pay
-              with Stripe</button>
+            <div id="pay-method-stripe" class="pay-method-section" style="display:none;">
+              <p style="margin-bottom: 1rem; color: #9ba1a6; font-size: 0.9rem;">Fast and secure checkout via Stripe.</p>
+              <button type="button" class="btn btn--accent btn-pay" id="btn-pay-stripe" style="background:#635bff;">Pay
+                with Stripe</button>
+            </div>
           </div>
-
         </div>
       </div>
 
@@ -1699,27 +1918,43 @@
     <div class="support-window" id="support-window">
       <div class="support-header">
         <div class="support-header__info">
-          <h4>Live Support</h4>
-          <span class="support-status">We typically reply in a few minutes</span>
+          <h4><span class="support-status-dot support-status-dot--online" id="support-status-dot"></span>Live Support</h4>
+          <span class="support-status" id="support-status-text">We typically reply in a few minutes</span>
         </div>
         <button id="close-support" class="support-close-btn" aria-label="Close support">&times;</button>
       </div>
-      <div class="support-messages" id="support-messages">
-        <!-- Messages will be populated here by JS -->
+      
+      <!-- Online Chat View -->
+      <div id="support-online-view">
+        <div class="support-messages" id="support-messages"></div>
+        <div class="support-quick-replies" id="support-quick-replies" style="display: none;"></div>
+        <form class="support-form" id="support-form">
+          <input type="text" class="support-input" id="support-input" placeholder="Type your message..."
+            autocomplete="off">
+          <button type="submit" class="support-submit" aria-label="Send message">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </button>
+        </form>
       </div>
-      <div class="support-quick-replies" id="support-quick-replies">
-        <!-- Filled via JS -->
+
+      <!-- Offline Form View -->
+      <div id="support-offline-view" style="display: none;">
+        <div class="support-offline-notice">
+          <div class="support-offline-notice__icon">🌙</div>
+          <div class="support-offline-notice__title">We're currently away</div>
+          <div class="support-offline-notice__text">Leave us a message and we'll get back to you by email as soon as we return.</div>
+        </div>
+        <form class="support-offline-form" id="support-offline-form">
+          <input type="text" id="offline-name" placeholder="Your Name" required>
+          <input type="email" id="offline-email" placeholder="Your Email Address" required>
+          <textarea id="offline-message" placeholder="How can we help you?" required></textarea>
+          <button type="submit" id="offline-submit-btn">Send Message</button>
+          <div id="offline-success-msg" class="offline-success" style="display: none;">Message sent! We'll be in touch soon.</div>
+        </form>
       </div>
-      <form class="support-form" id="support-form">
-        <input type="text" id="support-input" placeholder="Type a message..." required autocomplete="off">
-        <button type="submit" aria-label="Send Message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
-        </button>
-      </form>
     </div>
     <button class="support-fab" id="support-fab" aria-label="Open support">
       <svg class="icon-chat" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"

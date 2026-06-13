@@ -391,6 +391,15 @@ function initSearchAndViewControls() {
       vSelect.dataset.listenerBound = 'true';
       vSelect.addEventListener('change', ctrl.renderFn);
     }
+    
+    // Bind delivery filter
+    const prefix = ctrl.searchId.split('-')[0];
+    const deliveryFilterId = prefix === 'all' ? 'all-orders-delivery-filter' : prefix + '-delivery-filter';
+    const dFilter = document.getElementById(deliveryFilterId);
+    if (dFilter && !dFilter.dataset.listenerBound) {
+      dFilter.dataset.listenerBound = 'true';
+      dFilter.addEventListener('change', ctrl.renderFn);
+    }
   });
 }
 
@@ -694,13 +703,20 @@ function createOrderCard(id, data, draggable = false) {
     ? `<span class="timer-text timer-danger">${timerInfo.text}</span>`
     : `<span class="timer-text">${timerInfo.text}</span>`;
 
+  const rushBadgeHtml = data.customerData?.deliveryType === 'rush'
+    ? `<span class="badge badge--rush" style="font-size: 0.65rem; margin-right: 0.5rem; vertical-align: middle;">RUSH</span>`
+    : '';
+
   card.innerHTML = `
     <div class="order-card-header">
       <div style="display: flex; align-items: center; gap: 0.5rem;">
         ${dragHandleHtml}
         <span class="order-id">#${id.slice(0, 8).toUpperCase()}</span>
       </div>
-      <span class="status-badge ${statusClass}">${data.status}</span>
+      <div>
+        ${rushBadgeHtml}
+        <span class="status-badge ${statusClass}">${data.status}</span>
+      </div>
     </div>
     <div class="order-details">
       <div class="order-id" style="margin-bottom: 0.5rem; text-transform: none;">${data.customerData?.email || 'N/A'}</div>
@@ -756,6 +772,10 @@ function createOrderRow(id, data, draggable = false) {
   const genre = data.customerData?.genre || 'N/A';
   const voice = data.customerData?.preferredVoice || data.customerData?.mood || 'N/A';
 
+  const rushBadgeHtml = data.customerData?.deliveryType === 'rush'
+    ? `<span class="badge badge--rush" style="font-size: 0.65rem; margin-left: 0.5rem; vertical-align: middle;">RUSH</span>`
+    : '';
+
   tr.innerHTML = `
     <td>
       <div style="display: flex; align-items: center;">
@@ -763,7 +783,7 @@ function createOrderRow(id, data, draggable = false) {
         <strong style="font-family: monospace; font-size: 0.9rem; color: var(--accent);">#${shortId}</strong>
       </div>
     </td>
-    <td><strong>${email}</strong></td>
+    <td><strong>${email}</strong> ${rushBadgeHtml}</td>
     <td>${recipient}</td>
     <td>${genre}</td>
     <td>${voice}</td>
@@ -781,11 +801,24 @@ function renderOrdersSection(orders, listElement, isDraggable, searchInputId, vi
 
   const queryText = searchInput ? searchInput.value.toLowerCase().trim() : '';
   const viewMode = viewDropdown ? viewDropdown.value : 'grid';
+  
+  // Determine delivery filter ID
+  const prefix = searchInputId.split('-')[0];
+  const deliveryFilterId = prefix === 'all' ? 'all-orders-delivery-filter' : prefix + '-delivery-filter';
+  const deliveryFilterDropdown = document.getElementById(deliveryFilterId);
+  const deliveryFilter = deliveryFilterDropdown ? deliveryFilterDropdown.value : 'all';
 
-  // Filter orders based on search query
+  // Filter orders based on search query and delivery filter
   const filtered = orders.filter(order => {
-    if (!queryText) return true;
     const cd = order.customerData || {};
+    
+    // Apply delivery filter
+    const orderDeliveryType = cd.deliveryType || 'standard';
+    if (deliveryFilter === 'rush' && orderDeliveryType !== 'rush') return false;
+    if (deliveryFilter === 'standard' && orderDeliveryType !== 'standard') return false;
+
+    // Apply search query
+    if (!queryText) return true;
     const email = (cd.email || '').toLowerCase();
     const id = (order.id || '').toLowerCase();
     const genre = (cd.genre || '').toLowerCase();

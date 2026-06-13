@@ -132,6 +132,11 @@
                 <option value="grid">Cards</option>
                 <option value="list">Detailed List</option>
               </select>
+              <select id="pool-delivery-filter" class="view-dropdown">
+                <option value="all">All Deliveries</option>
+                <option value="standard">Standard</option>
+                <option value="rush">Rush Only</option>
+              </select>
             </div>
           </div>
           <div id="pool-list" class="order-grid"></div>
@@ -147,6 +152,11 @@
                 <option value="grid">Cards</option>
                 <option value="list">Detailed List</option>
               </select>
+              <select id="tasks-delivery-filter" class="view-dropdown">
+                <option value="all">All Deliveries</option>
+                <option value="standard">Standard</option>
+                <option value="rush">Rush Only</option>
+              </select>
             </div>
           </div>
           <div id="tasks-list" class="order-grid"></div>
@@ -161,6 +171,11 @@
               <select id="qa-view-mode" class="view-dropdown">
                 <option value="grid">Cards</option>
                 <option value="list">Detailed List</option>
+              </select>
+              <select id="qa-delivery-filter" class="view-dropdown">
+                <option value="all">All Deliveries</option>
+                <option value="standard">Standard</option>
+                <option value="rush">Rush Only</option>
               </select>
             </div>
           </div>
@@ -461,6 +476,14 @@
                 <option value="Ready for Delivery">Ready for Delivery</option>
                 <option value="Completed">Completed</option>
                 <option value="Delivered">Delivered</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="all-orders-delivery-filter">Filter by Delivery</label>
+              <select id="all-orders-delivery-filter">
+                <option value="all">All Deliveries</option>
+                <option value="standard">Standard</option>
+                <option value="rush">Rush Only</option>
               </select>
             </div>
           </div>

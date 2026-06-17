@@ -36,6 +36,7 @@ const initAll = () => {
   initSongModal();
   initHeroTypewriter();
   initCategoryCards();
+  initFloatingBadges();
 };
 
 if (document.readyState === 'loading') {
@@ -1581,5 +1582,58 @@ function initCategoryCards() {
       cards.forEach(c => c.classList.remove('is-active'));
     }
   });
+}
+
+/* ── Floating Badges Content Rotation ───────────────────────── */
+function initFloatingBadges() {
+  const badge1 = document.querySelector('.floating-card-wrapper--1 .floating-card');
+  const badge2 = document.querySelector('.floating-card-wrapper--2 .floating-card');
+  
+  if (!badge1 || !badge2) return;
+
+  const badge1Data = [
+    { icon: '🎵', title: 'New Song Ready!', desc: '"Forever Yours"' },
+    { icon: '🎤', title: 'Vocals Recorded!', desc: '"Mama\'s Boy (Country)"' },
+    { icon: '🎸', title: 'Acoustic Layer Added', desc: '"Sarah\'s Birthday"' },
+    { icon: '✨', title: 'Mastering Done!', desc: '"Tears of Joy (Pop)"' }
+  ];
+
+  const badge2Data = [
+    { icon: '⭐', title: '5-Star Review', desc: '"Made her cry happy tears!"' },
+    { icon: '💖', title: '5-Star Review', desc: '"Best anniversary gift ever!"' },
+    { icon: '😭', title: '5-Star Review', desc: '"Not a dry eye in the room."' },
+    { icon: '💍', title: '5-Star Review', desc: '"He proposed and I said YES!"' }
+  ];
+
+  function rotateBadgeContent(badgeEl, dataList) {
+    let index = 0;
+    
+    setInterval(() => {
+      badgeEl.classList.add('is-fading');
+      
+      setTimeout(() => {
+        index = (index + 1) % dataList.length;
+        const currentData = dataList[index];
+        
+        const iconEl = badgeEl.querySelector('.floating-card__icon');
+        const titleEl = badgeEl.querySelector('strong');
+        const descEl = badgeEl.querySelector('small');
+        
+        if (iconEl) iconEl.textContent = currentData.icon;
+        if (titleEl) titleEl.textContent = currentData.title;
+        if (descEl) descEl.textContent = currentData.desc;
+        
+        badgeEl.classList.remove('is-fading');
+      }, 400); // Wait for transition duration (400ms)
+      
+    }, 5000); // Rotate every 5 seconds
+  }
+
+  // Staggered starts: start badge1 immediately, start badge2 with a 2.5 second delay
+  rotateBadgeContent(badge1, badge1Data);
+  
+  setTimeout(() => {
+    rotateBadgeContent(badge2, badge2Data);
+  }, 2500);
 }
 

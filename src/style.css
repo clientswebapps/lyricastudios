@@ -860,6 +860,17 @@ ol {
   animation-play-state: paused;
 }
 
+.floating-card__icon,
+.floating-card div {
+  transition: opacity var(--duration-normal) ease, transform var(--duration-normal) ease;
+}
+
+.floating-card.is-fading .floating-card__icon,
+.floating-card.is-fading div {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
 .floating-card__icon {
   display: flex;
   align-items: center;

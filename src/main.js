@@ -1082,32 +1082,40 @@ function initSongModal() {
 
     console.log('Song Creation Checkout Form Submitted:', formData);
 
-    // Instead of writing to DB right away, we intercept and open the payment modal
-    // We store the data globally to be used by the payment script
-    window.currentOrderData = formData;
+    // Show loading indicator on checkout button
+    const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
+    const originalBtnHTML = checkoutSubmitBtn ? checkoutSubmitBtn.innerHTML : '';
+    if (checkoutSubmitBtn) {
+      checkoutSubmitBtn.disabled = true;
+      checkoutSubmitBtn.innerHTML = '<span>Preparing secure checkout...</span><div class="spinner spinner--small" style="display:inline-block; width:16px; height:16px; margin-left:8px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 1s linear infinite;"></div>';
+    }
 
-    const paymentModal = document.getElementById('payment-modal');
-    if (paymentModal) {
-      const payEmailInput = document.getElementById('pay-email');
-      if (payEmailInput) {
-        payEmailInput.value = emailVal;
+    try {
+      const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
+      const { data } = await createCheckoutSession({
+        email: emailVal,
+        deliveryType: selectedDeliveryType,
+        formData: formData
+      });
+
+      if (data && data.checkoutUrl) {
+        // Redirect to or open Lemon Squeezy checkout
+        if (window.LemonSqueezy) {
+          window.LemonSqueezy.Url.Open(data.checkoutUrl);
+        } else {
+          window.location.href = data.checkoutUrl;
+        }
+      } else {
+        throw new Error('Failed to retrieve checkout URL.');
       }
-
-      // Initialize UI prices before showing modal
-      const originalPrice = parseInt(formData.price.replace('$', ''), 10);
-      const itemNameEl = document.getElementById('summary-item-name');
-      const itemPriceEl = document.getElementById('summary-item-price');
-      const checkoutTotalVal = document.getElementById('checkout-total-val');
-      const btnPayNow = document.getElementById('btn-pay-now');
-
-      if (itemNameEl) itemNameEl.textContent = formData.deliveryType === 'rush' ? 'Custom Song Creation (Rush)' : 'Custom Song Creation';
-      if (itemPriceEl) itemPriceEl.textContent = `$${originalPrice.toFixed(2)}`;
-      if (checkoutTotalVal) checkoutTotalVal.textContent = `$${originalPrice.toFixed(2)}`;
-      if (btnPayNow) btnPayNow.textContent = `Pay $${originalPrice.toFixed(2)}`;
-
-      paymentModal.style.display = 'flex';
-    } else {
-      alert("We just deployed the new payment system! Please completely refresh your browser page (F5 or Ctrl+R) to load the new checkout interface.");
+    } catch (err) {
+      console.error('Checkout error:', err);
+      alert(err.message || 'An error occurred while setting up checkout. Please try again.');
+    } finally {
+      if (checkoutSubmitBtn) {
+        checkoutSubmitBtn.disabled = false;
+        checkoutSubmitBtn.innerHTML = originalBtnHTML;
+      }
     }
   }
 
@@ -1178,340 +1186,6 @@ function initSongModal() {
   }
 }
 
-// ── Payment Modal Logic (Stripe Integration) ─────────────────
-function initPaymentModal() {
-  const modal = document.getElementById('payment-modal');
-  if (!modal) return;
-
-  const closeBtn = document.getElementById('close-payment-modal');
-  const methodBtns = modal.querySelectorAll('.payment-method-btn');
-  const phase1 = document.getElementById('payment-phase-1');
-  const phase2 = document.getElementById('payment-phase-2');
-  const btnPaymentBack = document.getElementById('btn-payment-back');
-  const sections = modal.querySelectorAll('.pay-method-section');
-  const payForm = document.getElementById('payment-form');
-  const btnPayPaypal = document.getElementById('btn-pay-paypal');
-  const loadingOverlay = document.getElementById('payment-loading');
-  const errorMsg = document.getElementById('payment-error');
-
-  // Promo Code elements
-  const promoInput = document.getElementById('promo-code-input');
-  const promoApplyBtn = document.getElementById('promo-apply-btn');
-  const promoMessage = document.getElementById('promo-message');
-  const checkoutTotalVal = document.getElementById('checkout-total-val');
-  const btnPayNow = document.getElementById('btn-pay-now');
-  const discountRow = document.getElementById('checkout-discount-row');
-  const appliedCodeLabel = document.getElementById('applied-code-label');
-  const discountValLabel = document.getElementById('discount-val-label');
-
-  let appliedPromoCode = null;
-  let discountAmount = 0;
-
-  // ── Initialize Stripe Elements ────────────────────────────
-  const stripe = Stripe('pk_test_51ThuQXCDHFc4yKcqMoN4lm2vV47dLeQeyJ0wx9r2hVmuvDSOjWTCoH34muXScYSJslmJp8vDrZIoKWZReCtVdnwy00wqBnYP6U');
-  const elements = stripe.elements();
-
-  // Style the Stripe Card Element to match the site's dark theme
-  const cardStyle = {
-    base: {
-      color: '#e1e1e6',
-      fontFamily: '"Inter", sans-serif',
-      fontSmoothing: 'antialiased',
-      fontSize: '16px',
-      '::placeholder': {
-        color: '#6b7280'
-      }
-    },
-    invalid: {
-      color: '#ef4444',
-      iconColor: '#ef4444'
-    }
-  };
-
-  const cardElement = elements.create('card', { style: cardStyle, hidePostalCode: true });
-  const cardElementContainer = document.getElementById('card-element');
-  const cardErrors = document.getElementById('card-errors');
-
-  if (cardElementContainer) {
-    cardElement.mount('#card-element');
-  }
-
-  // Display real-time validation errors from the card element
-  cardElement.on('change', (event) => {
-    if (cardErrors) {
-      cardErrors.textContent = event.error ? event.error.message : '';
-    }
-  });
-
-  const resetPromo = () => {
-    appliedPromoCode = null;
-    discountAmount = 0;
-    
-    // Use the dynamically selected price from Step 4
-    const originalPrice = window.currentOrderData ? parseInt(window.currentOrderData.price.replace('$', ''), 10) : 79;
-
-    if (promoInput) promoInput.value = '';
-    if (promoMessage) {
-      promoMessage.className = 'promo-message';
-      promoMessage.textContent = '';
-      promoMessage.style.display = 'none';
-    }
-    if (discountRow) discountRow.style.display = 'none';
-    if (checkoutTotalVal) checkoutTotalVal.textContent = `$${originalPrice.toFixed(2)}`;
-    if (btnPayNow) btnPayNow.textContent = `Pay $${originalPrice.toFixed(2)}`;
-  };
-
-  // Close Modal
-  const closePayment = () => {
-    modal.style.display = 'none';
-    errorMsg.style.display = 'none';
-    if (cardErrors) cardErrors.textContent = '';
-    if (phase1 && phase2) {
-      phase1.style.display = 'block';
-      phase2.style.display = 'none';
-    }
-    resetPromo();
-    if (payForm) payForm.reset();
-    cardElement.clear();
-  };
-
-  closeBtn.addEventListener('click', closePayment);
-  window.addEventListener('click', (e) => {
-    if (e.target === modal) closePayment();
-  });
-
-  // Apply Promo Code (client-side preview — server validates the final price)
-  if (promoApplyBtn && promoInput) {
-    promoApplyBtn.addEventListener('click', async () => {
-      const codeVal = promoInput.value.trim().toUpperCase();
-      if (!codeVal) return;
-
-      if (promoMessage) {
-        promoMessage.className = 'promo-message';
-        promoMessage.style.display = 'none';
-      }
-      promoApplyBtn.disabled = true;
-      promoApplyBtn.textContent = 'Applying...';
-
-      try {
-        const emailVal = window.currentOrderData ? (window.currentOrderData.email || '').trim().toLowerCase() : '';
-        if (emailVal) {
-          const userPromoId = `${emailVal}_${codeVal}`;
-          const usedPromoRef = doc(db, 'used_promos', userPromoId);
-          const usedSnap = await getDoc(usedPromoRef);
-          if (usedSnap.exists()) {
-            resetPromo();
-            if (promoMessage) {
-              promoMessage.textContent = 'This promo code has already been applied by this email address.';
-              promoMessage.classList.add('error');
-              promoMessage.style.display = 'block';
-            }
-            return;
-          }
-        }
-
-        const promoDocRef = doc(db, 'promo_codes', codeVal);
-        const docSnap = await getDoc(promoDocRef);
-
-        if (docSnap.exists()) {
-          const promoData = docSnap.data();
-          appliedPromoCode = promoData.code;
-
-          const originalPrice = window.currentOrderData ? parseInt(window.currentOrderData.price.replace('$', ''), 10) : 79;
-
-          if (promoData.discountType === 'percentage') {
-            discountAmount = originalPrice * (parseFloat(promoData.discountValue) / 100);
-          } else {
-            discountAmount = parseFloat(promoData.discountValue);
-          }
-
-          // Cap discount at original price
-          if (discountAmount > originalPrice) {
-            discountAmount = originalPrice;
-          }
-
-          const finalPrice = originalPrice - discountAmount;
-
-          if (checkoutTotalVal) {
-            checkoutTotalVal.textContent = `$${finalPrice.toFixed(2)}`;
-          }
-          if (btnPayNow) {
-            btnPayNow.textContent = `Pay $${finalPrice.toFixed(2)}`;
-          }
-
-          if (discountRow && appliedCodeLabel && discountValLabel) {
-            appliedCodeLabel.textContent = appliedPromoCode;
-            discountValLabel.textContent = `-$${discountAmount.toFixed(2)}`;
-            discountRow.style.display = 'flex';
-          }
-
-          // Update currentOrderData details for display purposes
-          if (window.currentOrderData) {
-            window.currentOrderData.promoCodeUsed = appliedPromoCode;
-          }
-
-          if (promoMessage) {
-            promoMessage.textContent = `Promo code applied successfully! Discount: -$${discountAmount.toFixed(2)}`;
-            promoMessage.classList.add('success');
-            promoMessage.style.display = 'block';
-          }
-        } else {
-          // Invalid code
-          resetPromo();
-          if (promoMessage) {
-            promoMessage.textContent = 'Invalid promo code. Please check and try again.';
-            promoMessage.classList.add('error');
-            promoMessage.style.display = 'block';
-          }
-        }
-      } catch (err) {
-        console.error("Error applying promo code:", err);
-        if (promoMessage) {
-          promoMessage.textContent = 'Error verifying promo code. Please try again.';
-          promoMessage.classList.add('error');
-          promoMessage.style.display = 'block';
-        }
-      } finally {
-        promoApplyBtn.disabled = false;
-        promoApplyBtn.textContent = 'Apply';
-      }
-    });
-  }
-
-  // Payment Method Selection (Phase 1 -> Phase 2)
-  methodBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const method = btn.dataset.method;
-      
-      // Hide all sections, show selected
-      sections.forEach(sec => sec.style.display = 'none');
-      const selectedSection = document.getElementById(`pay-method-${method}`);
-      if (selectedSection) {
-        selectedSection.style.display = 'block';
-      }
-
-      // Switch phases
-      phase1.style.display = 'none';
-      phase2.style.display = 'block';
-    });
-  });
-
-  // Back Button (Phase 2 -> Phase 1)
-  if (btnPaymentBack) {
-    btnPaymentBack.addEventListener('click', () => {
-      phase2.style.display = 'none';
-      phase1.style.display = 'block';
-    });
-  }
-
-  // ── Stripe Payment Processing ─────────────────────────────
-  const processStripePayment = async (e) => {
-    if (e) e.preventDefault();
-    errorMsg.style.display = 'none';
-    if (cardErrors) cardErrors.textContent = '';
-
-    // Disable pay button during processing
-    if (btnPayNow) {
-      btnPayNow.disabled = true;
-      btnPayNow.textContent = 'Processing...';
-    }
-    loadingOverlay.style.display = 'flex';
-
-    const payEmailInput = document.getElementById('pay-email');
-    const payNameInput = document.getElementById('pay-name');
-
-    if (payEmailInput && window.currentOrderData) {
-      window.currentOrderData.email = payEmailInput.value.trim();
-    }
-
-    try {
-      if (!window.currentOrderData) throw new Error('No order data found');
-
-      // 1. Call Cloud Function to create PaymentIntent (server calculates price)
-      const createPaymentIntent = httpsCallable(functions, 'createStripePaymentIntent');
-      const { data: piData } = await createPaymentIntent({
-        email: window.currentOrderData.email,
-        deliveryType: window.currentOrderData.deliveryType || 'standard',
-        promoCode: appliedPromoCode || ''
-      });
-
-      // 2. Confirm the payment with Stripe using the card element
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-        piData.clientSecret,
-        {
-          payment_method: {
-            card: cardElement,
-            billing_details: {
-              name: payNameInput ? payNameInput.value.trim() : '',
-              email: window.currentOrderData.email
-            }
-          }
-        }
-      );
-
-      if (stripeError) {
-        // Display error to the customer
-        loadingOverlay.style.display = 'none';
-        if (btnPayNow) {
-          const displayPrice = piData.finalPrice || 79;
-          btnPayNow.disabled = false;
-          btnPayNow.textContent = `Pay $${displayPrice.toFixed(2)}`;
-        }
-        errorMsg.textContent = stripeError.message;
-        errorMsg.style.display = 'block';
-        return;
-      }
-
-      if (paymentIntent.status === 'succeeded') {
-        // 3. Confirm order in Firestore via Cloud Function
-        const confirmOrder = httpsCallable(functions, 'confirmStripeOrder');
-        await confirmOrder({
-          paymentIntentId: paymentIntent.id,
-          formData: window.currentOrderData
-        });
-
-        loadingOverlay.style.display = 'none';
-        alert('Payment Successful! Your song order has been sent to our artists.');
-        closePayment();
-
-        // Close the original song modal too
-        const songModal = document.getElementById('song-modal');
-        if (songModal) {
-          songModal.classList.remove('is-open');
-          document.body.classList.remove('modal-open');
-        }
-
-        window.currentOrderData = null;
-      }
-    } catch (error) {
-      loadingOverlay.style.display = 'none';
-      console.error('Payment error:', error);
-
-      const originalPrice = window.currentOrderData ? parseInt(window.currentOrderData.price.replace('$', ''), 10) : 79;
-      if (btnPayNow) {
-        btnPayNow.disabled = false;
-        btnPayNow.textContent = `Pay $${originalPrice.toFixed(2)}`;
-      }
-
-      // Parse Cloud Function error messages
-      let errorMessage = 'An error occurred while processing your payment. Please try again.';
-      if (error.code === 'functions/already-exists') {
-        errorMessage = 'This promo code has already been used by this email address.';
-      } else if (error.code === 'functions/not-found') {
-        errorMessage = 'Invalid promo code.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      errorMsg.textContent = errorMessage;
-      errorMsg.style.display = 'block';
-    }
-  };
-
-  if (payForm) payForm.addEventListener('submit', processStripePayment);
-  if (btnPayPaypal) btnPayPaypal.addEventListener('click', processStripePayment);
-}
-
-document.addEventListener('DOMContentLoaded', initPaymentModal);
 
 /* ── Live Support Widget Logic ────────────────────────────── */
 function initSupportWidget() {

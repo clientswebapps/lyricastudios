@@ -1,6 +1,6 @@
 {
   "name": "lyricastudios-functions",
-  "description": "Cloud Functions for Lyricastudios Stripe payment processing",
+  "description": "Cloud Functions for Lyricastudios Merchant of Record payment processing",
   "scripts": {
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
@@ -13,9 +13,9 @@
   },
   "main": "index.js",
   "dependencies": {
+    "axios": "^1.18.0",
     "firebase-admin": "^13.0.0",
-    "firebase-functions": "^6.3.0",
-    "stripe": "^18.0.0"
+    "firebase-functions": "^6.3.0"
   },
   "private": true
 }

@@ -1,235 +1,233 @@
 /* ═══════════════════════════════════════════════════════════════
    LYRICASTUDIOS — Firebase Cloud Functions (Gen 1)
-   Secure Stripe Payment Processing
+   Secure Lemon Squeezy Payment Processing (Merchant of Record)
    ═══════════════════════════════════════════════════════════════ */
 
 const functions = require("firebase-functions/v1");
 const admin = require("firebase-admin");
+const axios = require("axios");
 
 admin.initializeApp();
 
 /**
- * createPaymentIntent
- * -------------------
- * Called by the frontend when the customer clicks "Pay".
- * Calculates the correct price server-side (prevents tampering),
- * validates any promo code, and creates a Stripe PaymentIntent.
- *
- * @param {object} data - { email, deliveryType, promoCode? }
- * @returns {object} - { clientSecret, finalPrice }
+ * createCheckoutSession
+ * ---------------------
+ * Called by the frontend when the customer clicks checkout.
+ * Saves form data to pending_orders in Firestore and generates a Lemon Squeezy checkout URL.
  */
-exports.createStripePaymentIntent = functions
-  .runWith({ secrets: ["STRIPE_SECRET_KEY"] })
+exports.createCheckoutSession = functions
+  .runWith({ secrets: ["LEMON_SQUEEZY_API_KEY"] })
   .https.onCall(async (data, context) => {
-    const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY.trim());
     const db = admin.firestore();
 
-    // ── Validate required fields ────────────────────────────
     const email = (data.email || "").trim().toLowerCase();
     const deliveryType = data.deliveryType || "standard";
+    const formData = data.formData;
 
-    if (!email) {
-      throw new functions.https.HttpsError("invalid-argument", "Email is required.");
+    if (!email || !formData) {
+      throw new functions.https.HttpsError("invalid-argument", "Email and form data are required.");
     }
 
-    // ── Calculate base price (server-authoritative) ─────────
-    let basePrice;
-    if (deliveryType === "rush") {
-      basePrice = 89;
-    } else {
-      basePrice = 79;
-    }
-
-    // ── Validate promo code (if provided) ───────────────────
-    let discountAmount = 0;
-    let validatedPromoCode = null;
-    const promoCode = (data.promoCode || "").trim().toUpperCase();
-
-    if (promoCode) {
-      // Check if this email already used this promo code
-      const userPromoId = `${email}_${promoCode}`;
-      const usedPromoSnap = await db
-        .collection("used_promos")
-        .doc(userPromoId)
-        .get();
-
-      if (usedPromoSnap.exists) {
-        throw new functions.https.HttpsError(
-          "already-exists",
-          "This promo code has already been used by this email address."
-        );
-      }
-
-      // Look up the promo code
-      const promoSnap = await db
-        .collection("promo_codes")
-        .doc(promoCode)
-        .get();
-
-      if (promoSnap.exists) {
-        const promoData = promoSnap.data();
-        validatedPromoCode = promoData.code || promoCode;
-
-        if (promoData.discountType === "percentage") {
-          discountAmount = basePrice * (parseFloat(promoData.discountValue) / 100);
-        } else {
-          discountAmount = parseFloat(promoData.discountValue);
-        }
-
-        // Cap discount at base price
-        if (discountAmount > basePrice) {
-          discountAmount = basePrice;
-        }
-      } else {
-        throw new functions.https.HttpsError("not-found", "Invalid promo code.");
-      }
-    }
-
-    // ── Calculate final price ───────────────────────────────
-    const finalPrice = Math.round((basePrice - discountAmount) * 100); // cents
-
-    if (finalPrice <= 0) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Total price must be greater than zero."
-      );
-    }
-
-    // ── Create Stripe PaymentIntent ─────────────────────────
+    // 1. Save order to pending_orders in Firestore
+    let pendingOrderId;
     try {
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: finalPrice,
-        currency: "usd",
-        metadata: {
+      const pendingOrderRef = await db.collection("pending_orders").add({
+        customerData: {
+          recipient: formData.recipient || "",
+          name: formData.name || "",
+          pronouns: formData.pronouns || "",
+          occasion: formData.occasion || "",
+          occasionStory: formData.occasionStory || "",
+          genre: formData.genre || "",
+          preferredVoice: formData.preferredVoice || "",
           email: email,
+          memories: formData.memories || "",
+          words: formData.words || [],
+          plan: formData.plan || "standard",
           deliveryType: deliveryType,
-          promoCode: validatedPromoCode || "",
-          basePriceCents: basePrice * 100,
-          discountCents: Math.round(discountAmount * 100),
+          price: deliveryType === "rush" ? "$89.00" : "$79.00",
         },
+        status: "Pending Payment",
+        paymentStatus: "unpaid",
+        timestamps: {
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        }
       });
+      pendingOrderId = pendingOrderRef.id;
+    } catch (err) {
+      console.error("Failed to write pending order to Firestore:", err);
+      throw new functions.https.HttpsError("internal", "Failed to initialize order. Please try again.");
+    }
+
+    // 2. Retrieve configuration settings
+    const storeId = process.env.LEMON_SQUEEZY_STORE_ID || "409961";
+    const standardVariantId = process.env.LEMON_SQUEEZY_STANDARD_VARIANT_ID || "1802118";
+    const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1802132";
+
+    const variantId = deliveryType === "rush" ? rushVariantId : standardVariantId;
+
+    if (!process.env.LEMON_SQUEEZY_API_KEY) {
+      console.error("Missing LEMON_SQUEEZY_API_KEY environment secret.");
+      throw new functions.https.HttpsError("failed-precondition", "Payment gateway is not configured.");
+    }
+
+    // 3. Create checkout session via Lemon Squeezy API
+    try {
+      const response = await axios.post(
+        "https://api.lemonsqueezy.com/v1/checkouts",
+        {
+          data: {
+            type: "checkouts",
+            attributes: {
+              checkout_data: {
+                email: email,
+                custom: {
+                  pendingOrderId: pendingOrderId,
+                },
+              },
+            },
+            relationships: {
+              store: {
+                data: {
+                  type: "stores",
+                  id: storeId.toString(),
+                },
+              },
+              variant: {
+                data: {
+                  type: "variants",
+                  id: variantId.toString(),
+                },
+              },
+            },
+          },
+        },
+        {
+          headers: {
+            Accept: "application/vnd.api+json",
+            "Content-Type": "application/vnd.api+json",
+            Authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY.trim()}`,
+          },
+        }
+      );
+
+      const checkoutUrl = response.data.data.attributes.url;
 
       return {
-        clientSecret: paymentIntent.client_secret,
-        finalPrice: finalPrice / 100, // dollars for display
+        checkoutUrl: checkoutUrl,
+        pendingOrderId: pendingOrderId,
       };
-    } catch (error) {
-      console.error("Stripe PaymentIntent creation failed:", error);
-      throw new functions.https.HttpsError("internal", "Failed to create payment. Please try again.");
+    } catch (err) {
+      console.error("Lemon Squeezy checkout creation failed:", err.response ? err.response.data : err.message);
+      throw new functions.https.HttpsError("internal", "Failed to generate checkout session. Please try again.");
     }
   });
 
 /**
- * confirmOrder
- * ------------
- * Called by the frontend after Stripe confirms the payment succeeded.
- * Verifies the PaymentIntent status with Stripe, then writes the
- * order to Firestore and marks any promo code as used.
- *
- * @param {object} data - { paymentIntentId, formData }
- * @returns {object} - { success: true }
+ * handleMoRWebhook
+ * ----------------
+ * HTTP webhook receiver for Lemon Squeezy payment notifications.
+ * Verifies signature, processes successful orders, and moves them to orders collection.
  */
-exports.confirmStripeOrder = functions
-  .runWith({ secrets: ["STRIPE_SECRET_KEY"] })
-  .https.onCall(async (data, context) => {
-    const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY.trim());
+exports.handleMoRWebhook = functions
+  .runWith({ secrets: ["LEMON_SQUEEZY_WEBHOOK_SECRET"] })
+  .https.onRequest(async (req, res) => {
+    const crypto = require("crypto");
     const db = admin.firestore();
 
-    const paymentIntentId = data.paymentIntentId;
-    const formData = data.formData;
-
-    if (!paymentIntentId || !formData) {
-      throw new functions.https.HttpsError(
-        "invalid-argument",
-        "Payment intent ID and form data are required."
-      );
+    const webhookSecret = process.env.LEMON_SQUEEZY_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error("Missing LEMON_SQUEEZY_WEBHOOK_SECRET secret.");
+      res.status(500).send("Webhook secret not configured.");
+      return;
     }
 
-    // ── Verify payment with Stripe ──────────────────────────
-    let paymentIntent;
-    try {
-      paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-    } catch (error) {
-      console.error("Failed to retrieve PaymentIntent:", error);
-      throw new functions.https.HttpsError("not-found", "Payment not found.");
+    // 1. Verify webhook signature
+    const signature = req.get("X-Signature") || "";
+    if (!signature) {
+      console.error("Missing X-Signature header.");
+      res.status(401).send("Missing signature.");
+      return;
     }
 
-    if (paymentIntent.status !== "succeeded") {
-      throw new functions.https.HttpsError(
-        "failed-precondition",
-        "Payment has not been completed successfully."
-      );
+    const hmac = crypto.createHmac("sha256", webhookSecret.trim());
+    const digest = hmac.update(req.rawBody).digest("hex");
+
+    if (!crypto.timingSafeEqual(Buffer.from(digest, "utf8"), Buffer.from(signature, "utf8"))) {
+      console.error("Signature verification failed.");
+      res.status(401).send("Invalid signature.");
+      return;
     }
 
-    // ── Prevent duplicate order creation ────────────────────
-    const existingOrder = await db
-      .collection("orders")
-      .where("paymentIntentId", "==", paymentIntentId)
-      .limit(1)
-      .get();
+    // 2. Process event
+    const event = req.body;
+    const eventName = event.meta ? event.meta.event_name : null;
 
-    if (!existingOrder.empty) {
-      // Order already exists — return success without creating duplicate
-      return { success: true, message: "Order already exists." };
+    console.log(`Received Lemon Squeezy event: ${eventName}`);
+
+    if (eventName === "order_created") {
+      const customData = event.meta.custom_data || {};
+      const pendingOrderId = customData.pendingOrderId;
+
+      if (!pendingOrderId) {
+        console.warn("No pendingOrderId found in webhook custom metadata.");
+        res.status(200).send("Ignored: No pendingOrderId.");
+        return;
+      }
+
+      try {
+        const pendingOrderRef = db.collection("pending_orders").doc(pendingOrderId);
+        const pendingOrderSnap = await pendingOrderRef.get();
+
+        if (!pendingOrderSnap.exists) {
+          console.error(`Pending order ${pendingOrderId} not found in Firestore.`);
+          res.status(404).send("Pending order not found.");
+          return;
+        }
+
+        const pendingOrder = pendingOrderSnap.data();
+
+        // Prevent duplicate order creation if webhook retried
+        const existingOrder = await db
+          .collection("orders")
+          .where("paymentIntentId", "==", event.data.id.toString())
+          .limit(1)
+          .get();
+
+        if (!existingOrder.empty) {
+          console.log(`Order already processed for Lemon Squeezy order: ${event.data.id}`);
+          res.status(200).send("Already processed.");
+          return;
+        }
+
+        const orderData = {
+          customerData: pendingOrder.customerData,
+          status: "Pending Assignment",
+          assignedArtistId: null,
+          paymentIntentId: event.data.id.toString(),
+          paymentStatus: "paid",
+          timestamps: {
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            paidAt: admin.firestore.FieldValue.serverTimestamp(),
+          },
+          assets: {},
+        };
+
+        // Batch write: Add to orders and delete from pending_orders
+        const batch = db.batch();
+        const newOrderRef = db.collection("orders").doc();
+        batch.set(newOrderRef, orderData);
+        batch.delete(pendingOrderRef);
+
+        await batch.commit();
+        console.log(`Successfully completed order ${newOrderRef.id} from pending order ${pendingOrderId}`);
+
+      } catch (err) {
+        console.error("Error processing order during webhook:", err);
+        res.status(500).send("Internal processing error.");
+        return;
+      }
     }
 
-    // ── Build the order document ────────────────────────────
-    const email = (formData.email || "").trim().toLowerCase();
-    const promoCode = paymentIntent.metadata.promoCode || null;
-    const basePriceCents = parseInt(paymentIntent.metadata.basePriceCents) || 7900;
-    const discountCents = parseInt(paymentIntent.metadata.discountCents) || 0;
-
-    const orderData = {
-      customerData: {
-        recipient: formData.recipient || "",
-        name: formData.name || "",
-        pronouns: formData.pronouns || "",
-        occasion: formData.occasion || "",
-        occasionStory: formData.occasionStory || "",
-        genre: formData.genre || "",
-        preferredVoice: formData.preferredVoice || "",
-        email: email,
-        memories: formData.memories || "",
-        words: formData.words || [],
-        plan: formData.plan || "standard",
-        deliveryType: formData.deliveryType || "standard",
-        price: `$${(paymentIntent.amount / 100).toFixed(2)}`,
-        originalPrice: `$${(basePriceCents / 100).toFixed(2)}`,
-        promoCodeUsed: promoCode,
-        discountApplied: discountCents > 0 ? `$${(discountCents / 100).toFixed(2)}` : null,
-      },
-      status: "Pending Assignment",
-      assignedArtistId: null,
-      paymentIntentId: paymentIntentId,
-      paymentStatus: "paid",
-      timestamps: {
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      assets: {},
-    };
-
-    // ── Write order + mark promo as used (atomic batch) ─────
-    const batch = db.batch();
-
-    const orderRef = db.collection("orders").doc();
-    batch.set(orderRef, orderData);
-
-    if (promoCode && email) {
-      const userPromoId = `${email}_${promoCode}`;
-      const usedPromoRef = db.collection("used_promos").doc(userPromoId);
-      batch.set(usedPromoRef, {
-        email: email,
-        promoCode: promoCode,
-        usedAt: admin.firestore.FieldValue.serverTimestamp(),
-      });
-    }
-
-    try {
-      await batch.commit();
-    } catch (error) {
-      console.error("Failed to write order to Firestore:", error);
-      throw new functions.https.HttpsError("internal", "Failed to save order. Please contact support.");
-    }
-
-    return { success: true };
+    res.status(200).send("Webhook event processed.");
   });

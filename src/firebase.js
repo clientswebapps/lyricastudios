@@ -13,7 +13,8 @@ const firebaseConfig = {
   projectId: "lyricastudios-2026",
   storageBucket: "lyricastudios-2026.firebasestorage.app",
   messagingSenderId: "400849594802",
-  appId: "1:400849594802:web:89bad36c93838bd9fe9cab"
+  appId: "1:400849594802:web:89bad36c93838bd9fe9cab",
+  measurementId: "G-N7K1G5TBMB"
 };
 
 // Initialize Firebase

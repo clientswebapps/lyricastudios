@@ -47,9 +47,11 @@ let poolOrdersCache = [];
 let tasksOrdersCache = [];
 let qaOrdersCache = [];
 let currentChatArtistId = null;
+let currentModalArtistId = null;
 const alertedMessageIds = new Set(); // track which background alerts were displayed locally
 let unreadMessagesCount = {}; // map of artistId -> unread count for admin
 let localArtists = []; // local cache for admin artist list
+let localUsersSnapshotDocs = [];
 let allActivities = []; // local cache for activity logs
 
 // DOM Elements
@@ -217,44 +219,95 @@ function listenToUserDoc(uid) {
       
       updateUserUI();
       
-      // Show admin-only menus
+      const isTabAllowed = (tabKey) => {
+        if (!userData) return false;
+        if (userData.role === 'admin') return true;
+        return !!(userData.allowedTabs && userData.allowedTabs[tabKey]);
+      };
+
+      // Populate users list if we have cached docs
+      renderUsersListFromCache();
+
+      // Show/hide sidebar nav tabs dynamically
+      document.getElementById('nav-qa').style.display = isTabAllowed('qa') ? 'block' : 'none';
+      document.getElementById('nav-users').style.display = isTabAllowed('users') ? 'block' : 'none';
+      
+      const navBanner = document.getElementById('nav-banner');
+      if (navBanner) navBanner.style.display = isTabAllowed('banner') ? 'block' : 'none';
+      
+      const navPromoCodes = document.getElementById('nav-promo-codes');
+      if (navPromoCodes) navPromoCodes.style.display = isTabAllowed('promoCodes') ? 'block' : 'none';
+      
+      const navPromoUsage = document.getElementById('nav-promo-usage');
+      if (navPromoUsage) navPromoUsage.style.display = isTabAllowed('promoUsage') ? 'block' : 'none';
+      
+      const navAllOrders = document.getElementById('nav-all-orders');
+      if (navAllOrders) navAllOrders.style.display = isTabAllowed('allOrders') ? 'block' : 'none';
+
+      // Hide or show user creation form
+      const createForm = document.querySelector('.create-user-form');
+      if (createForm) {
+        createForm.style.display = (userData.role === 'admin') ? 'block' : 'none';
+      }
+
+      // Chat sidebar settings
       if (userData.role === 'admin') {
-        document.getElementById('nav-qa').style.display = 'block';
-        document.getElementById('nav-users').style.display = 'block';
-        const navBanner = document.getElementById('nav-banner');
-        if (navBanner) navBanner.style.display = 'block';
-        const navPromoCodes = document.getElementById('nav-promo-codes');
-        if (navPromoCodes) navPromoCodes.style.display = 'block';
-        const navPromoUsage = document.getElementById('nav-promo-usage');
-        if (navPromoUsage) navPromoUsage.style.display = 'block';
-        const navAllOrders = document.getElementById('nav-all-orders');
-        if (navAllOrders) navAllOrders.style.display = 'block';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'flex';
         if (artistMessagesLayout) artistMessagesLayout.style.display = 'none';
-
-        if (!isAdminSettingsInitialized) {
-          isAdminSettingsInitialized = true;
-          initAdminBannerSettings();
-          initAdminPromoCodesSettings();
-          initAdminPromoUsage();
-          initAdminAllOrders();
-        }
       } else {
-        document.getElementById('nav-qa').style.display = 'none';
-        document.getElementById('nav-users').style.display = 'none';
-        const navBanner = document.getElementById('nav-banner');
-        if (navBanner) navBanner.style.display = 'none';
-        const navPromoCodes = document.getElementById('nav-promo-codes');
-        if (navPromoCodes) navPromoCodes.style.display = 'none';
-        const navPromoUsage = document.getElementById('nav-promo-usage');
-        if (navPromoUsage) navPromoUsage.style.display = 'none';
-        const navAllOrders = document.getElementById('nav-all-orders');
-        if (navAllOrders) navAllOrders.style.display = 'none';
         if (adminMessagesLayout) adminMessagesLayout.style.display = 'none';
         if (artistMessagesLayout) artistMessagesLayout.style.display = 'flex';
-        // For artist, load chat with Admin
         listenToChat(currentUser.uid, artistChatMessages);
       }
+
+      // Initialize allowed sections / listeners dynamically
+      if (isTabAllowed('banner') && !unsubscribeBanner) {
+        initAdminBannerSettings();
+      } else if (!isTabAllowed('banner') && unsubscribeBanner) {
+        unsubscribeBanner();
+        unsubscribeBanner = null;
+      }
+
+      if (isTabAllowed('promoCodes') && !unsubscribePromoCodes) {
+        initAdminPromoCodesSettings();
+      } else if (!isTabAllowed('promoCodes') && unsubscribePromoCodes) {
+        unsubscribePromoCodes();
+        unsubscribePromoCodes = null;
+      }
+
+      if (isTabAllowed('promoUsage') && !unsubscribePromoUsage) {
+        initAdminPromoUsage();
+      } else if (!isTabAllowed('promoUsage') && unsubscribePromoUsage) {
+        unsubscribePromoUsage();
+        unsubscribePromoUsage = null;
+      }
+
+      if (isTabAllowed('allOrders') && !unsubscribeAllOrders) {
+        initAdminAllOrders();
+      } else if (!isTabAllowed('allOrders') && unsubscribeAllOrders) {
+        unsubscribeAllOrders();
+        unsubscribeAllOrders = null;
+      }
+
+      // Manage QA conditional listener registration
+      if (isTabAllowed('qa')) {
+        if (!unsubscribeQA) {
+          const qaQ = query(collection(db, 'orders'), where('status', '==', 'Awaiting QA'));
+          unsubscribeQA = onSnapshot(qaQ, (snapshot) => {
+            qaOrdersCache = [];
+            snapshot.forEach(docSnap => {
+              qaOrdersCache.push({ id: docSnap.id, ...docSnap.data() });
+            });
+            renderOrdersSection(qaOrdersCache, qaList, false, 'qa-search', 'qa-view-mode');
+          });
+        }
+      } else {
+        if (unsubscribeQA) {
+          unsubscribeQA();
+          unsubscribeQA = null;
+        }
+      }
+
       if (filterArtistContainer) filterArtistContainer.style.display = 'block';
       
       // Show History tab for everyone
@@ -403,6 +456,50 @@ function initSearchAndViewControls() {
   });
 }
 
+// --- Render Users List From Cache ---
+function renderUsersListFromCache() {
+  const isTabAllowed = (tabKey) => {
+    if (!userData) return false;
+    if (userData.role === 'admin') return true;
+    return !!(userData.allowedTabs && userData.allowedTabs[tabKey]);
+  };
+
+  const canManageUsers = isTabAllowed('users');
+  if (canManageUsers) {
+    if (usersList) usersList.innerHTML = '';
+  }
+  
+  localArtists = [];
+  
+  if (historyFilterArtist) {
+    const currentSelectedArtist = historyFilterArtist.value;
+    historyFilterArtist.innerHTML = '<option value="">All Artists</option>';
+    
+    localUsersSnapshotDocs.forEach(docSnap => {
+      const uData = docSnap.data();
+      if (canManageUsers && usersList) {
+        usersList.appendChild(createUserCard(docSnap.id, uData));
+      }
+      
+      // Populate historical log artist selector
+      if (uData.role !== 'admin') {
+        localArtists.push({ id: docSnap.id, ...uData });
+        const opt = document.createElement('option');
+        opt.value = docSnap.id;
+        opt.textContent = uData.name || 'Unknown';
+        if (docSnap.id === currentSelectedArtist) {
+          opt.selected = true;
+        }
+        historyFilterArtist.appendChild(opt);
+      }
+    });
+  }
+  
+  if (canManageUsers) {
+    renderChatArtistList();
+  }
+}
+
 // --- Listeners ---
 function setupListeners() {
   // Initialize controls bounding
@@ -451,52 +548,11 @@ function setupListeners() {
     }
   });
 
-  // Admin Only Listeners
-  if (userData && userData.role === 'admin') {
-    const qaQ = query(collection(db, 'orders'), where('status', '==', 'Awaiting QA'));
-    unsubscribeQA = onSnapshot(qaQ, (snapshot) => {
-      qaOrdersCache = [];
-      snapshot.forEach(docSnap => {
-        qaOrdersCache.push({ id: docSnap.id, ...docSnap.data() });
-      });
-      renderOrdersSection(qaOrdersCache, qaList, false, 'qa-search', 'qa-view-mode');
-    });
-  }
-
-  // Users list (admin) and artist history dropdown (everyone)
+  // Users list and artist history dropdown listener (cached and rendered conditionally)
   const usersQ = query(collection(db, 'users'));
   unsubscribeUsers = onSnapshot(usersQ, (snapshot) => {
-    if (userData && userData.role === 'admin') {
-      usersList.innerHTML = '';
-    }
-    
-    localArtists = [];
-    
-    const currentSelectedArtist = historyFilterArtist.value;
-    historyFilterArtist.innerHTML = '<option value="">All Artists</option>';
-    
-    snapshot.forEach(doc => {
-      const uData = doc.data();
-      if (userData && userData.role === 'admin') {
-        usersList.appendChild(createUserCard(doc.id, uData));
-      }
-      
-      // Populate historical log artist selector
-      if (uData.role !== 'admin') {
-        localArtists.push({ id: doc.id, ...uData });
-        const opt = document.createElement('option');
-        opt.value = doc.id;
-        opt.textContent = uData.name || 'Unknown';
-        if (doc.id === currentSelectedArtist) {
-          opt.selected = true;
-        }
-        historyFilterArtist.appendChild(opt);
-      }
-    });
-    
-    if (userData && userData.role === 'admin') {
-      renderChatArtistList();
-    }
+    localUsersSnapshotDocs = snapshot.docs;
+    renderUsersListFromCache();
   });
 
   // History logs listener (everyone)
@@ -573,11 +629,11 @@ function setupListeners() {
 }
 
 function clearListeners() {
-  if (unsubscribePool) unsubscribePool();
-  if (unsubscribeTasks) unsubscribeTasks();
-  if (unsubscribeQA) unsubscribeQA();
-  if (unsubscribeUsers) unsubscribeUsers();
-  if (unsubscribeHistory) unsubscribeHistory();
+  if (unsubscribePool) { unsubscribePool(); unsubscribePool = null; }
+  if (unsubscribeTasks) { unsubscribeTasks(); unsubscribeTasks = null; }
+  if (unsubscribeQA) { unsubscribeQA(); unsubscribeQA = null; }
+  if (unsubscribeUsers) { unsubscribeUsers(); unsubscribeUsers = null; }
+  if (unsubscribeHistory) { unsubscribeHistory(); unsubscribeHistory = null; }
   if (unsubscribeUserDoc) {
     unsubscribeUserDoc();
     unsubscribeUserDoc = null;
@@ -966,7 +1022,7 @@ function createCompactOrderCard(id, data) {
 function createUserCard(id, data) {
   const card = document.createElement('div');
   card.className = 'user-card';
-  if (data.role !== 'admin') {
+  if (userData && userData.role === 'admin' && data.role !== 'admin') {
     card.onclick = () => openArtistModal(id, data);
     card.style.cursor = 'pointer';
   }
@@ -1256,6 +1312,7 @@ window.onclick = (e) => {
     orderModal.style.display = 'none';
   } else if (e.target === artistModal) {
     artistModal.style.display = 'none';
+    currentModalArtistId = null;
   } else if (e.target === changePasswordModal) {
     changePasswordModal.style.display = 'none';
   } else if (e.target === logoutConfirmModal) {
@@ -1540,6 +1597,23 @@ if (historyFilterAction) {
 async function openArtistModal(artistId, artistData) {
   if (!artistModal) return;
   
+  currentModalArtistId = artistId;
+  
+  // Populate permissions checkboxes
+  const allowed = artistData.allowedTabs || {};
+  const qaCheck = document.getElementById('perm-qa'); if (qaCheck) qaCheck.checked = !!allowed.qa;
+  const bannerCheck = document.getElementById('perm-banner'); if (bannerCheck) bannerCheck.checked = !!allowed.banner;
+  const promoCodesCheck = document.getElementById('perm-promo-codes'); if (promoCodesCheck) promoCodesCheck.checked = !!allowed.promoCodes;
+  const promoUsageCheck = document.getElementById('perm-promo-usage'); if (promoUsageCheck) promoUsageCheck.checked = !!allowed.promoUsage;
+  const usersCheck = document.getElementById('perm-users'); if (usersCheck) usersCheck.checked = !!allowed.users;
+  const allOrdersCheck = document.getElementById('perm-all-orders'); if (allOrdersCheck) allOrdersCheck.checked = !!allowed.allOrders;
+
+  // Show permissions section if the logged in user is admin
+  const permContainer = document.getElementById('modal-artist-permissions-container');
+  if (permContainer) {
+    permContainer.style.display = (userData && userData.role === 'admin') ? 'block' : 'none';
+  }
+
   modalArtistName.innerText = artistData.name || 'Unknown Artist';
   modalArtistEmail.innerText = artistData.email || 'N/A';
   modalArtistRole.innerText = (artistData.role || 'Artist').toUpperCase();
@@ -1640,6 +1714,7 @@ function getStatusClassForOrder(status) {
 if (closeArtistModalBtn) {
   closeArtistModalBtn.onclick = () => {
     artistModal.style.display = 'none';
+    currentModalArtistId = null;
   };
 }
 
@@ -1915,6 +1990,40 @@ if (modalArtistNotify) {
     selectChatArtist(artistId, artistName);
   };
 }
+
+// --- Admin Update Artist Permissions ---
+const tabKeys = {
+  'perm-qa': 'qa',
+  'perm-banner': 'banner',
+  'perm-promo-codes': 'promoCodes',
+  'perm-promo-usage': 'promoUsage',
+  'perm-users': 'users',
+  'perm-all-orders': 'allOrders'
+};
+
+Object.keys(tabKeys).forEach(id => {
+  const el = document.getElementById(id);
+  if (el) {
+    el.addEventListener('change', async () => {
+      if (!currentModalArtistId) return;
+      const tabKey = tabKeys[id];
+      const isChecked = el.checked;
+      
+      try {
+        const userRef = doc(db, 'users', currentModalArtistId);
+        await updateDoc(userRef, {
+          [`allowedTabs.${tabKey}`]: isChecked
+        });
+        showReorderToast("Permissions updated!");
+      } catch (error) {
+        console.error("Error updating permissions:", error);
+        showAlertModal("Could not update permissions: " + error.message, "Error", "error");
+        el.checked = !isChecked; // revert
+      }
+    });
+  }
+});
+
 
 // --- Chat Actions & Methods ---
 function selectChatArtist(artistId, name) {

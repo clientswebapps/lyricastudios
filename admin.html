@@ -626,6 +626,36 @@
           </div>
         </div>
 
+        <div class="artist-permissions-section mt-4" style="border-top: 1px solid var(--border); padding-top: 1.5rem;" id="modal-artist-permissions-container">
+          <h4 style="margin-bottom: 0.75rem;">Allowed Hidden Tabs</h4>
+          <div class="permissions-grid">
+            <label class="permission-checkbox">
+              <input type="checkbox" id="perm-qa" data-tab="qa">
+              QA Pending
+            </label>
+            <label class="permission-checkbox">
+              <input type="checkbox" id="perm-banner" data-tab="banner">
+              Promo Banner
+            </label>
+            <label class="permission-checkbox">
+              <input type="checkbox" id="perm-promo-codes" data-tab="promoCodes">
+              Promo Codes
+            </label>
+            <label class="permission-checkbox">
+              <input type="checkbox" id="perm-promo-usage" data-tab="promoUsage">
+              Promo Usage
+            </label>
+            <label class="permission-checkbox">
+              <input type="checkbox" id="perm-users" data-tab="users">
+              Manage Users
+            </label>
+            <label class="permission-checkbox">
+              <input type="checkbox" id="perm-all-orders" data-tab="allOrders">
+              All Orders
+            </label>
+          </div>
+        </div>
+
         <div class="artist-orders-section mt-4">
           <h4 style="margin-bottom: 0.75rem;">Assigned Orders (Drag & Drop to Prioritize)</h4>
           <div id="modal-artist-orders-list" class="order-grid" style="grid-template-columns: 1fr; gap: 0.75rem;">

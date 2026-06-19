@@ -952,7 +952,9 @@ ol {
 }
 
 .section-tag {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
   background: var(--color-accent-light);
   color: var(--color-accent);
   padding: 0.3rem 0.85rem;
@@ -962,6 +964,43 @@ ol {
   letter-spacing: var(--ls-wide);
   margin-bottom: var(--space-md);
 }
+
+/* ── Ambient Soundwave Animation ──────────────────────────────── */
+.soundwave-animation {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  width: 14px;
+  height: 10px;
+  flex-shrink: 0;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+.soundwave-animation span {
+  width: 2px;
+  height: 100%;
+  background-color: currentColor;
+  border-radius: 1px;
+  animation: bounceSoundwave 1s ease-in-out infinite alternate;
+  transform-origin: bottom;
+}
+
+.soundwave-animation span:nth-child(1) { animation-duration: 0.8s; animation-delay: 0.15s; }
+.soundwave-animation span:nth-child(2) { animation-duration: 1.1s; animation-delay: 0.3s; }
+.soundwave-animation span:nth-child(3) { animation-duration: 0.9s; animation-delay: 0.05s; }
+.soundwave-animation span:nth-child(4) { animation-duration: 1.2s; animation-delay: 0.45s; }
+.soundwave-animation span:nth-child(5) { animation-duration: 0.7s; animation-delay: 0.25s; }
+
+@keyframes bounceSoundwave {
+  0% {
+    transform: scaleY(0.25);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
 
 .section-title {
   font-family: var(--font-primary);

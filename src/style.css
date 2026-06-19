@@ -2141,6 +2141,9 @@ body.modal-open {
   cursor: pointer;
   transition: all var(--duration-fast) ease-out;
   user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .song-modal__chip:hover {
@@ -2345,6 +2348,27 @@ body.modal-open {
   flex-shrink: 0;
 }
 
+/* Outlined chip-icon general styles */
+.song-modal__chip .chip-icon {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  flex-shrink: 0;
+  transition: transform var(--duration-fast) var(--ease-out);
+  color: var(--color-accent);
+}
+
+.song-modal__chip:hover .chip-icon {
+  transform: scale(1.1);
+}
+
+/* Hide original icon when regular chip is selected because checkmark takes its place */
+.song-modal__chips:not(.song-modal__chips--genre) .song-modal__chip.is-selected .chip-icon {
+  display: none;
+}
+
 /* ── Genre Cards Grid (Step 3) ───────────────────────────────── */
 .song-modal__chips--genre {
   display: grid;
@@ -2354,9 +2378,9 @@ body.modal-open {
 }
 
 .song-modal__chips--genre .song-modal__chip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
   text-align: left;
   padding: var(--space-md);
   border-radius: var(--radius-md);
@@ -2364,6 +2388,34 @@ body.modal-open {
   width: 100%;
   gap: var(--space-xs);
   transition: all var(--duration-fast) ease-out;
+  position: relative;
+}
+
+.song-modal__chips--genre .song-modal__chip.is-selected {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.song-modal__chips--genre .song-modal__chip.is-selected::before {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  margin: 0;
+}
+
+.genre-card__title-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  margin-bottom: 2px;
+}
+
+.genre-card__title-row .chip-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--color-accent);
 }
 
 .song-modal__chips--genre .song-modal__chip strong {
@@ -5819,6 +5871,12 @@ body.nav-open {
   display: block;
   font-size: var(--fs-base);
   font-weight: var(--fw-semibold);
+}
+
+.delivery-option-btn__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.2rem;
 }
 
@@ -5833,16 +5891,18 @@ body.nav-open {
   margin-left: 1rem;
 }
 
-.delivery-option-btn__badge {
-  font-size: 0.65rem;
-  font-weight: var(--fw-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  background: var(--gradient-accent);
-  color: #fff;
-  padding: 0.2rem 0.5rem;
-  border-radius: var(--radius-full);
-  margin-left: 1rem;
+.delivery-option-btn__info .delivery-option-btn__badge {
+  font-size: 0.65rem !important;
+  font-weight: var(--fw-bold) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.06em !important;
+  background: var(--gradient-accent) !important;
+  color: #ffffff !important;
+  padding: 0.2rem 0.5rem !important;
+  border-radius: var(--radius-full) !important;
+  margin-left: 0 !important;
+  display: inline-block !important;
+  line-height: 1 !important;
 }
 
 /* ── Mobile Optimization for Promo Code ── */

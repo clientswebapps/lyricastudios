@@ -816,14 +816,8 @@ function initSongModal() {
     });
   });
 
-  // ── Delivery Speed Selection (now handled in Lemon Squeezy checkout) ──
+  // ── Delivery Speed Selection (handled on Lemon Squeezy checkout page) ──
   const checkoutBtnText = checkoutSubmitBtn ? checkoutSubmitBtn.querySelector('span') : null;
-
-  function updateCheckoutButton() {
-    if (checkoutBtnText) {
-      checkoutBtnText.textContent = `Continue to checkout`;
-    }
-  }
 
   // ── Plan Card Selection ──────────────────────────
   const planCards = modal.querySelectorAll('.song-modal__plan-card');

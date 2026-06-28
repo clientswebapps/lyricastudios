@@ -62,8 +62,8 @@ exports.createCheckoutSession = functions
 
     // 2. Retrieve configuration settings
     const storeId = process.env.LEMON_SQUEEZY_STORE_ID || "409961";
-    const standardVariantId = process.env.LEMON_SQUEEZY_STANDARD_VARIANT_ID || "1847689";
-    const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1847690";
+    const standardVariantId = process.env.LEMON_SQUEEZY_STANDARD_VARIANT_ID || "1802118";
+    const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1802132";
 
     const variantId = standardVariantId;
 
@@ -80,12 +80,6 @@ exports.createCheckoutSession = functions
           data: {
             type: "checkouts",
             attributes: {
-              product_options: {
-                enabled_variants: [
-                  parseInt(standardVariantId, 10),
-                  parseInt(rushVariantId, 10),
-                ],
-              },
               checkout_data: {
                 email: email,
                 custom: {
@@ -221,7 +215,7 @@ exports.handleMoRWebhook = functions
         const orderAttributes = event.data.attributes || {};
         
         const purchasedVariantId = (event.data.relationships?.variant?.data?.id || "").toString();
-        const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1847690";
+        const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1802132";
         const actualDeliveryType = purchasedVariantId === rushVariantId.toString() ? "rush" : "standard";
         const actualPrice = purchasedVariantId === rushVariantId.toString() ? "$89.00" : "$79.00";
 

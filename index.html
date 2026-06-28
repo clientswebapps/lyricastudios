@@ -24,7 +24,7 @@
     href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
-  <script src="https://assets.lemonsqueezy.com/lemon.js" defer></script>
+  <script src="https://app.lemonsqueezy.com/js/lemon.js" defer></script>
 
   <!-- Schema.org Structured Data -->
   <script type="application/ld+json">
@@ -127,10 +127,9 @@
   <!-- ═══════════════════════════════════════════ -->
   <!-- PROMO BANNER                                -->
   <!-- ═══════════════════════════════════════════ -->
-  <div class="promo-banner" id="promo-banner">
+  <div class="promo-banner is-hidden" id="promo-banner" style="display: none;">
     <div class="container">
-      <p>🎵 <strong>Limited Offer</strong> — Get 20% off your first custom song! Use code <span
-          class="promo-code">FIRSTSONG</span> at checkout <a href="#hero" class="promo-link">Start Now →</a></p>
+      <p></p>
     </div>
     <button class="promo-close" id="promo-close" aria-label="Close promotion banner">&times;</button>
   </div>
@@ -300,23 +299,23 @@
               <img src="/images/hero_couple.jpeg" alt="Happy couple hugging" class="hero__slide" />
 
             </div>
-            <!-- Floating cards -->
-            <div class="floating-card-wrapper floating-card-wrapper--1" data-animate="fade-up" data-delay="400">
-              <div class="floating-card">
-                <span class="floating-card__icon">🎵</span>
-                <div>
-                  <strong>New Song Ready!</strong>
-                  <small>"Forever Yours"</small>
-                </div>
+          </div>
+          <!-- Floating cards -->
+          <div class="floating-card-wrapper floating-card-wrapper--1" data-animate="fade-up" data-delay="400">
+            <div class="floating-card">
+              <span class="floating-card__icon">🎵</span>
+              <div>
+                <strong>New Song Ready!</strong>
+                <small>"Forever Yours"</small>
               </div>
             </div>
-            <div class="floating-card-wrapper floating-card-wrapper--2" data-animate="fade-up" data-delay="600">
-              <div class="floating-card">
-                <span class="floating-card__icon">⭐</span>
-                <div>
-                  <strong>5-Star Review</strong>
-                  <small>"Made her cry happy tears!"</small>
-                </div>
+          </div>
+          <div class="floating-card-wrapper floating-card-wrapper--2" data-animate="fade-up" data-delay="600">
+            <div class="floating-card">
+              <span class="floating-card__icon">⭐</span>
+              <div>
+                <strong>5-Star Review</strong>
+                <small>"Made her cry happy tears!"</small>
               </div>
             </div>
           </div>
@@ -1832,37 +1831,10 @@
             </span>
           </div>
 
-          <!-- Delivery Speed Selection -->
-          <div class="song-modal__field" style="margin-top: 2rem; margin-bottom: 2rem; text-align: left; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.05);">
-            <label class="song-modal__label">Choose Delivery Speed <span class="song-modal__required">*</span></label>
-            <div class="delivery-speed-options">
-              <button type="button" class="delivery-option-btn is-active" data-delivery="standard" data-price="79">
-                <div class="delivery-option-btn__info">
-                  <div class="delivery-option-btn__title-row">
-                    <strong>Standard Delivery</strong>
-                  </div>
-                  <span>2–5 Days</span>
-                </div>
-                <div class="delivery-option-btn__price">$79</div>
-              </button>
-
-              <button type="button" class="delivery-option-btn" data-delivery="rush" data-price="89">
-                <div class="delivery-option-btn__info">
-                  <div class="delivery-option-btn__title-row">
-                    <strong>Rush Delivery</strong>
-                    <span class="delivery-option-btn__badge">Need It Fast?</span>
-                  </div>
-                  <span>Up to 1 Day</span>
-                </div>
-                <div class="delivery-option-btn__price">$89</div>
-              </button>
-            </div>
-          </div>
-
           <!-- Checkout Action Area -->
           <div class="song-modal__checkout-actions">
             <button type="button" class="song-modal__btn-checkout btn btn--accent" id="checkout-submit-btn">
-              <span>Continue to checkout ($79)</span>
+              <span>Continue to checkout</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14" />
                 <path d="m12 5 7 7-7 7" />

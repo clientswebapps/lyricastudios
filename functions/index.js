@@ -49,6 +49,7 @@ exports.createCheckoutSession = functions
         },
         status: "Pending Payment",
         paymentStatus: "unpaid",
+        promoCodeUsed: null,
         timestamps: {
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         }
@@ -61,10 +62,10 @@ exports.createCheckoutSession = functions
 
     // 2. Retrieve configuration settings
     const storeId = process.env.LEMON_SQUEEZY_STORE_ID || "409961";
-    const standardVariantId = process.env.LEMON_SQUEEZY_STANDARD_VARIANT_ID || "1802118";
-    const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1802132";
+    const standardVariantId = process.env.LEMON_SQUEEZY_STANDARD_VARIANT_ID || "1847689";
+    const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1847690";
 
-    const variantId = deliveryType === "rush" ? rushVariantId : standardVariantId;
+    const variantId = standardVariantId;
 
     if (!process.env.LEMON_SQUEEZY_API_KEY) {
       console.error("Missing LEMON_SQUEEZY_API_KEY environment secret.");
@@ -79,6 +80,12 @@ exports.createCheckoutSession = functions
           data: {
             type: "checkouts",
             attributes: {
+              product_options: {
+                enabled_variants: [
+                  parseInt(standardVariantId, 10),
+                  parseInt(rushVariantId, 10),
+                ],
+              },
               checkout_data: {
                 email: email,
                 custom: {
@@ -119,6 +126,17 @@ exports.createCheckoutSession = functions
       };
     } catch (err) {
       console.error("Lemon Squeezy checkout creation failed:", err.response ? err.response.data : err.message);
+      
+      if (err.response && err.response.data && Array.isArray(err.response.data.errors)) {
+        const firstError = err.response.data.errors[0];
+        if (firstError && firstError.detail && firstError.detail.toLowerCase().includes("discount code")) {
+          throw new functions.https.HttpsError(
+            "invalid-argument",
+            "Invalid promo code."
+          );
+        }
+      }
+      
       throw new functions.https.HttpsError("internal", "Failed to generate checkout session. Please try again.");
     }
   });
@@ -200,12 +218,39 @@ exports.handleMoRWebhook = functions
           return;
         }
 
+        const orderAttributes = event.data.attributes || {};
+        
+        const purchasedVariantId = (event.data.relationships?.variant?.data?.id || "").toString();
+        const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1847690";
+        const actualDeliveryType = purchasedVariantId === rushVariantId.toString() ? "rush" : "standard";
+        const actualPrice = purchasedVariantId === rushVariantId.toString() ? "$89.00" : "$79.00";
+
+        const updatedCustomerData = {
+          ...pendingOrder.customerData,
+          deliveryType: actualDeliveryType,
+          price: actualPrice
+        };
+
         const orderData = {
-          customerData: pendingOrder.customerData,
+          customerData: updatedCustomerData,
           status: "Pending Assignment",
           assignedArtistId: null,
           paymentIntentId: event.data.id.toString(),
           paymentStatus: "paid",
+          promoCodeUsed: pendingOrder.promoCodeUsed || orderAttributes.discount_code || null,
+          discountInfo: {
+            discountTotal: orderAttributes.discount_total || 0,
+            discountTotalFormatted: orderAttributes.discount_total_formatted || "$0.00",
+            discountTotalUsd: orderAttributes.discount_total_usd || 0,
+          },
+          paymentInfo: {
+            subtotal: orderAttributes.subtotal || 0,
+            subtotalFormatted: orderAttributes.subtotal_formatted || "",
+            tax: orderAttributes.tax || 0,
+            taxFormatted: orderAttributes.tax_formatted || "",
+            total: orderAttributes.total || 0,
+            totalFormatted: orderAttributes.total_formatted || "",
+          },
           timestamps: {
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             paidAt: admin.firestore.FieldValue.serverTimestamp(),

@@ -37,7 +37,17 @@ const initAll = () => {
   initHeroTypewriter();
   initCategoryCards();
   initFloatingBadges();
+  
+  if (window.createLemonSqueezy) {
+    window.createLemonSqueezy();
+  }
 };
+
+window.addEventListener('lemon_squeezy_loaded', () => {
+  if (window.createLemonSqueezy) {
+    window.createLemonSqueezy();
+  }
+});
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initAll);
@@ -64,9 +74,8 @@ function initPromoBanner() {
       isBannerActive = !!data.isActive;
       bannerText.innerHTML = data.html || '';
     } else {
-      // Default fallback
-      isBannerActive = true;
-      bannerText.innerHTML = `🎵 <strong>Limited Offer</strong> — Get 20% off your first custom song! Use code <span class="promo-code">FIRSTSONG</span> at checkout <a href="#hero" class="promo-link">Start Now →</a>`;
+      // No promo configured — keep banner hidden
+      isBannerActive = false;
     }
 
     updateVisibility();
@@ -755,7 +764,7 @@ function initSongModal() {
 
   if (checkoutBackLink) {
     checkoutBackLink.addEventListener('click', () => {
-      goToStep(4, 'backward');
+      goToStep(3, 'backward');
     });
   }
 
@@ -807,25 +816,14 @@ function initSongModal() {
     });
   });
 
-  // ── Delivery Speed Selection ──────────────────────
-  let selectedDeliveryType = 'standard';
-  let selectedDeliveryPrice = 79;
-  const deliveryBtns = modal.querySelectorAll('.delivery-option-btn');
+  // ── Delivery Speed Selection (now handled in Lemon Squeezy checkout) ──
   const checkoutBtnText = checkoutSubmitBtn ? checkoutSubmitBtn.querySelector('span') : null;
 
-  deliveryBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      deliveryBtns.forEach(b => b.classList.remove('is-active'));
-      btn.classList.add('is-active');
-      
-      selectedDeliveryType = btn.dataset.delivery;
-      selectedDeliveryPrice = parseInt(btn.dataset.price, 10);
-      
-      if (checkoutBtnText) {
-        checkoutBtnText.textContent = `Continue to checkout ($${selectedDeliveryPrice})`;
-      }
-    });
-  });
+  function updateCheckoutButton() {
+    if (checkoutBtnText) {
+      checkoutBtnText.textContent = `Continue to checkout`;
+    }
+  }
 
   // ── Plan Card Selection ──────────────────────────
   const planCards = modal.querySelectorAll('.song-modal__plan-card');
@@ -1061,6 +1059,7 @@ function initSongModal() {
       return;
     }
 
+
     const formData = {
       recipient: recipientVal,
       name: (document.getElementById('recipient-name') || {}).value || '',
@@ -1077,11 +1076,18 @@ function initSongModal() {
         (document.getElementById('word-3') || {}).value || '',
       ].filter(Boolean),
       plan: 'standard',
-      deliveryType: selectedDeliveryType,
-      price: `$${selectedDeliveryPrice}`
+      deliveryType: 'standard',
+      price: '$79.00',
+      promoCodeUsed: '',
+      discountApplied: '',
+      originalPrice: '$79.00',
+      finalPrice: '$79.00'
     };
 
     console.log('Song Creation Checkout Form Submitted:', formData);
+
+    // Open a blank new tab immediately to bypass popup blockers
+    const checkoutTab = window.open('/checkout-loading.html', '_blank');
 
     // Show loading indicator on checkout button
     const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
@@ -1095,21 +1101,18 @@ function initSongModal() {
       const createCheckoutSession = httpsCallable(functions, 'createCheckoutSession');
       const { data } = await createCheckoutSession({
         email: emailVal,
-        deliveryType: selectedDeliveryType,
         formData: formData
       });
 
       if (data && data.checkoutUrl) {
-        // Redirect to or open Lemon Squeezy checkout
-        if (window.LemonSqueezy) {
-          window.LemonSqueezy.Url.Open(data.checkoutUrl);
-        } else {
-          window.location.href = data.checkoutUrl;
-        }
+        // Load the actual checkout URL in the opened tab
+        checkoutTab.location.href = data.checkoutUrl;
       } else {
+        checkoutTab.close();
         throw new Error('Failed to retrieve checkout URL.');
       }
     } catch (err) {
+      checkoutTab.close();
       console.error('Checkout error:', err);
       alert(err.message || 'An error occurred while setting up checkout. Please try again.');
     } finally {

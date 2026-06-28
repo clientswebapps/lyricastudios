@@ -2172,6 +2172,7 @@ body.modal-open {
 
 .song-modal__step {
   display: none;
+  position: relative;
 }
 
 .song-modal__step.is-active {
@@ -6295,5 +6296,121 @@ body.nav-open {
   .payment-method-btn__icon {
     width: 32px;
     height: 32px;
+  }
+}
+
+/* ── Checkout Redirect Overlay (Full-Page) ────────── */
+.checkout-redirect-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  align-items: center;
+  justify-content: center;
+  animation: overlayFadeIn 0.35s ease;
+}
+
+.checkout-redirect-overlay.is-visible {
+  display: flex;
+}
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.checkout-redirect-overlay__card {
+  background: #ffffff;
+  border-radius: 1.25rem;
+  padding: 2.5rem 2rem;
+  max-width: 380px;
+  width: 90%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  animation: cardSlideUp 0.4s ease;
+}
+
+@keyframes cardSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.checkout-redirect-overlay__icon {
+  margin-bottom: 1.25rem;
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.08); opacity: 0.85; }
+}
+
+.checkout-redirect-overlay__spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(236, 72, 153, 0.15);
+  border-top-color: #ec4899;
+  border-right-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1.5rem;
+}
+
+.checkout-redirect-overlay__title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.checkout-redirect-overlay__subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin: 0 0 1.5rem;
+  line-height: 1.5;
+}
+
+.checkout-redirect-overlay__badges {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.checkout-redirect-overlay__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #4b5563;
+}
+
+.checkout-redirect-overlay__badge svg {
+  color: #6b7280;
+  flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .checkout-redirect-overlay__card {
+    padding: 2rem 1.25rem;
+    max-width: 320px;
+  }
+  .checkout-redirect-overlay__title {
+    font-size: 1.05rem;
+  }
+  .checkout-redirect-overlay__badges {
+    gap: 0.5rem;
   }
 }

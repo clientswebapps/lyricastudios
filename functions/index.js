@@ -20,6 +20,11 @@ exports.createCheckoutSession = functions
   .https.onCall(async (data, context) => {
     const db = admin.firestore();
 
+    const rawKey = process.env.LEMON_SQUEEZY_API_KEY || "";
+    console.log("LEMON_SQUEEZY_API_KEY raw length:", rawKey.length);
+    console.log("LEMON_SQUEEZY_API_KEY prefix:", rawKey.substring(0, 20));
+    console.log("LEMON_SQUEEZY_API_KEY suffix:", rawKey.slice(-20));
+
     const email = (data.email || "").trim().toLowerCase();
     const deliveryType = data.deliveryType || "standard";
     const formData = data.formData;
@@ -62,12 +67,14 @@ exports.createCheckoutSession = functions
 
     // 2. Retrieve configuration settings
     const storeId = process.env.LEMON_SQUEEZY_STORE_ID || "409961";
-    const standardVariantId = process.env.LEMON_SQUEEZY_STANDARD_VARIANT_ID || "1802118";
-    const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1802132";
+    const standardVariantId = process.env.LEMON_SQUEEZY_STANDARD_VARIANT_ID || "1847689";
+    const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1847690";
 
     const variantId = standardVariantId;
 
-    if (!process.env.LEMON_SQUEEZY_API_KEY) {
+    const apiKey = (process.env.LEMON_SQUEEZY_API_KEY || "").replace(/^["']|["']$/g, "").trim();
+
+    if (!apiKey) {
       console.error("Missing LEMON_SQUEEZY_API_KEY environment secret.");
       throw new functions.https.HttpsError("failed-precondition", "Payment gateway is not configured.");
     }
@@ -80,6 +87,12 @@ exports.createCheckoutSession = functions
           data: {
             type: "checkouts",
             attributes: {
+              product_options: {
+                enabled_variants: [
+                  parseInt(standardVariantId, 10),
+                  parseInt(rushVariantId, 10),
+                ],
+              },
               checkout_data: {
                 email: email,
                 custom: {
@@ -107,7 +120,7 @@ exports.createCheckoutSession = functions
           headers: {
             Accept: "application/vnd.api+json",
             "Content-Type": "application/vnd.api+json",
-            Authorization: `Bearer ${process.env.LEMON_SQUEEZY_API_KEY.trim()}`,
+            Authorization: `Bearer ${apiKey}`,
           },
         }
       );
@@ -215,7 +228,7 @@ exports.handleMoRWebhook = functions
         const orderAttributes = event.data.attributes || {};
         
         const purchasedVariantId = (event.data.relationships?.variant?.data?.id || "").toString();
-        const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1802132";
+        const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1847690";
         const actualDeliveryType = purchasedVariantId === rushVariantId.toString() ? "rush" : "standard";
         const actualPrice = purchasedVariantId === rushVariantId.toString() ? "$89.00" : "$79.00";
 

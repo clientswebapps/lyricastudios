@@ -1080,15 +1080,17 @@ function initSongModal() {
 
     console.log('Song Creation Checkout Form Submitted:', formData);
 
-    // Open a blank new tab immediately to bypass popup blockers
-    const checkoutTab = window.open('/checkout-loading.html', '_blank');
+    // Show the checkout redirect overlay on Phase 4
+    const redirectOverlay = document.getElementById('checkout-redirect-overlay');
+    if (redirectOverlay) {
+      redirectOverlay.classList.add('is-visible');
+    }
 
-    // Show loading indicator on checkout button
+    // Also disable the checkout button
     const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
     const originalBtnHTML = checkoutSubmitBtn ? checkoutSubmitBtn.innerHTML : '';
     if (checkoutSubmitBtn) {
       checkoutSubmitBtn.disabled = true;
-      checkoutSubmitBtn.innerHTML = '<span>Preparing secure checkout...</span><div class="spinner spinner--small" style="display:inline-block; width:16px; height:16px; margin-left:8px; border:2px solid rgba(255,255,255,0.3); border-top-color:#fff; border-radius:50%; animation:spin 1s linear infinite;"></div>';
     }
 
     try {
@@ -1099,15 +1101,17 @@ function initSongModal() {
       });
 
       if (data && data.checkoutUrl) {
-        // Load the actual checkout URL in the opened tab
-        checkoutTab.location.href = data.checkoutUrl;
+        // Redirect the current window to the Lemon Squeezy checkout
+        window.location.href = data.checkoutUrl;
       } else {
-        checkoutTab.close();
         throw new Error('Failed to retrieve checkout URL.');
       }
     } catch (err) {
-      checkoutTab.close();
       console.error('Checkout error:', err);
+      // Hide overlay on error
+      if (redirectOverlay) {
+        redirectOverlay.classList.remove('is-visible');
+      }
       alert(err.message || 'An error occurred while setting up checkout. Please try again.');
     } finally {
       if (checkoutSubmitBtn) {
@@ -1633,4 +1637,16 @@ function initFloatingBadges() {
     rotateBadgeContent(badge2, badge2Data);
   }, 2500);
 }
+
+// Hide checkout loading overlay and enable button when navigated back to
+window.addEventListener('pageshow', (event) => {
+  const redirectOverlay = document.getElementById('checkout-redirect-overlay');
+  if (redirectOverlay) {
+    redirectOverlay.classList.remove('is-visible');
+  }
+  const checkoutSubmitBtn = document.getElementById('checkout-submit-btn');
+  if (checkoutSubmitBtn) {
+    checkoutSubmitBtn.disabled = false;
+  }
+});
 

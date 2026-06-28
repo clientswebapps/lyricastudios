@@ -1858,49 +1858,6 @@
               <p>We're confident you'll love your custom song. If you're not completely satisfied, we'll make it right with a <strong>complimentary revision</strong>, or you can email us for a <strong>full refund</strong>. Plus, we guarantee a <strong>100% refund</strong> if your song is not delivered <strong>within 5 days</strong> of your order, <strong>no questions asked</strong>.</p>
             </div>
           </div>
-
-          <!-- News Logos -->
-          <div class="song-modal__news-strip">
-            <p class="song-modal__news-label">FEATURED ON LOCAL NEWS</p>
-            <div class="song-modal__news-logos">
-              <span class="news-logo">cbs news</span>
-              <span class="news-logo">fox</span>
-              <span class="news-logo">aol</span>
-              <span class="news-logo font-yahoo">yahoo<i>!</i>life</span>
-            </div>
-          </div>
-
-          <!-- Checkout Redirect Overlay -->
-          <div class="checkout-redirect-overlay" id="checkout-redirect-overlay">
-            <div class="checkout-redirect-overlay__content">
-              <div class="checkout-redirect-overlay__icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#redirect-gradient)" stroke-width="1.5">
-                  <defs>
-                    <linearGradient id="redirect-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stop-color="#6366f1" />
-                      <stop offset="50%" stop-color="#ec4899" />
-                      <stop offset="100%" stop-color="#f43f5e" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  <path d="m9 11 2 2 4-4" />
-                </svg>
-              </div>
-              <div class="checkout-redirect-overlay__spinner"></div>
-              <h3 class="checkout-redirect-overlay__title">Redirecting to secure checkout</h3>
-              <p class="checkout-redirect-overlay__subtitle">You'll be taken to our trusted payment partner to complete your order safely.</p>
-              <div class="checkout-redirect-overlay__badges">
-                <span class="checkout-redirect-overlay__badge">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                  SSL Encrypted
-                </span>
-                <span class="checkout-redirect-overlay__badge">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                  Secure Payment
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
 
       </div>
@@ -1984,6 +1941,38 @@
     </button>
   </div>
 
+
+  <!-- Full-Page Checkout Redirect Overlay -->
+  <div class="checkout-redirect-overlay" id="checkout-redirect-overlay">
+    <div class="checkout-redirect-overlay__card">
+      <div class="checkout-redirect-overlay__icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#redirect-gradient)" stroke-width="1.5">
+          <defs>
+            <linearGradient id="redirect-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#6366f1" />
+              <stop offset="50%" stop-color="#ec4899" />
+              <stop offset="100%" stop-color="#f43f5e" />
+            </linearGradient>
+          </defs>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="m9 11 2 2 4-4" />
+        </svg>
+      </div>
+      <div class="checkout-redirect-overlay__spinner"></div>
+      <h3 class="checkout-redirect-overlay__title">Redirecting to secure checkout</h3>
+      <p class="checkout-redirect-overlay__subtitle">You'll be taken to our trusted payment partner to complete your order safely.</p>
+      <div class="checkout-redirect-overlay__badges">
+        <span class="checkout-redirect-overlay__badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          SSL Encrypted
+        </span>
+        <span class="checkout-redirect-overlay__badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Secure Payment
+        </span>
+      </div>
+    </div>
+  </div>
 
   <script type="module" src="/src/main.js"></script>
 </body>

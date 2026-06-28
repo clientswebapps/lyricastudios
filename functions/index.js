@@ -20,11 +20,6 @@ exports.createCheckoutSession = functions
   .https.onCall(async (data, context) => {
     const db = admin.firestore();
 
-    const rawKey = process.env.LEMON_SQUEEZY_API_KEY || "";
-    console.log("LEMON_SQUEEZY_API_KEY raw length:", rawKey.length);
-    console.log("LEMON_SQUEEZY_API_KEY prefix:", rawKey.substring(0, 20));
-    console.log("LEMON_SQUEEZY_API_KEY suffix:", rawKey.slice(-20));
-
     const email = (data.email || "").trim().toLowerCase();
     const deliveryType = data.deliveryType || "standard";
     const formData = data.formData;

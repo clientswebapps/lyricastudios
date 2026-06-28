@@ -467,6 +467,16 @@ ol {
   outline: none;
 }
 
+.logo-img {
+  height: 32px;
+  width: auto;
+  display: block;
+}
+
+.footer__logo .logo-img {
+  height: 38px;
+}
+
 .logo-icon {
   display: flex;
   align-items: center;
@@ -3287,6 +3297,14 @@ body.modal-open {
   color: var(--color-accent);
   box-shadow: 0 8px 24px rgba(244, 63, 94, 0.15);
   animation: badgeBounce 2s ease-in-out infinite;
+}
+
+.intro__logo-badge-icon {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
 }
 
 @keyframes badgeBounce {

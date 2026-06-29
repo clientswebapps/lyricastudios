@@ -173,15 +173,40 @@ exports.handleMoRWebhook = functions
     const hmac = crypto.createHmac("sha256", webhookSecret.trim());
     const digest = hmac.update(req.rawBody).digest("hex");
 
-    if (!crypto.timingSafeEqual(Buffer.from(digest, "utf8"), Buffer.from(signature, "utf8"))) {
+    const digestBuffer = Buffer.from(digest, "utf8");
+    const signatureBuffer = Buffer.from(signature, "utf8");
+
+    if (digestBuffer.length !== signatureBuffer.length) {
+      console.error("Signature length mismatch.");
+      res.status(401).send("Invalid signature.");
+      return;
+    }
+
+    if (!crypto.timingSafeEqual(digestBuffer, signatureBuffer)) {
       console.error("Signature verification failed.");
       res.status(401).send("Invalid signature.");
       return;
     }
 
     // 2. Process event
-    const event = req.body;
-    const eventName = event.meta ? event.meta.event_name : null;
+    let event;
+    try {
+      if (req.body && typeof req.body === "object" && !Buffer.isBuffer(req.body)) {
+        event = req.body;
+      } else if (Buffer.isBuffer(req.body)) {
+        event = JSON.parse(req.body.toString("utf8"));
+      } else if (typeof req.body === "string") {
+        event = JSON.parse(req.body);
+      } else {
+        event = JSON.parse(req.rawBody.toString("utf8"));
+      }
+    } catch (e) {
+      console.error("Failed to parse request body as JSON:", e);
+      res.status(400).send("Invalid JSON payload.");
+      return;
+    }
+
+    const eventName = event && event.meta ? event.meta.event_name : null;
 
     console.log(`Received Lemon Squeezy event: ${eventName}`);
 
@@ -222,7 +247,11 @@ exports.handleMoRWebhook = functions
 
         const orderAttributes = event.data.attributes || {};
         
-        const purchasedVariantId = (event.data.relationships?.variant?.data?.id || "").toString();
+        const purchasedVariantId = (
+          event.data.relationships?.variant?.data?.id || 
+          event.data.attributes?.first_order_item?.variant_id || 
+          ""
+        ).toString();
         const rushVariantId = process.env.LEMON_SQUEEZY_RUSH_VARIANT_ID || "1847690";
         const actualDeliveryType = purchasedVariantId === rushVariantId.toString() ? "rush" : "standard";
         const actualPrice = purchasedVariantId === rushVariantId.toString() ? "$89.00" : "$79.00";

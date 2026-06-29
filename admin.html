@@ -426,8 +426,29 @@
 
         <!-- Promo Usage View (Admin Only) -->
         <section id="promo-usage-view" class="view-section" style="display: none;">
-          <h2>Promo Code Usage</h2>
-          <div class="banner-settings-container" style="max-width: 1000px; margin-top: 1.5rem;">
+          <div class="view-header">
+            <h2>Promo Code Usage</h2>
+            <div class="view-controls">
+              <input type="text" id="promo-usage-search" placeholder="Search by email or code..." class="search-bar" autocomplete="off" style="min-width: 280px;">
+            </div>
+          </div>
+
+          <div class="promo-stats-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 1.5rem 0; max-width: 1000px;">
+            <div class="settings-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+              <span style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Total Uses</span>
+              <span id="promo-total-count" style="font-size: 2rem; font-weight: 700; color: var(--accent);">0</span>
+            </div>
+            <div class="settings-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+              <span style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Most Popular Code</span>
+              <span id="promo-popular-code" style="font-size: 1.1rem; font-weight: 700; color: var(--text-main); font-family: monospace; background: rgba(168, 85, 247, 0.1); padding: 0.25rem 0.75rem; border-radius: 6px; border: 1px solid rgba(168, 85, 247, 0.2);">N/A</span>
+            </div>
+            <div class="settings-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+              <span style="font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; letter-spacing: 0.05em; margin-bottom: 0.5rem;">Total Saved</span>
+              <span id="promo-total-discount" style="font-size: 2rem; font-weight: 700; color: var(--success);">$0.00</span>
+            </div>
+          </div>
+
+          <div class="banner-settings-container" style="max-width: 1000px; margin-top: 0.5rem;">
             <div class="settings-card" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;">
               <div class="history-table-container">
                 <table class="history-table">

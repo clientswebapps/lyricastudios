@@ -2661,34 +2661,30 @@ function initAdminAllOrders() {
 // --- Promo Usage View (Admin Only) ---
 function initAdminPromoUsage() {
   const listEl = document.getElementById('promo-usage-list');
+  const searchInput = document.getElementById('promo-usage-search');
   if (!listEl) return;
 
-  if (unsubscribePromoUsage) unsubscribePromoUsage();
+  let promoUsageCache = [];
 
-  const ordersRef = collection(db, 'orders');
+  function renderPromoUsage() {
+    const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
 
-  unsubscribePromoUsage = onSnapshot(ordersRef, (snapshot) => {
-    listEl.innerHTML = '';
-    const ordersWithPromos = [];
-
-    snapshot.forEach(docSnap => {
-      const data = docSnap.data();
-      if (data.customerData && data.customerData.promoCodeUsed) {
-        ordersWithPromos.push({ id: docSnap.id, ...data.customerData });
-      }
+    const filtered = promoUsageCache.filter(order => {
+      const email = (order.email || '').toLowerCase();
+      const code = (order.promoCodeUsed || '').toLowerCase();
+      return email.includes(searchVal) || code.includes(searchVal);
     });
 
-    if (ordersWithPromos.length === 0) {
-      listEl.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No promo code usage recorded yet.</td></tr>';
+    listEl.innerHTML = '';
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No matching promo code usage found.</td></tr>';
+      updatePromoStats(filtered);
       return;
     }
 
-    // Sort by email
-    ordersWithPromos.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
-
-    ordersWithPromos.forEach(order => {
+    filtered.forEach(order => {
       const tr = document.createElement('tr');
-      
       const email = order.email || 'N/A';
       const code = order.promoCodeUsed || 'N/A';
       const discount = order.discountApplied || 'N/A';
@@ -2704,6 +2700,83 @@ function initAdminPromoUsage() {
       `;
       listEl.appendChild(tr);
     });
+
+    updatePromoStats(filtered);
+  }
+
+  function updatePromoStats(items) {
+    const totalCountEl = document.getElementById('promo-total-count');
+    const popularCodeEl = document.getElementById('promo-popular-code');
+    const totalDiscountEl = document.getElementById('promo-total-discount');
+
+    if (totalCountEl) totalCountEl.textContent = items.length;
+
+    const codeCounts = {};
+    let totalDiscountSum = 0;
+
+    items.forEach(item => {
+      const code = (item.promoCodeUsed || '').toUpperCase();
+      if (code && code !== 'N/A') {
+        codeCounts[code] = (codeCounts[code] || 0) + 1;
+      }
+
+      if (item.discountApplied) {
+        const cleanVal = parseFloat(item.discountApplied.replace(/[^0-9.]/g, ''));
+        if (!isNaN(cleanVal)) {
+          totalDiscountSum += cleanVal;
+        }
+      }
+    });
+
+    let popularCode = 'N/A';
+    let maxCount = 0;
+    for (const [code, count] of Object.entries(codeCounts)) {
+      if (count > maxCount) {
+        maxCount = count;
+        popularCode = `${code} (${count})`;
+      }
+    }
+
+    if (popularCodeEl) popularCodeEl.textContent = popularCode;
+    if (totalDiscountEl) totalDiscountEl.textContent = `$${totalDiscountSum.toFixed(2)}`;
+  }
+
+  if (searchInput && !searchInput.dataset.listenerBound) {
+    searchInput.dataset.listenerBound = 'true';
+    searchInput.addEventListener('input', renderPromoUsage);
+  }
+
+  if (unsubscribePromoUsage) unsubscribePromoUsage();
+
+  const ordersRef = collection(db, 'orders');
+
+  unsubscribePromoUsage = onSnapshot(ordersRef, (snapshot) => {
+    promoUsageCache = [];
+
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const promoCode = data.promoCodeUsed || (data.customerData && data.customerData.promoCodeUsed);
+      if (promoCode) {
+        const customer = data.customerData || {};
+        const discount = data.discountInfo?.discountTotalFormatted || customer.discountApplied || 'N/A';
+        const finalPrice = data.paymentInfo?.totalFormatted || customer.price || 'N/A';
+        const originalPrice = customer.originalPrice || (customer.deliveryType === 'rush' ? '$89.00' : '$79.00');
+
+        promoUsageCache.push({
+          id: docSnap.id,
+          email: customer.email || 'N/A',
+          promoCodeUsed: promoCode,
+          discountApplied: discount,
+          originalPrice: originalPrice,
+          price: finalPrice
+        });
+      }
+    });
+
+    // Sort by email
+    promoUsageCache.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
+
+    renderPromoUsage();
   }, (error) => {
     console.error("Error fetching promo usage:", error);
     listEl.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error loading promo usage: ${error.message}</td></tr>`;

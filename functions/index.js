@@ -298,6 +298,52 @@ exports.handleMoRWebhook = functions
         await batch.commit();
         console.log(`Successfully completed order ${newOrderRef.id} from pending order ${pendingOrderId}`);
 
+        // Broadcast FCM Push Notifications to active Admins & Artists
+        try {
+          const usersSnapshot = await db.collection("users").get();
+          const tokens = [];
+          
+          usersSnapshot.forEach(docSnap => {
+            const userData = docSnap.data();
+            // Send only to active users who have registered FCM tokens
+            if (userData.suspended !== true && Array.isArray(userData.fcmTokens)) {
+              userData.fcmTokens.forEach(t => {
+                if (t) tokens.push(t);
+              });
+            }
+          });
+
+          if (tokens.length > 0) {
+            console.log(`Broadcasting FCM notification for order ${newOrderRef.id} to ${tokens.length} tokens...`);
+            const payload = {
+              notification: {
+                title: "New Order Received!",
+                body: `Order #${newOrderRef.id.slice(0, 8).toUpperCase()} (${actualDeliveryType.toUpperCase()}) is ready.`,
+              },
+              data: {
+                orderId: newOrderRef.id,
+                click_action: "/admin.html"
+              },
+              webpush: {
+                fcmOptions: {
+                  link: "/admin.html"
+                }
+              }
+            };
+            const response = await admin.messaging().sendEachForMulticast({
+              tokens: tokens,
+              notification: payload.notification,
+              data: payload.data,
+              webpush: payload.webpush
+            });
+            console.log(`FCM broadcast results: success = ${response.successCount}, failure = ${response.failureCount}`);
+          } else {
+            console.log("No registered FCM tokens found to notify.");
+          }
+        } catch (fcmErr) {
+          console.error("FCM push notification broadcast failed:", fcmErr);
+        }
+
       } catch (err) {
         console.error("Error processing order during webhook:", err);
         res.status(500).send("Internal processing error.");

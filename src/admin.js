@@ -1,7 +1,7 @@
-import { auth, db } from './firebase.js';
-import { 
-  signInWithEmailAndPassword, 
-  onAuthStateChanged, 
+import { auth, db, messaging } from './firebase.js';
+import {
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
   signOut,
   createUserWithEmailAndPassword,
   updatePassword,
@@ -9,21 +9,27 @@ import {
   getAuth
 } from 'firebase/auth';
 import { initializeApp } from 'firebase/app';
-import { 
-  collection, 
-  query, 
-  where, 
-  onSnapshot, 
-  doc, 
-  getDoc, 
-  setDoc, 
+import {
+  collection,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  getDoc,
+  setDoc,
   updateDoc,
   deleteDoc,
   getDocs,
   addDoc,
   orderBy,
-  serverTimestamp 
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore';
+import { getToken, deleteToken } from 'firebase/messaging';
+
+// FCM VAPID Key placeholder - replace with your generated VAPID key
+const FCM_VAPID_KEY = "BOT5fX_Bcbkf_Kg8PA70-JjT_sMyUGz9lIbadsDGWl77hrqUmYfSOJvPHfCom8SfVkD0lxoR217M0T3LMQHrLQs";
 
 // --- State ---
 let currentUser = null;
@@ -168,6 +174,7 @@ onAuthStateChanged(auth, (user) => {
     listenToUserDoc(user.uid);
     showDashboard();
     setupListeners();
+    initFCM(user.uid);
   } else {
     currentUser = null;
     userData = null;
@@ -180,13 +187,13 @@ loginForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const email = document.getElementById('admin-email').value;
   const password = document.getElementById('admin-password').value;
-  
+
   try {
     authError.style.display = 'none';
     const btn = loginForm.querySelector('button');
     btn.disabled = true;
     btn.innerText = 'Logging in...';
-    
+
     await signInWithEmailAndPassword(auth, email, password);
   } catch (error) {
     authError.innerText = getFriendlyFirebaseErrorMessage(error, 'An error occurred during login. Please try again.');
@@ -204,21 +211,21 @@ logoutBtn.addEventListener('click', () => {
 
 function listenToUserDoc(uid) {
   if (unsubscribeUserDoc) unsubscribeUserDoc();
-  
+
   const userRef = doc(db, 'users', uid);
   unsubscribeUserDoc = onSnapshot(userRef, (userSnap) => {
     if (userSnap.exists()) {
       userData = userSnap.data();
-      
+
       // If suspended, notify user and log out
       if (userData.suspended) {
         signOut(auth);
         showAlertModal("Your account has been suspended by the administrator.", "Account Suspended", "error");
         return;
       }
-      
+
       updateUserUI();
-      
+
       const isTabAllowed = (tabKey) => {
         if (!userData) return false;
         if (userData.role === 'admin') return true;
@@ -231,16 +238,16 @@ function listenToUserDoc(uid) {
       // Show/hide sidebar nav tabs dynamically
       document.getElementById('nav-qa').style.display = isTabAllowed('qa') ? 'block' : 'none';
       document.getElementById('nav-users').style.display = isTabAllowed('users') ? 'block' : 'none';
-      
+
       const navBanner = document.getElementById('nav-banner');
       if (navBanner) navBanner.style.display = isTabAllowed('banner') ? 'block' : 'none';
-      
+
       const navPromoCodes = document.getElementById('nav-promo-codes');
       if (navPromoCodes) navPromoCodes.style.display = isTabAllowed('promoCodes') ? 'block' : 'none';
-      
+
       const navPromoUsage = document.getElementById('nav-promo-usage');
       if (navPromoUsage) navPromoUsage.style.display = isTabAllowed('promoUsage') ? 'block' : 'none';
-      
+
       const navAllOrders = document.getElementById('nav-all-orders');
       if (navAllOrders) navAllOrders.style.display = isTabAllowed('allOrders') ? 'block' : 'none';
 
@@ -309,7 +316,7 @@ function listenToUserDoc(uid) {
       }
 
       if (filterArtistContainer) filterArtistContainer.style.display = 'block';
-      
+
       // Show History tab for everyone
       const navHistory = document.getElementById('nav-history');
       if (navHistory) navHistory.style.display = 'block';
@@ -381,7 +388,7 @@ navBtns.forEach(btn => {
   btn.addEventListener('click', () => {
     navBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    
+
     viewSections.forEach(sec => sec.style.display = 'none');
     const targetSection = document.getElementById(btn.dataset.view);
     if (targetSection) targetSection.style.display = 'block';
@@ -420,7 +427,8 @@ function initSearchAndViewControls() {
     { searchId: 'pool-search', selectId: 'pool-view-mode', renderFn: () => renderOrdersSection(poolOrdersCache, poolList, false, 'pool-search', 'pool-view-mode') },
     { searchId: 'tasks-search', selectId: 'tasks-view-mode', renderFn: () => renderOrdersSection(tasksOrdersCache, tasksList, true, 'tasks-search', 'tasks-view-mode') },
     { searchId: 'qa-search', selectId: 'qa-view-mode', renderFn: () => renderOrdersSection(qaOrdersCache, qaList, false, 'qa-search', 'qa-view-mode') },
-    { searchId: 'all-orders-search', selectId: 'all-orders-view-mode', renderFn: () => {
+    {
+      searchId: 'all-orders-search', selectId: 'all-orders-view-mode', renderFn: () => {
         const filterSelect = document.getElementById('all-orders-status-filter');
         const filterVal = filterSelect ? filterSelect.value : 'All';
         const filtered = allOrdersCache.filter(order => {
@@ -428,7 +436,7 @@ function initSearchAndViewControls() {
           return order.status === filterVal;
         });
         renderOrdersSection(filtered, allOrdersList, false, 'all-orders-search', 'all-orders-view-mode');
-      } 
+      }
     }
   ];
 
@@ -444,7 +452,7 @@ function initSearchAndViewControls() {
       vSelect.dataset.listenerBound = 'true';
       vSelect.addEventListener('change', ctrl.renderFn);
     }
-    
+
     // Bind delivery filter
     const prefix = ctrl.searchId.split('-')[0];
     const deliveryFilterId = prefix === 'all' ? 'all-orders-delivery-filter' : prefix + '-delivery-filter';
@@ -468,19 +476,19 @@ function renderUsersListFromCache() {
   if (canManageUsers) {
     if (usersList) usersList.innerHTML = '';
   }
-  
+
   localArtists = [];
-  
+
   if (historyFilterArtist) {
     const currentSelectedArtist = historyFilterArtist.value;
     historyFilterArtist.innerHTML = '<option value="">All Artists</option>';
-    
+
     localUsersSnapshotDocs.forEach(docSnap => {
       const uData = docSnap.data();
       if (canManageUsers && usersList) {
         usersList.appendChild(createUserCard(docSnap.id, uData));
       }
-      
+
       // Populate historical log artist selector
       if (uData.role !== 'admin') {
         localArtists.push({ id: docSnap.id, ...uData });
@@ -494,7 +502,7 @@ function renderUsersListFromCache() {
       }
     });
   }
-  
+
   if (canManageUsers) {
     renderChatArtistList();
   }
@@ -533,14 +541,14 @@ function setupListeners() {
       const pA = a.priority !== undefined ? a.priority : 1000;
       const pB = b.priority !== undefined ? b.priority : 1000;
       if (pA !== pB) return pA - pB;
-      
+
       const timeA = a.timestamps?.createdAt ? a.timestamps.createdAt.toMillis() : 0;
       const timeB = b.timestamps?.createdAt ? b.timestamps.createdAt.toMillis() : 0;
       return timeA - timeB;
     });
 
     renderOrdersSection(tasksOrdersCache, tasksList, true, 'tasks-search', 'tasks-view-mode');
-    
+
     if (userData && userData.activeTasks !== activeCount) {
       updateDoc(doc(db, 'users', currentUser.uid), { activeTasks: activeCount });
       userData.activeTasks = activeCount;
@@ -573,17 +581,17 @@ function setupListeners() {
   unsubscribeNotifications = onSnapshot(notifyQ, (snapshot) => {
     const activeTabBtn = document.querySelector('.nav-btn.active');
     const activeView = activeTabBtn ? activeTabBtn.dataset.view : '';
-    
+
     if (activeView === 'messages-view') return; // Don't interrupt active chat
-    
+
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
       const docId = docSnap.id;
-      
+
       if (data.senderId !== currentUser.uid) {
-        const isTargetUser = (userData && userData.role === 'admin' && data.senderId === data.artistId) || 
-                             (userData && userData.role !== 'admin' && data.artistId === currentUser.uid);
-                             
+        const isTargetUser = (userData && userData.role === 'admin' && data.senderId === data.artistId) ||
+          (userData && userData.role !== 'admin' && data.artistId === currentUser.uid);
+
         if (isTargetUser && !alertedMessageIds.has(docId)) {
           alertedMessageIds.add(docId);
           showAlertModal(data.message, `New message from ${data.senderName}`, 'info');
@@ -597,13 +605,13 @@ function setupListeners() {
   unsubscribeUnreadCount = onSnapshot(unreadQ, (snapshot) => {
     unreadMessagesCount = {};
     let totalUnread = 0;
-    
+
     snapshot.forEach(docSnap => {
       const data = docSnap.data();
       if (data.senderId !== currentUser.uid) {
-        const isIncomingForMe = (userData && userData.role === 'admin') || 
-                                (userData && userData.role !== 'admin' && data.artistId === currentUser.uid);
-                                
+        const isIncomingForMe = (userData && userData.role === 'admin') ||
+          (userData && userData.role !== 'admin' && data.artistId === currentUser.uid);
+
         if (isIncomingForMe) {
           const aId = data.artistId;
           unreadMessagesCount[aId] = (unreadMessagesCount[aId] || 0) + 1;
@@ -611,11 +619,11 @@ function setupListeners() {
         }
       }
     });
-    
+
     if (userData && userData.role === 'admin') {
       renderChatArtistList();
     }
-    
+
     updateMessagesNavBadge(totalUnread);
   });
 
@@ -668,7 +676,7 @@ function clearListeners() {
   }
   alertedMessageIds.clear();
   isAdminSettingsInitialized = false;
-  
+
   // Unsubscribe support query listeners
   clearSupportListeners();
 }
@@ -678,10 +686,10 @@ function getTimerInfo(data) {
   if (data.status === 'Pending Assignment' || data.status === 'Completed' || data.status === 'Delivered' || data.status === 'Ready for Delivery') {
     return { text: '--:--', className: '' };
   }
-  
+
   const now = new Date();
   let deadline = null;
-  
+
   if (data.status === 'Lyrics In Progress' && data.timestamps?.lyricsDeadline) {
     deadline = data.timestamps.lyricsDeadline.toDate();
   } else if (data.status === 'Song In Production' && data.timestamps?.productionDeadline) {
@@ -697,7 +705,7 @@ function getTimerInfo(data) {
 
   const oneHour = 60 * 60 * 1000;
   const oneDay = 24 * 60 * 60 * 1000;
-  
+
   const days = Math.floor(diff / oneDay);
   const hours = Math.floor((diff % oneDay) / oneHour);
   const minutes = Math.floor((diff % oneHour) / (1000 * 60));
@@ -751,8 +759,8 @@ function createOrderCard(id, data, draggable = false) {
   };
   const statusClass = statusClasses[data.status] || 'status-pending';
 
-  const dragHandleHtml = draggable 
-    ? `<span class="drag-handle" title="Drag to reorder">☰</span>` 
+  const dragHandleHtml = draggable
+    ? `<span class="drag-handle" title="Drag to reorder">☰</span>`
     : '';
 
   const timerTextHtml = timerInfo.className === 'card-danger'
@@ -814,8 +822,8 @@ function createOrderRow(id, data, draggable = false) {
   };
   const statusClass = statusClasses[data.status] || 'status-pending';
 
-  const dragHandleHtml = draggable 
-    ? `<span class="drag-handle" title="Drag to reorder">☰</span>` 
+  const dragHandleHtml = draggable
+    ? `<span class="drag-handle" title="Drag to reorder">☰</span>`
     : '';
 
   const timerTextHtml = timerInfo.className === 'card-danger'
@@ -857,7 +865,7 @@ function renderOrdersSection(orders, listElement, isDraggable, searchInputId, vi
 
   const queryText = searchInput ? searchInput.value.toLowerCase().trim() : '';
   const viewMode = viewDropdown ? viewDropdown.value : 'grid';
-  
+
   // Determine delivery filter ID
   const prefix = searchInputId.split('-')[0];
   const deliveryFilterId = prefix === 'all' ? 'all-orders-delivery-filter' : prefix + '-delivery-filter';
@@ -867,7 +875,7 @@ function renderOrdersSection(orders, listElement, isDraggable, searchInputId, vi
   // Filter orders based on search query and delivery filter
   const filtered = orders.filter(order => {
     const cd = order.customerData || {};
-    
+
     // Apply delivery filter
     const orderDeliveryType = cd.deliveryType || 'standard';
     if (deliveryFilter === 'rush' && orderDeliveryType !== 'rush') return false;
@@ -882,12 +890,12 @@ function renderOrdersSection(orders, listElement, isDraggable, searchInputId, vi
     const recipient = (cd.recipient || '').toLowerCase();
     const name = (cd.name || '').toLowerCase();
 
-    return email.includes(queryText) || 
-           id.includes(queryText) || 
-           genre.includes(queryText) || 
-           voice.includes(queryText) || 
-           recipient.includes(queryText) ||
-           name.includes(queryText);
+    return email.includes(queryText) ||
+      id.includes(queryText) ||
+      genre.includes(queryText) ||
+      voice.includes(queryText) ||
+      recipient.includes(queryText) ||
+      name.includes(queryText);
   });
 
   listElement.innerHTML = '';
@@ -932,13 +940,13 @@ function renderOrdersSection(orders, listElement, isDraggable, searchInputId, vi
   } else {
     // List / Table view
     listElement.className = '';
-    
+
     const wrapper = document.createElement('div');
     wrapper.className = 'orders-table-wrapper';
-    
+
     const table = document.createElement('table');
     table.className = 'orders-table';
-    
+
     table.innerHTML = `
       <thead>
         <tr>
@@ -953,12 +961,12 @@ function renderOrdersSection(orders, listElement, isDraggable, searchInputId, vi
       </thead>
       <tbody class="table-body-target"></tbody>
     `;
-    
+
     const tbody = table.querySelector('.table-body-target');
     filtered.forEach(order => {
       tbody.appendChild(createOrderRow(order.id, order, isDraggable));
     });
-    
+
     wrapper.appendChild(table);
     listElement.appendChild(wrapper);
 
@@ -974,7 +982,7 @@ function createCompactOrderCard(id, data) {
   card.className = 'compact-order-card';
   card.setAttribute('draggable', 'true');
   card.dataset.id = id;
-  
+
   card.onclick = (e) => {
     if (e.target.classList.contains('drag-handle')) {
       e.stopPropagation();
@@ -1030,8 +1038,8 @@ function createUserCard(id, data) {
     <h4>${data.name} <small>(${data.role})</small></h4>
     <p>Email: ${data.email}</p>
     <p>Active Tasks: ${data.activeTasks || 0}</p>
-    <p class="text-success">Incentives: $${(data.incentives||0).toFixed(2)}</p>
-    <p class="text-danger">Penalties: $${(data.penalties||0).toFixed(2)}</p>
+    <p class="text-success">Incentives: $${(data.incentives || 0).toFixed(2)}</p>
+    <p class="text-danger">Penalties: $${(data.penalties || 0).toFixed(2)}</p>
   `;
   return card;
 }
@@ -1040,7 +1048,7 @@ function createUserCard(id, data) {
 function openOrderModal(id, data) {
   currentModalOrderId = id;
   currentModalOrderData = data;
-  
+
   document.getElementById('modal-order-id').innerText = `Order #${id}`;
   document.getElementById('modal-order-status').innerText = data.status;
   document.getElementById('modal-order-recipient').innerText = data.customerData?.recipient || 'N/A';
@@ -1119,13 +1127,13 @@ function selectSupportSession(sId) {
   const supportActiveTitle = document.getElementById('support-active-title');
   const adminSupportForm = document.getElementById('admin-support-form');
   const adminSupportMessages = document.getElementById('admin-support-messages');
-  
+
   if (!adminSupportMessages) return;
 
   currentSupportSessionId = sId;
   if (supportActiveTitle) supportActiveTitle.innerText = `Chatting with Visitor`;
   if (adminSupportForm) adminSupportForm.style.display = 'flex';
-  
+
   const layout = document.getElementById('support-messages-layout');
   if (layout) layout.classList.add('mobile-chat-active');
 
@@ -1150,14 +1158,14 @@ function selectSupportSession(sId) {
 
     msgs.forEach(msg => {
       const isSent = msg.sender === 'admin';
-      
+
       const bubble = document.createElement('div');
       bubble.className = `chat-bubble ${isSent ? 'sent' : 'received'}`;
-      
-      const timeStr = (msg.timestamp && typeof msg.timestamp.toDate === 'function') 
-        ? msg.timestamp.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+
+      const timeStr = (msg.timestamp && typeof msg.timestamp.toDate === 'function')
+        ? msg.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '...';
-      
+
       bubble.innerHTML = `
         <div class="chat-bubble-content">
           <span class="chat-bubble-text">${msg.text}</span>
@@ -1174,7 +1182,7 @@ function selectSupportSession(sId) {
 
 function setupSupportListeners() {
   console.log('[Support Admin] Setting up support listeners...');
-  
+
   // Prevent duplicate listener setup
   clearSupportListeners();
 
@@ -1186,16 +1194,16 @@ function setupSupportListeners() {
 
   // Listen to support sessions without orderBy to bypass index errors
   const sessionsQ = query(collection(db, 'support_sessions'));
-  
+
   unsubscribeSupportSessions = onSnapshot(sessionsQ, (snapshot) => {
     console.log('[Support Admin] Snapshot received. Size:', snapshot.size, 'Empty:', snapshot.empty);
     supportSessionList.innerHTML = '';
-    
+
     if (snapshot.empty) {
       supportSessionList.innerHTML = '<p style="padding: 1rem; color: var(--text-muted); text-align: center;">No active sessions.</p>';
       return;
     }
-    
+
     const sessions = [];
     snapshot.forEach(docSnap => {
       sessions.push({ id: docSnap.id, ...docSnap.data() });
@@ -1207,18 +1215,18 @@ function setupSupportListeners() {
       const tB = b.lastMessageTime && typeof b.lastMessageTime.toMillis === 'function' ? b.lastMessageTime.toMillis() : 0;
       return tB - tA;
     });
-    
+
     sessions.forEach(session => {
       const data = session;
       const sId = session.id;
-      
+
       const item = document.createElement('div');
       item.className = `chat-artist-item ${sId === currentSupportSessionId ? 'active' : ''}`;
-      
-      const timeStr = (data.lastMessageTime && typeof data.lastMessageTime.toDate === 'function') 
-        ? data.lastMessageTime.toDate().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) 
+
+      const timeStr = (data.lastMessageTime && typeof data.lastMessageTime.toDate === 'function')
+        ? data.lastMessageTime.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         : '';
-      
+
       item.innerHTML = `
         <div class="chat-artist-avatar">
           <span>U</span>
@@ -1233,13 +1241,13 @@ function setupSupportListeners() {
           </div>
         </div>
       `;
-      
+
       item.onclick = () => {
         selectSupportSession(sId);
         document.querySelectorAll('#support-session-list .chat-artist-item').forEach(el => el.classList.remove('active'));
         item.classList.add('active');
       };
-      
+
       supportSessionList.appendChild(item);
     });
   }, (error) => {
@@ -1336,7 +1344,7 @@ async function acceptOrder() {
   }
 
   const orderRef = doc(db, 'orders', currentModalOrderId);
-  
+
   // Set 4 hour deadline
   const now = new Date();
   const deadline = new Date(now.getTime() + 4 * 60 * 60 * 1000);
@@ -1349,10 +1357,10 @@ async function acceptOrder() {
     });
     showAlertModal("Order accepted! You have 4 hours to submit lyrics.", "Order Accepted", "success");
     orderModal.style.display = 'none';
-    
+
     // Log Activity
     await logActivity(currentUser.uid, userData.name, currentModalOrderId, 'Accepted Order', `Accepted order #${currentModalOrderId.slice(0, 8).toUpperCase()}`);
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     showAlertModal("Error accepting order. Please try again.", "Error", "error");
   }
@@ -1363,7 +1371,7 @@ async function submitLyrics() {
   if (!lyrics) return showAlertModal("Please enter lyrics.", "Validation Error", "warning");
 
   const orderRef = doc(db, 'orders', currentModalOrderId);
-  
+
   // Set 8 hour deadline for production
   const now = new Date();
   const deadline = new Date(now.getTime() + 8 * 60 * 60 * 1000);
@@ -1376,10 +1384,10 @@ async function submitLyrics() {
     });
     showAlertModal("Lyrics submitted! You have 8 hours to produce the song.", "Lyrics Submitted", "success");
     orderModal.style.display = 'none';
-    
+
     // Log Activity
     await logActivity(currentUser.uid, userData.name, currentModalOrderId, 'Submitted Lyrics', `Submitted lyrics for order #${currentModalOrderId.slice(0, 8).toUpperCase()}`);
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     showAlertModal("Error submitting lyrics. Please try again.", "Error", "error");
   }
@@ -1390,7 +1398,7 @@ async function submitSong() {
   if (!url) return showAlertModal("Please provide the audio URL.", "Validation Error", "warning");
 
   const orderRef = doc(db, 'orders', currentModalOrderId);
-  
+
   try {
     await updateDoc(orderRef, {
       status: 'Awaiting QA',
@@ -1398,10 +1406,10 @@ async function submitSong() {
     });
     showAlertModal("Song submitted for QA!", "Song Submitted", "success");
     orderModal.style.display = 'none';
-    
+
     // Log Activity
     await logActivity(currentUser.uid, userData.name, currentModalOrderId, 'Submitted Song', `Submitted song for order #${currentModalOrderId.slice(0, 8).toUpperCase()}`);
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     showAlertModal("Error submitting song. Please try again.", "Error", "error");
   }
@@ -1409,7 +1417,7 @@ async function submitSong() {
 
 async function qaDecision(decision) {
   const orderRef = doc(db, 'orders', currentModalOrderId);
-  
+
   try {
     const artistRef = doc(db, 'users', currentModalOrderData.assignedArtistId);
     const artistSnap = await getDoc(artistRef);
@@ -1418,23 +1426,23 @@ async function qaDecision(decision) {
     if (decision === 'approved') {
       await updateDoc(orderRef, { status: 'Ready for Delivery' });
       // Here we could also distribute the incentive to the artist
-      if(artistSnap.exists()){
-         const currentInc = artistSnap.data().incentives || 0;
-         await updateDoc(artistRef, { incentives: currentInc + 20 }); // arbitrary $20 incentive
+      if (artistSnap.exists()) {
+        const currentInc = artistSnap.data().incentives || 0;
+        await updateDoc(artistRef, { incentives: currentInc + 20 }); // arbitrary $20 incentive
       }
       showAlertModal("Order approved and ready for delivery.", "QA Approved", "success");
-      
+
       // Log Activity
       await logActivity(currentModalOrderData.assignedArtistId, artistName, currentModalOrderId, 'QA Approved', `Admin approved song for order #${currentModalOrderId.slice(0, 8).toUpperCase()}`);
     } else {
       await updateDoc(orderRef, { status: 'Song In Production' }); // Send back to production
       showAlertModal("Order rejected and sent back to artist.", "QA Rejected", "info");
-      
+
       // Log Activity
       await logActivity(currentModalOrderData.assignedArtistId, artistName, currentModalOrderId, 'QA Rejected', `Admin rejected song for order #${currentModalOrderId.slice(0, 8).toUpperCase()} (needs revision)`);
     }
     orderModal.style.display = 'none';
-  } catch(e) {
+  } catch (e) {
     console.error(e);
     showAlertModal("Error updating order. Please try again.", "Error", "error");
   }
@@ -1449,10 +1457,10 @@ createArtistForm.addEventListener('submit', async (e) => {
   const email = document.getElementById('new-artist-email').value;
   const pass = document.getElementById('new-artist-password').value;
   const msgDiv = document.getElementById('create-user-msg');
-  
+
   msgDiv.className = 'mt-4';
   msgDiv.innerText = 'Creating user...';
-  
+
   try {
     // 1. Fetch config from the main app so we can init secondary
     const firebaseConfig = {
@@ -1463,14 +1471,14 @@ createArtistForm.addEventListener('submit', async (e) => {
       messagingSenderId: "400849594802",
       appId: "1:400849594802:web:89bad36c93838bd9fe9cab"
     };
-    
+
     // Check if secondary app exists, otherwise initialize it
     const secondaryApp = initializeApp(firebaseConfig, "SecondaryApp");
     const secondaryAuth = getAuth(secondaryApp);
-    
+
     const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
     const newUid = userCredential.user.uid;
-    
+
     // 2. Add to Firestore users collection using the main app's db
     await setDoc(doc(db, 'users', newUid), {
       uid: newUid,
@@ -1483,10 +1491,10 @@ createArtistForm.addEventListener('submit', async (e) => {
       penaltyStatus: false,
       createdAt: serverTimestamp()
     });
-    
+
     // 3. Sign out the secondary app immediately so it doesn't linger
     await signOut(secondaryAuth);
-    
+
     msgDiv.classList.add('success-msg');
     msgDiv.innerText = 'Artist account created successfully!';
     createArtistForm.reset();
@@ -1518,32 +1526,32 @@ async function logActivity(artistId, artistName, orderId, action, details) {
 function renderHistory() {
   if (!historyList) return;
   historyList.innerHTML = '';
-  
+
   const selectedArtist = historyFilterArtist ? historyFilterArtist.value : '';
   const selectedAction = historyFilterAction ? historyFilterAction.value : '';
-  
+
   let filtered = allActivities;
-  
+
   // Artist filter (available to both admins and artists)
   if (selectedArtist) {
     filtered = filtered.filter(act => act.artistId === selectedArtist);
   }
-  
+
   // Action filter
   if (selectedAction) {
     filtered = filtered.filter(act => act.action === selectedAction);
   }
-  
+
   if (filtered.length === 0) {
     historyList.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No activities found.</td></tr>';
     return;
   }
-  
+
   filtered.forEach(act => {
     const tr = document.createElement('tr');
     const timeStr = act.timestamp ? act.timestamp.toDate().toLocaleString() : 'Pending...';
     const shortOrderId = act.orderId ? act.orderId.slice(0, 8).toUpperCase() : 'N/A';
-    
+
     tr.innerHTML = `
       <td>${timeStr}</td>
       <td><strong>${act.artistName || 'Unknown'}</strong></td>
@@ -1596,9 +1604,9 @@ if (historyFilterAction) {
 // --- Artist Details Modal & Statistics ---
 async function openArtistModal(artistId, artistData) {
   if (!artistModal) return;
-  
+
   currentModalArtistId = artistId;
-  
+
   // Populate permissions checkboxes
   const allowed = artistData.allowedTabs || {};
   const qaCheck = document.getElementById('perm-qa'); if (qaCheck) qaCheck.checked = !!allowed.qa;
@@ -1650,13 +1658,13 @@ async function openArtistModal(artistId, artistData) {
   try {
     const artistOrdersQ = query(collection(db, 'orders'), where('assignedArtistId', '==', artistId));
     const ordersSnap = await getDocs(artistOrdersQ);
-    
+
     modalArtistOrdersList.innerHTML = '';
-    
+
     let totalAssigned = 0;
     let completedCount = 0;
     let pendingCount = 0;
-    
+
     if (ordersSnap.empty) {
       modalArtistOrdersList.innerHTML = '<p class="text-center text-muted" style="width: 100%; padding: 2rem 0;">No orders assigned.</p>';
     } else {
@@ -1677,7 +1685,7 @@ async function openArtistModal(artistId, artistData) {
         const pA = a.priority !== undefined ? a.priority : 1000;
         const pB = b.priority !== undefined ? b.priority : 1000;
         if (pA !== pB) return pA - pB;
-        
+
         const timeA = a.timestamps?.createdAt ? a.timestamps.createdAt.toMillis() : 0;
         const timeB = b.timestamps?.createdAt ? b.timestamps.createdAt.toMillis() : 0;
         return timeA - timeB;
@@ -1691,7 +1699,7 @@ async function openArtistModal(artistId, artistData) {
     modalArtistTotalAssigned.innerText = totalAssigned;
     modalArtistCompleted.innerText = completedCount;
     modalArtistPending.innerText = pendingCount;
-    
+
   } catch (e) {
     console.error("Error loading artist details:", e);
     modalArtistOrdersList.innerHTML = '<p class="text-center text-muted text-danger" style="width: 100%; padding: 2rem 0;">Error loading orders.</p>';
@@ -1737,7 +1745,7 @@ voice: ${cd.preferredVoice || cd.mood || 'N/A'}
 keywords: ${(cd.words && cd.words.length > 0) ? cd.words.join(', ') : 'None'}
 occasion story: ${cd.occasionStory || 'None'}
 memories & jokes: ${cd.memories || 'None'}`;
-    
+
     try {
       await navigator.clipboard.writeText(formatted);
       const originalText = copyDetailsBtn.innerText;
@@ -1755,10 +1763,10 @@ memories & jokes: ${cd.memories || 'None'}`;
 // --- Reusable Alert Modal ---
 function showAlertModal(message, title = 'Notification', type = 'info') {
   if (!alertModal || !alertModalMessage || !alertModalTitle || !alertModalIcon) return;
-  
+
   alertModalMessage.innerText = message;
   alertModalTitle.innerText = title;
-  
+
   // Reset icon and class
   alertModalIcon.className = 'alert-icon-container';
   if (type === 'success') {
@@ -1774,7 +1782,7 @@ function showAlertModal(message, title = 'Notification', type = 'info') {
     alertModalIcon.innerText = 'ℹ️';
     alertModalIcon.classList.add('alert-icon--info');
   }
-  
+
   alertModal.style.display = 'flex';
 }
 
@@ -1791,8 +1799,29 @@ if (logoutCancelBtn) {
   };
 }
 if (logoutConfirmBtn) {
-  logoutConfirmBtn.onclick = () => {
+  logoutConfirmBtn.onclick = async () => {
     logoutConfirmModal.style.display = 'none';
+
+    // Clear FCM token before signout
+    try {
+      const currentToken = localStorage.getItem('fcm_token');
+      if (currentToken) {
+        // Delete registration in Firebase
+        await deleteToken(messaging);
+
+        // Remove token from Firestore user document
+        if (currentUser) {
+          const userRef = doc(db, 'users', currentUser.uid);
+          await updateDoc(userRef, {
+            fcmTokens: arrayRemove(currentToken)
+          });
+        }
+        localStorage.removeItem('fcm_token');
+      }
+    } catch (err) {
+      console.error('Error clearing FCM token during logout:', err);
+    }
+
     signOut(auth);
   };
 }
@@ -1817,29 +1846,29 @@ if (changePassForm) {
     e.preventDefault();
     const newPass = document.getElementById('new-password').value;
     const confirmPass = document.getElementById('confirm-password').value;
-    
+
     if (newPass !== confirmPass) {
       changePassMsg.className = 'error-msg mt-4';
       changePassMsg.innerText = 'Passwords do not match.';
       return;
     }
-    
+
     if (newPass.length < 6) {
       changePassMsg.className = 'error-msg mt-4';
       changePassMsg.innerText = 'Password must be at least 6 characters.';
       return;
     }
-    
+
     try {
       changePassMsg.className = 'mt-4';
       changePassMsg.innerText = 'Updating password...';
-      
+
       await updatePassword(auth.currentUser, newPass);
-      
+
       changePassMsg.className = 'success-msg mt-4';
       changePassMsg.innerText = 'Password updated successfully!';
       changePassForm.reset();
-      
+
       setTimeout(() => {
         changePasswordModal.style.display = 'none';
       }, 1500);
@@ -1860,13 +1889,13 @@ if (modalArtistResetPass) {
       showAlertModal("No email address found for this artist.", "Error", "error");
       return;
     }
-    
+
     try {
       modalArtistResetPass.disabled = true;
       modalArtistResetPass.innerText = 'Sending...';
-      
+
       await sendPasswordResetEmail(auth, email);
-      
+
       showAlertModal(`A password reset link has been successfully sent to ${name} (${email}).`, "Reset Link Sent", "success");
     } catch (error) {
       console.error(error);
@@ -1885,21 +1914,21 @@ if (modalArtistSuspend) {
     const artistName = modalArtistSuspend.dataset.name;
     const isSuspended = modalArtistSuspend.dataset.suspended === "true";
     if (!artistId) return;
-    
+
     try {
       modalArtistSuspend.disabled = true;
       modalArtistSuspend.innerText = isSuspended ? 'Unsuspending...' : 'Suspending...';
-      
+
       const newStatus = !isSuspended;
       await updateDoc(doc(db, 'users', artistId), {
         suspended: newStatus
       });
-      
+
       const actionText = newStatus ? 'Suspended' : 'Unsuspended';
       const logText = newStatus ? `Suspended artist ${artistName}` : `Unsuspended artist ${artistName}`;
-      
+
       await logActivity(currentUser.uid, userData.name, '', actionText + ' Artist', logText);
-      
+
       showAlertModal(`Artist "${artistName}" has been ${actionText.toLowerCase()} successfully.`, `${actionText} Artist`, "success");
       if (artistModal) artistModal.style.display = 'none';
     } catch (error) {
@@ -1918,7 +1947,7 @@ if (modalArtistDelete) {
     const artistId = modalArtistDelete.dataset.id;
     const artistName = modalArtistDelete.dataset.name;
     if (!artistId) return;
-    
+
     if (deleteArtistNamePlaceholder) {
       deleteArtistNamePlaceholder.innerText = artistName;
     }
@@ -1945,18 +1974,18 @@ if (deleteArtistConfirmBtn) {
     const artistId = deleteArtistConfirmBtn.dataset.id;
     const artistName = deleteArtistConfirmBtn.dataset.name;
     if (!artistId) return;
-    
+
     try {
       deleteArtistConfirmBtn.disabled = true;
       deleteArtistConfirmBtn.innerText = 'Deleting...';
-      
+
       await deleteDoc(doc(db, 'users', artistId));
-      
+
       await logActivity(currentUser.uid, userData.name, '', 'Deleted Artist', `Deleted artist ${artistName}`);
-      
+
       if (deleteArtistConfirmModal) deleteArtistConfirmModal.style.display = 'none';
       if (artistModal) artistModal.style.display = 'none';
-      
+
       showAlertModal(`Artist "${artistName}" has been successfully deleted.`, "Artist Deleted", "success");
     } catch (error) {
       console.error(error);
@@ -2008,7 +2037,7 @@ Object.keys(tabKeys).forEach(id => {
       if (!currentModalArtistId) return;
       const tabKey = tabKeys[id];
       const isChecked = el.checked;
-      
+
       try {
         const userRef = doc(db, 'users', currentModalArtistId);
         await updateDoc(userRef, {
@@ -2031,14 +2060,14 @@ function selectChatArtist(artistId, name) {
   if (chatActiveTitle) chatActiveTitle.innerText = `Chat with ${name}`;
   if (adminChatForm) adminChatForm.style.display = 'flex';
   if (adminChatDeleteAllBtn) adminChatDeleteAllBtn.style.display = 'inline-flex';
-  
+
   // Highlight active item
   renderChatArtistList();
-  
+
   // Mobile: Switch to chat area view
   const layout = document.getElementById('admin-messages-layout');
   if (layout) layout.classList.add('mobile-chat-active');
-  
+
   listenToChat(artistId, adminChatMessages);
 }
 
@@ -2058,10 +2087,10 @@ function renderChatArtistList() {
     const item = document.createElement('div');
     item.className = `chat-artist-item ${art.id === currentChatArtistId ? 'active' : ''}`;
     item.onclick = () => selectChatArtist(art.id, art.name);
-    
+
     const unread = unreadMessagesCount[art.id] || 0;
     const badge = unread > 0 ? `<span class="chat-unread-badge">${unread}</span>` : '';
-    
+
     item.innerHTML = `
       <span class="chat-artist-name">${art.name}</span>
       ${badge}
@@ -2072,50 +2101,50 @@ function renderChatArtistList() {
 
 function listenToChat(artistId, containerElement) {
   if (unsubscribeChatMessages) unsubscribeChatMessages();
-  
+
   const chatQ = query(
     collection(db, 'messages'),
     where('artistId', '==', artistId)
   );
-  
+
   unsubscribeChatMessages = onSnapshot(chatQ, (snapshot) => {
     containerElement.innerHTML = '';
     if (snapshot.empty) {
       containerElement.innerHTML = '<p class="text-muted text-center" style="margin: auto; padding: 2rem;">No messages yet. Send a message to start the conversation!</p>';
       return;
     }
-    
+
     // Client-side sort to bypass composite index requirements
     const messages = [];
     snapshot.forEach(docSnap => {
       messages.push({ id: docSnap.id, ...docSnap.data() });
     });
-    
+
     messages.sort((a, b) => {
       const timeA = a.timestamp ? a.timestamp.toMillis() : Date.now();
       const timeB = b.timestamp ? b.timestamp.toMillis() : Date.now();
       return timeA - timeB;
     });
-    
+
     messages.forEach(msg => {
       // Mark as read if received by current user and unread
       if (msg.senderId !== currentUser.uid && !msg.read) {
         updateDoc(doc(db, 'messages', msg.id), { read: true });
       }
-      
+
       const bubble = document.createElement('div');
       const isSent = msg.senderId === currentUser.uid;
       bubble.className = `chat-bubble ${isSent ? 'sent' : 'received'}`;
-      
+
       const timeStr = msg.timestamp ? msg.timestamp.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-      
+
       bubble.innerHTML = `
         <span class="chat-bubble-text">${msg.message}</span>
         <span class="chat-bubble-time">${timeStr}</span>
       `;
       containerElement.appendChild(bubble);
     });
-    
+
     // Scroll to bottom
     containerElement.scrollTop = containerElement.scrollHeight;
   });
@@ -2126,7 +2155,7 @@ if (adminChatForm) {
     e.preventDefault();
     const msgText = adminChatInput.value.trim();
     if (!msgText || !currentChatArtistId) return;
-    
+
     adminChatInput.value = '';
     try {
       await addDoc(collection(db, 'messages'), {
@@ -2146,25 +2175,25 @@ if (adminChatForm) {
 if (adminChatDeleteAllBtn) {
   adminChatDeleteAllBtn.addEventListener('click', async () => {
     if (!currentChatArtistId) return;
-    
+
     if (confirm("Are you sure you want to delete all messages in this conversation? This cannot be undone.")) {
       try {
         adminChatDeleteAllBtn.disabled = true;
         adminChatDeleteAllBtn.innerText = 'Deleting...';
-        
+
         const chatQ = query(
           collection(db, 'messages'),
           where('artistId', '==', currentChatArtistId)
         );
         const snapshot = await getDocs(chatQ);
-        
+
         const deletePromises = [];
         snapshot.forEach(docSnap => {
           deletePromises.push(deleteDoc(doc(db, 'messages', docSnap.id)));
         });
-        
+
         await Promise.all(deletePromises);
-        
+
       } catch (err) {
         console.error("Error deleting messages: ", err);
         showAlertModal("Failed to delete messages.", "Error", "error");
@@ -2181,7 +2210,7 @@ if (artistChatForm) {
     e.preventDefault();
     const msgText = artistChatInput.value.trim();
     if (!msgText) return;
-    
+
     artistChatInput.value = '';
     try {
       await addDoc(collection(db, 'messages'), {
@@ -2210,7 +2239,7 @@ function updateMessagesNavBadge(count) {
 
 function getFriendlyFirebaseErrorMessage(error, defaultMessage = 'An unexpected error occurred.') {
   if (!error || !error.code) return error ? (error.message || defaultMessage) : defaultMessage;
-  
+
   switch (error.code) {
     // Auth Errors
     case 'auth/invalid-credential':
@@ -2231,13 +2260,13 @@ function getFriendlyFirebaseErrorMessage(error, defaultMessage = 'An unexpected 
       return 'This action requires recent authentication. Please log out and log back in to continue.';
     case 'auth/network-request-failed':
       return 'Network connection failed. Please check your internet connection and try again.';
-      
+
     // Firestore Errors
     case 'permission-denied':
       return 'You do not have permission to perform this action.';
     case 'unavailable':
       return 'The database is temporarily offline. Please check your network connection and try again.';
-      
+
     default:
       return error.message || defaultMessage;
   }
@@ -2264,7 +2293,7 @@ function setupDragAndDrop(container, onReorder) {
     Array.from(container.children).forEach(child => {
       child.classList.remove('drag-over');
     });
-    
+
     if (onReorder && draggedEl) {
       onReorder();
     }
@@ -2277,7 +2306,7 @@ function setupDragAndDrop(container, onReorder) {
     if (!card || card === draggedEl) return;
 
     card.classList.add('drag-over');
-    
+
     const rect = card.getBoundingClientRect();
     const midY = rect.top + rect.height / 2;
     if (e.clientY < midY) {
@@ -2298,7 +2327,7 @@ function setupDragAndDrop(container, onReorder) {
 async function handleTasksReorder() {
   const cards = Array.from(tasksList.querySelectorAll('.order-card, .order-row'));
   const orderIds = cards.map(c => c.dataset.id).filter(Boolean);
-  
+
   try {
     const promises = orderIds.map((id, index) => {
       const orderRef = doc(db, 'orders', id);
@@ -2316,7 +2345,7 @@ async function handleArtistModalReorder(artistId) {
   if (!artistId) return;
   const cards = Array.from(modalArtistOrdersList.querySelectorAll('.compact-order-card'));
   const orderIds = cards.map(c => c.dataset.id).filter(Boolean);
-  
+
   try {
     const promises = orderIds.map((id, index) => {
       const orderRef = doc(db, 'orders', id);
@@ -2357,14 +2386,14 @@ function initAdminBannerSettings() {
   const placeholder = document.getElementById('admin-banner-preview-placeholder');
   const msgEl = document.getElementById('banner-settings-msg');
   const submitBtn = document.getElementById('banner-settings-submit');
-  
+
   if (!form || !activeInput || !htmlInput) return;
 
   // Function to update preview
   function updateLivePreview() {
     const isActive = activeInput.checked;
     const htmlVal = htmlInput.value.trim();
-    
+
     if (isActive && htmlVal) {
       if (preview) preview.style.display = 'block';
       if (placeholder) placeholder.style.display = 'none';
@@ -2386,7 +2415,7 @@ function initAdminBannerSettings() {
       const tagType = btn.dataset.tag;
       let openTag = '';
       let closeTag = '';
-      
+
       switch (tagType) {
         case 'strong':
           openTag = '<strong>';
@@ -2405,7 +2434,7 @@ function initAdminBannerSettings() {
           closeTag = '</span>';
           break;
       }
-      
+
       insertTagAtCursor(htmlInput, openTag, closeTag);
     });
   });
@@ -2417,11 +2446,11 @@ function initAdminBannerSettings() {
     const selectedText = text.substring(start, end);
     const replacement = openTag + selectedText + closeTag;
     textarea.value = text.substring(0, start) + replacement + text.substring(end);
-    
+
     textarea.focus();
     textarea.selectionStart = start + openTag.length;
     textarea.selectionEnd = start + openTag.length + selectedText.length;
-    
+
     updateLivePreview();
   }
 
@@ -2446,7 +2475,7 @@ function initAdminBannerSettings() {
     e.preventDefault();
     submitBtn.disabled = true;
     submitBtn.innerText = 'Saving...';
-    
+
     try {
       await setDoc(doc(db, 'settings', 'promo_banner'), {
         isActive: activeInput.checked,
@@ -2454,7 +2483,7 @@ function initAdminBannerSettings() {
         updatedAt: serverTimestamp(),
         updatedBy: currentUser ? currentUser.email : 'admin'
       }, { merge: true });
-      
+
       showStatusMessage('Banner settings saved successfully.', 'success');
     } catch (error) {
       console.error('Error saving banner settings:', error);
@@ -2469,7 +2498,7 @@ function initAdminBannerSettings() {
     if (!msgEl) return;
     msgEl.innerText = text;
     msgEl.style.display = 'block';
-    
+
     if (type === 'success') {
       msgEl.style.background = 'rgba(16, 185, 129, 0.15)';
       msgEl.style.color = 'var(--success)';
@@ -2479,7 +2508,7 @@ function initAdminBannerSettings() {
       msgEl.style.color = 'var(--danger)';
       msgEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
     }
-    
+
     setTimeout(() => {
       msgEl.style.display = 'none';
     }, 4000);
@@ -2512,9 +2541,9 @@ function initAdminPromoCodesSettings() {
       const codeItem = document.createElement('div');
       codeItem.className = 'promo-code-item';
       codeItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 0.5rem;';
-      
-      const discountLabel = codeData.discountType === 'percentage' 
-        ? `${codeData.discountValue}% Off` 
+
+      const discountLabel = codeData.discountType === 'percentage'
+        ? `${codeData.discountValue}% Off`
         : `$${parseFloat(codeData.discountValue).toFixed(2)} Off`;
 
       codeItem.innerHTML = `
@@ -2583,7 +2612,7 @@ function initAdminPromoCodesSettings() {
     if (!msgEl) return;
     msgEl.innerText = text;
     msgEl.style.display = 'block';
-    
+
     if (type === 'success') {
       msgEl.style.background = 'rgba(16, 185, 129, 0.15)';
       msgEl.style.color = 'var(--success)';
@@ -2593,7 +2622,7 @@ function initAdminPromoCodesSettings() {
       msgEl.style.color = 'var(--danger)';
       msgEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
     }
-    
+
     setTimeout(() => {
       msgEl.style.display = 'none';
     }, 4000);
@@ -2622,7 +2651,7 @@ function initAdminAllOrders() {
 
   // Setup real-time listener for the all orders collection
   if (unsubscribeAllOrders) unsubscribeAllOrders();
-  
+
   const ordersRef = collection(db, 'orders');
   // Order by createdAt descending if available
   const q = query(ordersRef, orderBy('timestamps.createdAt', 'desc'));
@@ -2632,7 +2661,7 @@ function initAdminAllOrders() {
     snapshot.forEach(docSnap => {
       allOrdersCache.push({ id: docSnap.id, ...docSnap.data() });
     });
-    
+
     renderOrders();
   }, (error) => {
     console.error("Error fetching all orders database:", error);
@@ -2780,6 +2809,82 @@ function initAdminPromoUsage() {
   }, (error) => {
     console.error("Error fetching promo usage:", error);
     listEl.innerHTML = `<tr><td colspan="5" class="text-center text-danger">Error loading promo usage: ${error.message}</td></tr>`;
+  });
+}
+
+// --- FCM Notifications & PWA Installation Logic ---
+
+async function initFCM(uid) {
+  try {
+    // 1. Request notifications permission
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      console.log('Notification permission was not granted.');
+      return;
+    }
+
+    // 2. Register Service Worker explicitly to ensure it runs correctly
+    const registration = await navigator.worker || await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    console.log('Service Worker registered for FCM:', registration);
+
+    // 3. Retrieve FCM Token
+    const currentToken = await getToken(messaging, {
+      serviceWorkerRegistration: registration,
+      vapidKey: FCM_VAPID_KEY
+    });
+
+    if (currentToken) {
+      console.log('FCM registration token retrieved:', currentToken);
+
+      // Save the token to user document in Firestore under fcmTokens array
+      const userRef = doc(db, 'users', uid);
+      await updateDoc(userRef, {
+        fcmTokens: arrayUnion(currentToken)
+      });
+
+      // Store current token in localStorage for logout cleanup
+      localStorage.setItem('fcm_token', currentToken);
+    } else {
+      console.warn('No FCM registration token available. Request permission to generate one.');
+    }
+  } catch (err) {
+    console.error('An error occurred while retrieving FCM token:', err);
+  }
+}
+
+// Custom PWA installation prompt handling
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent Chrome 67 and earlier from automatically showing the prompt
+  e.preventDefault();
+  // Stash the event so it can be triggered later.
+  deferredPrompt = e;
+
+  // Show the custom install button
+  const installBtn = document.getElementById('pwa-install-btn');
+  if (installBtn) {
+    installBtn.style.display = 'block';
+  }
+});
+
+const installBtn = document.getElementById('pwa-install-btn');
+if (installBtn) {
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+
+    // Show the native browser prompt
+    deferredPrompt.prompt();
+
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to the PWA install prompt: ${outcome}`);
+
+    // Reset deferred prompt
+    deferredPrompt = null;
+
+    // Hide the button
+    installBtn.style.display = 'none';
   });
 }
 

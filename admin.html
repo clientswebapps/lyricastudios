@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/src/admin.css">
+  
+  <!-- PWA Setup -->
+  <link rel="manifest" href="/admin-manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Lyrica Admin">
+  <link rel="apple-touch-icon" href="/Logo/Lyrica Favicon.svg">
 </head>
 <body>
   <!-- Global App Loader -->
@@ -90,6 +97,7 @@
         </div>
       </nav>
       <div class="sidebar-footer">
+        <button id="pwa-install-btn" class="btn btn--accent" style="display: none; margin-bottom: 0.5rem; width: 100%;">Install Admin App</button>
         <button id="change-pass-btn" class="btn btn--outline" style="margin-bottom: 0.5rem;">Change Password</button>
         <button id="logout-btn" class="btn btn--outline">Logout</button>
       </div>

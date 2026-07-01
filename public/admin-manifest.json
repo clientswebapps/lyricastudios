@@ -1,0 +1,22 @@
+{
+  "name": "Lyrica Studios Admin",
+  "short_name": "Lyrica Admin",
+  "description": "Lyrica Studios Admin & Artist Portal",
+  "start_url": "/admin.html",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#ff4081",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    },
+    {
+      "src": "/Logo/Lyrica Favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ]
+}

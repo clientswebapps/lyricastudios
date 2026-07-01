@@ -19,9 +19,18 @@ const messaging = firebase.messaging();
 // Customize background notification handling
 messaging.onBackgroundMessage((payload) => {
   console.log('[firebase-messaging-sw.js] Received background message ', payload);
-  // Note: The Firebase SDK automatically displays the notification to the user 
-  // on behalf of your client app if the app is in the background. 
-  // We do not need to call self.registration.showNotification() here.
+  
+  // Explicitly trigger a notification display for mobile browsers (e.g. iOS Safari PWA)
+  if (payload.notification) {
+    const notificationTitle = payload.notification.title || "New Notification";
+    const notificationOptions = {
+      body: payload.notification.body || "",
+      icon: "/Logo/Lyrica Favicon.svg",
+      badge: "/Logo/Lyrica Favicon.svg",
+      data: payload.data
+    };
+    self.registration.showNotification(notificationTitle, notificationOptions);
+  }
 });
 
 // Standard Service Worker lifecycle event listeners to satisfy PWA criteria

@@ -433,6 +433,12 @@ exports.sendCustomPushNotification = functions.https.onCall(async (data, context
         type: "broadcast"
       },
       webpush: {
+        notification: {
+          title: title,
+          body: body,
+          icon: "/Logo/Lyrica Favicon.svg",
+          badge: "/Logo/Lyrica Favicon.svg"
+        },
         fcmOptions: {
           link: "/admin.html"
         }

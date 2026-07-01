@@ -658,7 +658,10 @@ function initSmoothScroll() {
       if (this.hasAttribute('data-open-modal')) return;
 
       const targetId = this.getAttribute('href');
-      if (targetId === '#') return;
+      if (targetId === '#') {
+        e.preventDefault();
+        return;
+      }
 
       const target = document.querySelector(targetId);
       if (!target) return;
@@ -674,6 +677,27 @@ function initSmoothScroll() {
         top: targetPosition,
         behavior: 'smooth',
       });
+    });
+  });
+
+  // Intercept logo clicks to scroll to top smoothly without adding # to URL
+  document.querySelectorAll('.header__logo, .footer__logo').forEach(logoLink => {
+    logoLink.addEventListener('click', function (e) {
+      const isHomepage = window.location.pathname === '/' || 
+                         window.location.pathname === '' || 
+                         window.location.pathname.endsWith('/index.html') ||
+                         window.location.pathname.endsWith('/');
+      
+      if (isHomepage) {
+        e.preventDefault();
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+        if (window.location.hash) {
+          history.pushState("", document.title, window.location.pathname + window.location.search);
+        }
+      }
     });
   });
 }

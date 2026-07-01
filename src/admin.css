@@ -138,6 +138,17 @@ body {
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, border-right-color 0.3s ease;
+  overflow: hidden;
+}
+
+@media (min-width: 769px) {
+  .dashboard-container.sidebar-collapsed .sidebar {
+    width: 0;
+    opacity: 0;
+    border-right-color: transparent;
+    pointer-events: none;
+  }
 }
 
 .sidebar-header {
@@ -516,7 +527,7 @@ body {
 
 /* --- Mobile Toggle Button --- */
 .mobile-toggle-btn {
-  display: none;
+  display: inline-flex;
   background: transparent;
   border: none;
   color: var(--text-main);

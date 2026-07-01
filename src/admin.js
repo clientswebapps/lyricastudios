@@ -413,18 +413,34 @@ navBtns.forEach(btn => {
 // Initialize sidebar accordions
 initSidebarAccordions();
 
-// Mobile Toggles Event Handlers
+// Sidebar Toggle Event Handlers for Mobile & Desktop
 if (mobileMenuToggle && sidebar && sidebarOverlay) {
   mobileMenuToggle.onclick = (e) => {
     e.stopPropagation();
-    sidebar.classList.toggle('open');
-    sidebarOverlay.classList.toggle('active');
+    if (window.innerWidth <= 768) {
+      sidebar.classList.toggle('open');
+      sidebarOverlay.classList.toggle('active');
+    } else {
+      const container = document.getElementById('dashboard-view');
+      if (container) {
+        container.classList.toggle('sidebar-collapsed');
+      }
+    }
   };
 
   sidebarOverlay.onclick = () => {
     sidebar.classList.remove('open');
     sidebarOverlay.classList.remove('active');
   };
+
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      if (sidebar.classList.contains('open')) {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('active');
+      }
+    }
+  });
 }
 
 // --- Search & View Layout Controls ---

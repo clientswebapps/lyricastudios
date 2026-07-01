@@ -325,6 +325,12 @@ exports.handleMoRWebhook = functions
                 click_action: "/admin.html"
               },
               webpush: {
+                notification: {
+                  title: "New Order Received!",
+                  body: `Order #${newOrderRef.id.slice(0, 8).toUpperCase()} (${actualDeliveryType.toUpperCase()}) is ready.`,
+                  icon: "/Logo/Lyrica Favicon.svg",
+                  badge: "/Logo/Lyrica Favicon.svg"
+                },
                 fcmOptions: {
                   link: "/admin.html"
                 }

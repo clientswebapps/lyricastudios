@@ -27,7 +27,7 @@ import {
   arrayUnion,
   arrayRemove
 } from 'firebase/firestore';
-import { getToken, deleteToken } from 'firebase/messaging';
+import { getToken, deleteToken, onMessage } from 'firebase/messaging';
 
 // FCM VAPID Key placeholder - replace with your generated VAPID key
 const FCM_VAPID_KEY = "BOT5fX_Bcbkf_Kg8PA70-JjT_sMyUGz9lIbadsDGWl77hrqUmYfSOJvPHfCom8SfVkD0lxoR217M0T3LMQHrLQs";
@@ -2830,8 +2830,11 @@ async function initFCM(uid) {
     }
 
     // 2. Register Service Worker explicitly to ensure it runs correctly
-    const registration = await navigator.worker || await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
     console.log('Service Worker registered for FCM:', registration);
+
+    // Wait until the service worker is fully active and ready
+    await navigator.serviceWorker.ready;
 
     // 3. Retrieve FCM Token
     const currentToken = await getToken(messaging, {
@@ -2850,6 +2853,22 @@ async function initFCM(uid) {
 
       // Store current token in localStorage for logout cleanup
       localStorage.setItem('fcm_token', currentToken);
+
+      // 4. Handle foreground notifications
+      onMessage(messaging, (payload) => {
+        console.log('Foreground notification received:', payload);
+        
+        // Show a standard browser/desktop notification if supported and permitted
+        if (Notification.permission === 'granted') {
+          new Notification(payload.notification.title, {
+            body: payload.notification.body,
+            icon: '/Logo/Lyrica Favicon.svg'
+          });
+        }
+        
+        // Also show an in-app alert modal
+        showAlertModal(payload.notification.body, payload.notification.title, 'info');
+      });
     } else {
       console.warn('No FCM registration token available. Request permission to generate one.');
     }

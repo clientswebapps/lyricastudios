@@ -117,6 +117,7 @@ const modalArtistOrdersList = document.getElementById('modal-artist-orders-list'
 const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 const sidebarOverlay = document.getElementById('sidebar-overlay');
 const sidebar = document.getElementById('sidebar');
+const enableNotificationsBtn = document.getElementById('enable-notifications-btn');
 
 // Change Password DOM Elements
 const changePasswordModal = document.getElementById('change-password-modal');
@@ -2837,14 +2838,48 @@ function initAdminPromoUsage() {
 // --- FCM Notifications & PWA Installation Logic ---
 
 async function initFCM(uid) {
-  try {
-    // 1. Request notifications permission
-    const permission = await Notification.requestPermission();
-    if (permission !== 'granted') {
-      console.log('Notification permission was not granted.');
-      return;
+  // Check if browser/device supports Web Push Notifications
+  if (typeof Notification === 'undefined') {
+    console.warn('Web Push Notifications are not supported by this browser/OS configuration.');
+    if (enableNotificationsBtn) {
+      enableNotificationsBtn.style.display = 'block';
+      enableNotificationsBtn.innerText = 'Push Alerts Unsupported';
+      enableNotificationsBtn.disabled = true;
+      enableNotificationsBtn.onclick = () => {
+        showAlertModal("To receive push alerts on iOS, you must first add this app to your Home Screen using the Safari Share menu.", "Notifications Unsupported", "info");
+      };
     }
+    return;
+  }
 
+  // If notification permission has not been granted yet, show the manual enable button
+  if (Notification.permission !== 'granted') {
+    if (enableNotificationsBtn) {
+      enableNotificationsBtn.style.display = 'block';
+      enableNotificationsBtn.onclick = async () => {
+        try {
+          const permission = await Notification.requestPermission();
+          if (permission === 'granted') {
+            enableNotificationsBtn.style.display = 'none';
+            initFCM(uid);
+          } else {
+            showAlertModal("Notification permission is required to receive push alerts.", "Permission Required", "warning");
+          }
+        } catch (err) {
+          console.error('Error requesting notification permission:', err);
+        }
+      };
+    }
+    console.log('Notification permission has not been granted yet.');
+    return;
+  }
+
+  // If permission is already granted, hide the button and proceed
+  if (enableNotificationsBtn) {
+    enableNotificationsBtn.style.display = 'none';
+  }
+
+  try {
     // 2. Register Service Worker explicitly to ensure it runs correctly
     const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
     console.log('Service Worker registered for FCM:', registration);

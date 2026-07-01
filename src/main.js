@@ -87,19 +87,9 @@ function initPromoBanner() {
       banner.style.display = 'none';
     } else {
       banner.style.display = '';
-      const currentScroll = window.scrollY;
-      if (currentScroll > scrollThreshold) {
-        banner.classList.add('is-hidden');
-      } else {
-        banner.classList.remove('is-hidden');
-      }
+      banner.classList.remove('is-hidden');
     }
   }
-
-  // Hide on scroll down, show on scroll up
-  window.addEventListener('scroll', () => {
-    updateVisibility();
-  }, { passive: true });
 
   // Mark as permanently closed when X is clicked
   closeBtn.addEventListener('click', () => {

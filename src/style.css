@@ -14,8 +14,16 @@
   --color-accent-hover: #e11d48;
   --color-accent-light: rgba(244, 63, 94, 0.08);
 
-  --gradient-accent: linear-gradient(135deg, #6366f1, #ec4899, #f43f5e);
-  --gradient-accent-hover: linear-gradient(135deg, #4f46e5, #db2777, #e11d48);
+  --gradient-accent: radial-gradient(circle at 15% 20%, #6366f1 0%, transparent 60%),
+                     radial-gradient(circle at 85% 15%, #ec4899 0%, transparent 60%),
+                     radial-gradient(circle at 50% 85%, #f43f5e 0%, transparent 65%),
+                     radial-gradient(circle at 80% 85%, #6366f1 0%, transparent 50%),
+                     #ec4899;
+  --gradient-accent-hover: radial-gradient(circle at 15% 20%, #4f46e5 0%, transparent 60%),
+                           radial-gradient(circle at 85% 15%, #db2777 0%, transparent 60%),
+                           radial-gradient(circle at 50% 85%, #e11d48 0%, transparent 65%),
+                           radial-gradient(circle at 80% 85%, #4f46e5 0%, transparent 50%),
+                           #db2777;
 
   /* Neutrals */
   --color-bg: #ffffff;
@@ -427,6 +435,10 @@ ol {
   padding-top: calc(var(--header-top) + 36px);
 }
 
+.header.is-scrolled {
+  padding-top: var(--header-top) !important;
+}
+
 .header__pill {
   position: relative;
   display: flex;
@@ -436,19 +448,25 @@ ol {
   max-width: fit-content;
   width: auto;
   border-radius: var(--radius-full);
-  background: transparent;
+  background: rgba(255, 255, 255, 0.82);
   pointer-events: auto;
-  border: 1px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.header.is-scrolled .header__pill {
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.12);
 }
 
 .header__pill::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: var(--color-bg-elevated);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  background: transparent;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-radius: inherit;
   z-index: -1;
   pointer-events: none;
@@ -465,6 +483,11 @@ ol {
   font-size: var(--fs-base);
   font-weight: var(--fw-bold);
   outline: none;
+}
+
+.header__logo img {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  transition: filter var(--duration-normal) ease;
 }
 
 .logo-img {
@@ -3439,7 +3462,7 @@ body.modal-open {
 }
 
 .intro__title-accent {
-  background: linear-gradient(135deg, #6366f1, #ec4899, #f43f5e, var(--color-accent));
+  background: var(--gradient-accent);
   background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -3534,7 +3557,7 @@ body.modal-open {
   font-size: var(--fs-base);
   font-weight: var(--fw-bold);
   color: #fff;
-  background: linear-gradient(135deg, #6366f1, #ec4899, #f43f5e, var(--color-accent));
+  background: var(--gradient-accent);
   background-size: 200% 200%;
   border: none;
   border-radius: var(--radius-full);
@@ -3603,7 +3626,7 @@ body.modal-open {
 .eq-bar {
   width: 6px;
   border-radius: 4px;
-  background: linear-gradient(to top, #6366f1, #ec4899, #f43f5e);
+  background: var(--gradient-accent);
   animation: eqPulse 0.8s ease-in-out infinite alternate;
 }
 
@@ -5031,17 +5054,24 @@ body.nav-open {
   display: inline-block;
 }
 
-.typewriter-cursor {
-  display: inline-block;
-  width: 4px;
-  height: 1.1em;
+.text-gradient {
   background: var(--gradient-accent);
   background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 4s ease-in-out infinite;
+  display: inline-block;
+}
+
+.typewriter-cursor {
+  display: inline-block;
+  width: 0px;
+  height: 1.1em;
+  background: transparent;
   vertical-align: middle;
-  margin-left: 4px;
-  border-radius: 2px;
+  margin-left: 0px;
   transform: translateY(-2px);
-  animation: blinkCursor 0.9s step-end infinite, gradientShift 4s ease-in-out infinite;
 }
 
 @keyframes blinkCursor {
@@ -5059,9 +5089,13 @@ body.nav-open {
 /* ── Typewriter Splashing Notes ── */
 .splash-note {
   position: absolute;
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   pointer-events: none;
   z-index: 1000;
+  display: inline-block;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  text-shadow: 0 0 10px rgba(244, 63, 94, 0.8), 0 0 20px rgba(99, 102, 241, 0.8);
   animation: splashNoteAnim 0.9s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 

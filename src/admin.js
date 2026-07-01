@@ -1,4 +1,5 @@
-import { auth, db, messaging } from './firebase.js';
+import { auth, db, messaging, functions } from './firebase.js';
+import { httpsCallable } from 'firebase/functions';
 import {
   signInWithEmailAndPassword,
   onAuthStateChanged,
@@ -250,6 +251,11 @@ function listenToUserDoc(uid) {
 
       const navAllOrders = document.getElementById('nav-all-orders');
       if (navAllOrders) navAllOrders.style.display = isTabAllowed('allOrders') ? 'block' : 'none';
+
+      const navPushNotifications = document.getElementById('nav-push-notifications');
+      if (navPushNotifications) {
+        navPushNotifications.style.display = (userData.role === 'admin') ? 'block' : 'none';
+      }
 
       // Hide or show user creation form
       const createForm = document.querySelector('.create-user-form');
@@ -2885,6 +2891,64 @@ if (installBtn) {
 
     // Hide the button
     installBtn.style.display = 'none';
+  });
+}
+
+// Handle custom manual push notification broadcast
+const customPushForm = document.getElementById('custom-push-form');
+if (customPushForm) {
+  customPushForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const target = document.getElementById('push-target').value;
+    const title = document.getElementById('push-title').value.trim();
+    const body = document.getElementById('push-body').value.trim();
+    const msgDiv = document.getElementById('custom-push-msg');
+    const submitBtn = document.getElementById('push-send-submit');
+    
+    if (!title || !body || !target) {
+      if (msgDiv) {
+        msgDiv.className = 'error-msg mt-4';
+        msgDiv.innerText = 'Title, message, and target are required.';
+      }
+      return;
+    }
+    
+    try {
+      submitBtn.disabled = true;
+      submitBtn.innerText = 'Broadcasting...';
+      if (msgDiv) {
+        msgDiv.className = 'mt-4';
+        msgDiv.innerText = 'Sending broadcast alerts...';
+        msgDiv.style.color = '#fff';
+      }
+
+      // Call HTTPS Callable Cloud Function
+      const sendCustomPush = httpsCallable(functions, 'sendCustomPushNotification');
+      const response = await sendCustomPush({ target, title, body });
+      const result = response.data;
+
+      if (result && result.success) {
+        if (msgDiv) {
+          msgDiv.className = 'success-msg mt-4';
+          msgDiv.innerText = `Broadcast sent successfully! Dispatched to ${result.sentCount} active devices.`;
+          msgDiv.style.color = 'var(--success)';
+        }
+        customPushForm.reset();
+      } else {
+        throw new Error(result ? result.message : 'Unknown error occurred.');
+      }
+    } catch (err) {
+      console.error('Failed to send custom push notification:', err);
+      if (msgDiv) {
+        msgDiv.className = 'error-msg mt-4';
+        msgDiv.innerText = `Failed to send broadcast: ${err.message}`;
+        msgDiv.style.color = 'var(--danger)';
+      }
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerText = 'Broadcast Notification';
+    }
   });
 }
 

@@ -91,6 +91,7 @@
           </div>
           <div class="nav-group-content">
             <button class="nav-btn" data-view="users-view" id="nav-users" style="display:none;">Manage Users</button>
+            <button class="nav-btn" data-view="push-notifications-view" id="nav-push-notifications" style="display:none;">Push Alerts</button>
             <button class="nav-btn" data-view="messages-view" id="nav-messages">Messages <span id="messages-nav-badge" class="chat-unread-badge" style="display: none; margin-left: 0.5rem; padding: 0.1rem 0.35rem; font-size: 0.7rem; line-height: 1; vertical-align: middle;">0</span></button>
             <button class="nav-btn" data-view="support-view" id="nav-support">Live Support</button>
           </div>
@@ -210,6 +211,34 @@
             <div id="create-user-msg" class="mt-4" style="font-size:0.875rem;"></div>
           </div>
           <div id="users-list" class="users-grid mt-4"></div>
+        </section>
+
+        <!-- Push Notifications View (Admin Only) -->
+        <section id="push-notifications-view" class="view-section" style="display: none;">
+          <h2>Send Custom Push Notification</h2>
+          <div class="create-user-form">
+            <h3>New Broadcast Alert</h3>
+            <form id="custom-push-form">
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label for="push-target" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Send To</label>
+                <select id="push-target" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: #fff;">
+                  <option value="all">All Active Users (Admins & Artists)</option>
+                  <option value="artists">All Artists Only</option>
+                  <option value="admins">All Admins Only</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label for="push-title" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Notification Title</label>
+                <input type="text" id="push-title" placeholder="e.g. System Update" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: #fff;">
+              </div>
+              <div class="form-group" style="margin-bottom: 1.25rem;">
+                <label for="push-body" style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Notification Message</label>
+                <textarea id="push-body" placeholder="Type your notification message here..." rows="4" required style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: #fff;"></textarea>
+              </div>
+              <button type="submit" class="btn btn--accent" id="push-send-submit" style="width: 100%; padding: 0.75rem;">Broadcast Notification</button>
+            </form>
+            <div id="custom-push-msg" class="mt-4" style="font-size:0.875rem;"></div>
+          </div>
         </section>
 
         <!-- History View -->

@@ -353,3 +353,108 @@ exports.handleMoRWebhook = functions
 
     res.status(200).send("Webhook event processed.");
   });
+
+/**
+ * sendCustomPushNotification
+ * --------------------------
+ * HTTPS Callable function restricted to admins.
+ * Broadcasts a custom push notification to active artists, admins, or all.
+ */
+exports.sendCustomPushNotification = functions.https.onCall(async (data, context) => {
+  // 1. Ensure user is authenticated
+  if (!context.auth) {
+    throw new functions.https.HttpsError("unauthenticated", "User must be authenticated.");
+  }
+
+  const db = admin.firestore();
+
+  // 2. Retrieve caller details to verify admin role
+  try {
+    const callerSnap = await db.collection("users").doc(context.auth.uid).get();
+    if (!callerSnap.exists || callerSnap.data().role !== "admin") {
+      throw new functions.https.HttpsError("permission-denied", "Only administrators can send push notifications.");
+    }
+  } catch (authErr) {
+    console.error("Failed user verification query:", authErr);
+    if (authErr instanceof functions.https.HttpsError) {
+      throw authErr;
+    }
+    throw new functions.https.HttpsError("internal", "Authorization validation failed.");
+  }
+
+  const target = data.target || "all";
+  const title = (data.title || "").trim();
+  const body = (data.body || "").trim();
+
+  if (!title || !body) {
+    throw new functions.https.HttpsError("invalid-argument", "Notification title and message are required.");
+  }
+
+  // 3. Query all users and filter in-memory to avoid missing index errors
+  try {
+    const usersSnap = await db.collection("users").get();
+    const tokens = [];
+    
+    usersSnap.forEach(docSnap => {
+      const userData = docSnap.data();
+      
+      // Filter out suspended accounts
+      if (userData.suspended === true) {
+        return;
+      }
+      
+      // Filter based on targeted group selection
+      if (target === "artists" && userData.role !== "artist") {
+        return;
+      }
+      if (target === "admins" && userData.role !== "admin") {
+        return;
+      }
+
+      if (Array.isArray(userData.fcmTokens)) {
+        userData.fcmTokens.forEach(t => {
+          if (t) tokens.push(t);
+        });
+      }
+    });
+
+    if (tokens.length === 0) {
+      return { success: true, sentCount: 0, message: "No registered devices found for target group." };
+    }
+
+    // 4. Send multicast notification
+    const payload = {
+      notification: {
+        title: title,
+        body: body
+      },
+      data: {
+        click_action: "/admin.html",
+        type: "broadcast"
+      },
+      webpush: {
+        fcmOptions: {
+          link: "/admin.html"
+        }
+      }
+    };
+
+    const response = await admin.messaging().sendEachForMulticast({
+      tokens: tokens,
+      notification: payload.notification,
+      data: payload.data,
+      webpush: payload.webpush
+    });
+
+    console.log(`Custom Push Broadcast successfully sent to ${response.successCount} of ${tokens.length} devices.`);
+
+    return {
+      success: true,
+      sentCount: response.successCount,
+      failCount: response.failureCount
+    };
+  } catch (err) {
+    console.error("Error broadcasting custom push notifications:", err);
+    throw new functions.https.HttpsError("internal", err.message || "Failed to broadcast notifications.");
+  }
+});

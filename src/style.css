@@ -4064,6 +4064,11 @@ body.modal-open {
     transition: none;
   }
 
+  .promo-banner:not(.is-hidden)~.header.is-scrolled {
+    padding-top: calc(var(--header-top) + 36px) !important;
+    transition: none;
+  }
+
   .promo-banner .container {
     width: 100%;
     overflow: hidden;

@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="/src/admin.css">
   
   <!-- PWA Setup -->
@@ -95,6 +96,7 @@
             <button class="nav-btn" data-view="push-notifications-view" id="nav-push-notifications" style="display:none;">Push Alerts</button>
             <button class="nav-btn" data-view="messages-view" id="nav-messages">Messages <span id="messages-nav-badge" class="chat-unread-badge" style="display: none; margin-left: 0.5rem; padding: 0.1rem 0.35rem; font-size: 0.7rem; line-height: 1; vertical-align: middle;">0</span></button>
             <button class="nav-btn" data-view="support-view" id="nav-support">Live Support</button>
+            <button class="nav-btn" data-view="analytics-view" id="nav-analytics" style="display:none;">System Analytics</button>
           </div>
         </div>
       </nav>
@@ -242,6 +244,135 @@
               <button type="submit" class="btn btn--accent" id="push-send-submit" style="width: 100%; padding: 0.75rem;">Broadcast Notification</button>
             </form>
             <div id="custom-push-msg" class="mt-4" style="font-size:0.875rem;"></div>
+          </div>
+        </section>
+
+        <!-- Analytics View (Admin Only) -->
+        <section id="analytics-view" class="view-section" style="display: none;">
+          <div class="view-header">
+            <h2>System Analytics & Insights</h2>
+            <div class="view-controls flex-gap">
+              <div class="control-select-wrapper">
+                <label for="analytics-date-range">Range:</label>
+                <select id="analytics-date-range" class="view-dropdown">
+                  <option value="7">Last 7 Days</option>
+                  <option value="30" selected>Last 30 Days</option>
+                  <option value="90">Last 90 Days</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI Cards Grid -->
+          <div class="kpi-grid">
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper text-accent">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </div>
+              <div class="kpi-details">
+                <span class="kpi-label">Unique Visitors</span>
+                <h3 class="kpi-value" id="kpi-unique-visitors">0</h3>
+                <span class="kpi-trend" id="kpi-unique-visitors-trend">--</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper text-success">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              </div>
+              <div class="kpi-details">
+                <span class="kpi-label">Total Viewers (Pageviews)</span>
+                <h3 class="kpi-value" id="kpi-page-views">0</h3>
+                <span class="kpi-trend" id="kpi-page-views-trend">--</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper text-warning">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              </div>
+              <div class="kpi-details">
+                <span class="kpi-label">Average Retention (Day 1)</span>
+                <h3 class="kpi-value" id="kpi-retention-rate">0.0%</h3>
+                <span class="kpi-trend" id="kpi-retention-rate-trend">--</span>
+              </div>
+            </div>
+
+            <div class="kpi-card">
+              <div class="kpi-icon-wrapper text-danger">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+              </div>
+              <div class="kpi-details">
+                <span class="kpi-label">Order Conversion Rate</span>
+                <h3 class="kpi-value" id="kpi-conversion-rate">0.0%</h3>
+                <span class="kpi-trend" id="kpi-conversion-rate-trend">--</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Charts Area -->
+          <div class="analytics-charts-grid">
+            <div class="chart-card large-chart">
+              <div class="chart-header">
+                <h4>Traffic Trend (Pageviews & Unique Visitors)</h4>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-traffic-trend"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h4>Day 1 Retention Curve</h4>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-retention-rate"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h4>Top Countries</h4>
+              </div>
+              <div class="chart-container">
+                <canvas id="chart-countries"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card">
+              <div class="chart-header">
+                <h4>Devices Used</h4>
+              </div>
+              <div class="chart-container flex-center">
+                <div class="doughnut-wrapper">
+                  <canvas id="chart-devices"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Most Viewed Content & Modals -->
+          <div class="chart-card" style="margin-top: 1.5rem; min-height: auto;">
+            <div class="chart-header">
+              <h4>Most Viewed Content & Modals</h4>
+            </div>
+            <div class="history-table-container" style="margin-top: 0.5rem; overflow-x: auto;">
+              <table class="history-table">
+                <thead>
+                  <tr>
+                    <th>Page / Modal Name</th>
+                    <th>Category</th>
+                    <th style="text-align: right; padding-right: 1.5rem;">Unique Viewers</th>
+                    <th style="text-align: right; padding-right: 1.5rem;">Total Views / Hits</th>
+                  </tr>
+                </thead>
+                <tbody id="analytics-content-tbody">
+                  <tr>
+                    <td colspan="4" class="text-center text-muted" style="padding: 2rem 0;">No tracking events recorded yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
 
@@ -714,6 +845,10 @@
             <label class="permission-checkbox">
               <input type="checkbox" id="perm-all-orders" data-tab="allOrders">
               All Orders
+            </label>
+            <label class="permission-checkbox">
+              <input type="checkbox" id="perm-analytics" data-tab="analytics">
+              System Analytics
             </label>
           </div>
         </div>

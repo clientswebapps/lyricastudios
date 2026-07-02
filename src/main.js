@@ -21,7 +21,116 @@ function pauseAllPlayers(exceptPauseFn) {
   });
 }
 
+// --- Event & Pageview Tracking ---
+async function logAnalyticsEvent(eventName) {
+  try {
+    const visitorId = localStorage.getItem('lyrica_visitor_id');
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    const eventDoc = {
+      visitorId: visitorId || 'unknown',
+      eventName: eventName,
+      dateStr: todayStr,
+      timestamp: serverTimestamp()
+    };
+
+    await addDoc(collection(db, 'visitor_events'), eventDoc);
+  } catch (e) {
+    console.warn("Analytics: Event log failed:", e);
+  }
+}
+
+// --- Visitor Tracking ---
+async function initVisitorTracking() {
+  try {
+    // Determine page view label dynamically
+    let pageLabel = 'Page View: Home';
+    if (window.location.pathname.includes('privacy')) pageLabel = 'Page View: Privacy Policy';
+    else if (window.location.pathname.includes('terms')) pageLabel = 'Page View: Terms of Service';
+    else if (window.location.pathname.includes('checkout-loading')) pageLabel = 'Page View: Checkout Redirect';
+
+    // Avoid double logging in the same tab session for visitor_logs
+    if (sessionStorage.getItem('lyrica_session_logged')) {
+      // Still track the pageview event even if the visitor session is already logged
+      logAnalyticsEvent(pageLabel);
+      return;
+    }
+
+    // Resolve or generate unique visitor ID for retention calculations
+    let visitorId = localStorage.getItem('lyrica_visitor_id');
+    let firstVisitDate = localStorage.getItem('lyrica_visitor_created');
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    if (!visitorId) {
+      visitorId = 'v_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      firstVisitDate = todayStr;
+      localStorage.setItem('lyrica_visitor_id', visitorId);
+      localStorage.setItem('lyrica_visitor_created', firstVisitDate);
+    }
+
+    // Determine device type
+    let device = 'Desktop';
+    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      if (/iPad|Tablet/i.test(navigator.userAgent)) {
+        device = 'Tablet';
+      } else {
+        device = 'Mobile';
+      }
+    }
+
+    // Attempt to get country from timezone or geolocation API
+    let country = 'United States'; // Default fallback
+    try {
+      // Timezone fallback guess
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      if (tz) {
+        if (tz.includes("Europe/London") || tz.includes("GB")) country = "United Kingdom";
+        else if (tz.includes("Europe/Paris") || tz.includes("Europe/Berlin") || tz.includes("Europe/Rome") || tz.includes("Europe/Madrid")) country = "Germany";
+        else if (tz.includes("Australia") || tz.includes("Sydney")) country = "Australia";
+        else if (tz.includes("Asia/Tokyo")) country = "Japan";
+        else if (tz.includes("America/New_York") || tz.includes("America/Chicago") || tz.includes("America/Los_Angeles")) country = "United States";
+        else if (tz.includes("America/Toronto")) country = "Canada";
+      }
+
+      // Fetch with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2500);
+      const res = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.country_name) {
+          country = data.country_name;
+        }
+      }
+    } catch (e) {
+      console.warn("Analytics: Country resolve failed or timed out, using fallback", e);
+    }
+
+    // Log tracking data
+    const logData = {
+      visitorId,
+      firstVisitDate,
+      dateStr: todayStr,
+      timestamp: serverTimestamp(),
+      device,
+      country,
+      referrer: document.referrer ? new URL(document.referrer).hostname : 'Direct',
+      path: window.location.pathname || '/'
+    };
+
+    await addDoc(collection(db, 'visitor_logs'), logData);
+    sessionStorage.setItem('lyrica_session_logged', 'true');
+    
+    // Log the page view event
+    logAnalyticsEvent(pageLabel);
+  } catch (error) {
+    console.error("Analytics: Tracking error:", error);
+  }
+}
+
 const initAll = () => {
+  initVisitorTracking();
   initPromoBanner();
   initStickyHeader();
   initMobileNav();
@@ -866,6 +975,7 @@ function initSongModal() {
     modal.classList.add('is-open');
     modal.classList.add('has-intro');
     document.body.classList.add('modal-open');
+    logAnalyticsEvent('Modal: Song Builder Open');
     // Set initial direction
     modal.setAttribute('data-direction', 'forward');
 
@@ -940,6 +1050,16 @@ function initSongModal() {
   function goToStep(step, direction) {
     currentStep = step;
     modal.setAttribute('data-direction', direction);
+
+    const stepLabels = {
+      1: 'Step 1: Recipient Details',
+      2: 'Step 2: Genre & Mood',
+      3: 'Step 3: Choose Plan',
+      4: 'Step 4: Checkout Summary'
+    };
+    if (stepLabels[step]) {
+      logAnalyticsEvent(stepLabels[step]);
+    }
 
     // Switch visible step
     const steps = modal.querySelectorAll('.song-modal__step');
@@ -1093,6 +1213,7 @@ function initSongModal() {
     };
 
     console.log('Song Creation Checkout Form Submitted:', formData);
+    logAnalyticsEvent('Action: Checkout Form Submitted');
 
     // Show the checkout redirect overlay on Phase 4
     const redirectOverlay = document.getElementById('checkout-redirect-overlay');

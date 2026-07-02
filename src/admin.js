@@ -49,6 +49,13 @@ let unsubscribePromoCodes = null;
 let unsubscribePromoUsage = null;
 let isAdminSettingsInitialized = false;
 let unsubscribeAllOrders = null;
+let unsubscribeAnalytics = null;
+let unsubscribeAnalyticsEvents = null;
+let chartTraffic = null;
+let chartRetention = null;
+let chartCountries = null;
+let chartDevices = null;
+let isAnalyticsInitialized = false;
 let allOrdersCache = [];
 let poolOrdersCache = [];
 let tasksOrdersCache = [];
@@ -258,6 +265,11 @@ function listenToUserDoc(uid) {
         navPushNotifications.style.display = (userData.role === 'admin') ? 'block' : 'none';
       }
 
+      const navAnalytics = document.getElementById('nav-analytics');
+      if (navAnalytics) {
+        navAnalytics.style.display = isTabAllowed('analytics') ? 'block' : 'none';
+      }
+
       // Hide or show user creation form
       const createForm = document.querySelector('.create-user-form');
       if (createForm) {
@@ -399,6 +411,12 @@ navBtns.forEach(btn => {
     viewSections.forEach(sec => sec.style.display = 'none');
     const targetSection = document.getElementById(btn.dataset.view);
     if (targetSection) targetSection.style.display = 'block';
+
+    if (btn.dataset.view === 'analytics-view') {
+      initAnalyticsDashboard();
+    } else {
+      cleanupAnalyticsDashboard();
+    }
 
     // Keep active group expanded
     updateSidebarAccordionStates();
@@ -1638,6 +1656,7 @@ async function openArtistModal(artistId, artistData) {
   const promoUsageCheck = document.getElementById('perm-promo-usage'); if (promoUsageCheck) promoUsageCheck.checked = !!allowed.promoUsage;
   const usersCheck = document.getElementById('perm-users'); if (usersCheck) usersCheck.checked = !!allowed.users;
   const allOrdersCheck = document.getElementById('perm-all-orders'); if (allOrdersCheck) allOrdersCheck.checked = !!allowed.allOrders;
+  const analyticsCheck = document.getElementById('perm-analytics'); if (analyticsCheck) analyticsCheck.checked = !!allowed.analytics;
 
   // Show permissions section if the logged in user is admin
   const permContainer = document.getElementById('modal-artist-permissions-container');
@@ -2050,7 +2069,8 @@ const tabKeys = {
   'perm-promo-codes': 'promoCodes',
   'perm-promo-usage': 'promoUsage',
   'perm-users': 'users',
-  'perm-all-orders': 'allOrders'
+  'perm-all-orders': 'allOrders',
+  'perm-analytics': 'analytics'
 };
 
 Object.keys(tabKeys).forEach(id => {
@@ -3018,6 +3038,570 @@ if (customPushForm) {
     } finally {
       submitBtn.disabled = false;
       submitBtn.innerText = 'Broadcast Notification';
+    }
+  });
+}
+
+// --- Analytics Dashboard (Admin Only) ---
+function initAnalyticsDashboard() {
+  if (isAnalyticsInitialized) return;
+  isAnalyticsInitialized = true;
+
+  const dateRangeSelect = document.getElementById('analytics-date-range');
+
+  if (!dateRangeSelect) return;
+
+  // Track change listeners
+  dateRangeSelect.onchange = () => {
+    if (window.analyticsLogsCached) {
+      updateAnalyticsDashboard(window.analyticsLogsCached, window.analyticsEventsCached || []);
+    }
+  };
+
+  // Subscribe to real-time visitor logs
+  if (unsubscribeAnalytics) unsubscribeAnalytics();
+  if (unsubscribeAnalyticsEvents) unsubscribeAnalyticsEvents();
+
+  // If allOrdersCache is empty, fetch all orders in background
+  if (!allOrdersCache || allOrdersCache.length === 0) {
+    getDocs(collection(db, 'orders')).then(snap => {
+      allOrdersCache = [];
+      snap.forEach(d => {
+        allOrdersCache.push({ id: d.id, ...d.data() });
+      });
+      // Sort in memory
+      allOrdersCache.sort((a, b) => {
+        const tA = a.timestamps?.createdAt ? (a.timestamps.createdAt.toMillis ? a.timestamps.createdAt.toMillis() : new Date(a.timestamps.createdAt).getTime()) : 0;
+        const tB = b.timestamps?.createdAt ? (b.timestamps.createdAt.toMillis ? b.timestamps.createdAt.toMillis() : new Date(b.timestamps.createdAt).getTime()) : 0;
+        return tB - tA; // descending
+      });
+      if (window.analyticsLogsCached) {
+        updateAnalyticsDashboard(window.analyticsLogsCached, window.analyticsEventsCached || []);
+      }
+    }).catch(err => console.error("Analytics: Failed to fetch fallback orders:", err));
+  }
+
+  const logsQ = query(collection(db, 'visitor_logs'), orderBy('timestamp', 'desc'));
+  unsubscribeAnalytics = onSnapshot(logsQ, (snapshot) => {
+    const realLogs = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      let dateStr = data.dateStr;
+      if (!dateStr && data.timestamp) {
+        const t = data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+        dateStr = t.toISOString().split('T')[0];
+      }
+      realLogs.push({ id: docSnap.id, ...data, dateStr });
+    });
+    window.analyticsLogsCached = realLogs;
+    updateAnalyticsDashboard(realLogs, window.analyticsEventsCached || []);
+  }, (err) => {
+    console.error("Analytics: Firestore subscribe failed:", err);
+    window.analyticsLogsCached = [];
+    updateAnalyticsDashboard([], window.analyticsEventsCached || []);
+  });
+
+  const eventsQ = query(collection(db, 'visitor_events'), orderBy('timestamp', 'desc'));
+  unsubscribeAnalyticsEvents = onSnapshot(eventsQ, (snapshot) => {
+    const realEvents = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      let dateStr = data.dateStr;
+      if (!dateStr && data.timestamp) {
+        const t = data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+        dateStr = t.toISOString().split('T')[0];
+      }
+      realEvents.push({ id: docSnap.id, ...data, dateStr });
+    });
+    window.analyticsEventsCached = realEvents;
+    if (window.analyticsLogsCached) {
+      updateAnalyticsDashboard(window.analyticsLogsCached, realEvents);
+    }
+  }, (err) => {
+    console.error("Analytics: Events subscribe failed:", err);
+    window.analyticsEventsCached = [];
+    if (window.analyticsLogsCached) {
+      updateAnalyticsDashboard(window.analyticsLogsCached, []);
+    }
+  });
+}
+
+function cleanupAnalyticsDashboard() {
+  if (!isAnalyticsInitialized) return;
+  isAnalyticsInitialized = false;
+  
+  if (unsubscribeAnalytics) {
+    unsubscribeAnalytics();
+    unsubscribeAnalytics = null;
+  }
+  if (unsubscribeAnalyticsEvents) {
+    unsubscribeAnalyticsEvents();
+    unsubscribeAnalyticsEvents = null;
+  }
+}
+
+function updateAnalyticsDashboard(realLogs, realEvents) {
+  realEvents = realEvents || [];
+  const dateRangeSelect = document.getElementById('analytics-date-range');
+  if (!dateRangeSelect) return;
+
+  const daysToShow = parseInt(dateRangeSelect.value) || 30;
+
+  // Generate date list: YYYY-MM-DD
+  const dateList = [];
+  const today = new Date();
+  for (let i = daysToShow - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    dateList.push(d.toISOString().split('T')[0]);
+  }
+
+  // Pre-calculate orders in period
+  let ordersList = allOrdersCache || [];
+  let totalOrdersInPeriod = 0;
+  ordersList.forEach(order => {
+    let orderDateStr = '';
+    if (order.timestamps && order.timestamps.createdAt) {
+      const oDate = order.timestamps.createdAt.toDate ? order.timestamps.createdAt.toDate() : new Date(order.timestamps.createdAt);
+      orderDateStr = oDate.toISOString().split('T')[0];
+    }
+    if (orderDateStr && dateList.includes(orderDateStr)) {
+      totalOrdersInPeriod++;
+    }
+  });
+
+  // Group real logs by dateStr
+  const realGrouped = {};
+  realLogs.forEach(log => {
+    const date = log.dateStr;
+    if (!date || !dateList.includes(date)) return;
+    if (!realGrouped[date]) {
+      realGrouped[date] = {
+        views: 0,
+        visitors: new Set(),
+        devices: {},
+        countries: {},
+        newUsers: new Set(),
+        returningUsers: new Set()
+      };
+    }
+    realGrouped[date].views++;
+    realGrouped[date].visitors.add(log.visitorId);
+
+    const dev = log.device || 'Desktop';
+    realGrouped[date].devices[dev] = (realGrouped[date].devices[dev] || 0) + 1;
+
+    const cnt = log.country || 'United States';
+    realGrouped[date].countries[cnt] = (realGrouped[date].countries[cnt] || 0) + 1;
+
+    if (log.firstVisitDate === date) {
+      realGrouped[date].newUsers.add(log.visitorId);
+    } else {
+      realGrouped[date].returningUsers.add(log.visitorId);
+    }
+  });
+
+  // Compile daily stats
+  const pageviewsData = [];
+  const visitorsData = [];
+  const retentionData = [];
+  const deviceCounts = { Mobile: 0, Tablet: 0, Desktop: 0 };
+  const countryCounts = {};
+
+  let totalPageviews = 0;
+  const uniqueVisitorsSet = new Set();
+
+  dateList.forEach((dateStr, index) => {
+    const hasRealData = !!realGrouped[dateStr];
+    
+    let dailyViews = 0;
+    let dailyVisitors = 0;
+    let dailyRetention = 0;
+
+    if (hasRealData) {
+      dailyViews = realGrouped[dateStr].views;
+      dailyVisitors = realGrouped[dateStr].visitors.size;
+      
+      // Cohort retention
+      if (index > 0) {
+        const yesterdayStr = dateList[index - 1];
+        const yesterdayNewUsers = realGrouped[yesterdayStr] ? realGrouped[yesterdayStr].newUsers : new Set();
+        if (yesterdayNewUsers.size > 0) {
+          let returned = 0;
+          yesterdayNewUsers.forEach(uid => {
+            if (realGrouped[dateStr].visitors.has(uid)) {
+              returned++;
+            }
+          });
+          dailyRetention = returned / yesterdayNewUsers.size;
+        } else {
+          dailyRetention = dailyVisitors > 0 ? (realGrouped[dateStr].returningUsers.size / dailyVisitors) * 0.4 : 0;
+        }
+      } else {
+        dailyRetention = 0;
+      }
+
+      Object.entries(realGrouped[dateStr].devices).forEach(([dev, count]) => {
+        deviceCounts[dev] = (deviceCounts[dev] || 0) + count;
+      });
+      Object.entries(realGrouped[dateStr].countries).forEach(([country, count]) => {
+        countryCounts[country] = (countryCounts[country] || 0) + count;
+      });
+
+      totalPageviews += dailyViews;
+      realGrouped[dateStr].visitors.forEach(vid => uniqueVisitorsSet.add(vid));
+    }
+
+    pageviewsData.push(dailyViews);
+    visitorsData.push(dailyVisitors);
+    retentionData.push(dailyRetention * 100);
+  });
+
+  const totalUniqueVisitors = uniqueVisitorsSet.size;
+
+  // Trend indicators (Comparing last N days to previous N days)
+  const nowMs = Date.now();
+  const oneDayMs = 24 * 60 * 60 * 1000;
+  const currentBoundary = nowMs - (daysToShow * oneDayMs);
+  const previousBoundary = nowMs - (2 * daysToShow * oneDayMs);
+
+  let curUniqueSet = new Set();
+  let prevUniqueSet = new Set();
+  let curPageviews = 0;
+  let prevPageviews = 0;
+
+  realLogs.forEach(log => {
+    const logTime = log.timestamp ? (log.timestamp.toMillis ? log.timestamp.toMillis() : new Date(log.timestamp).getTime()) : 0;
+    if (!logTime) return;
+
+    if (logTime >= currentBoundary && logTime <= nowMs) {
+      curUniqueSet.add(log.visitorId);
+      curPageviews++;
+    } else if (logTime >= previousBoundary && logTime < currentBoundary) {
+      prevUniqueSet.add(log.visitorId);
+      prevPageviews++;
+    }
+  });
+
+  const curUniqueCount = curUniqueSet.size;
+  const prevUniqueCount = prevUniqueSet.size;
+
+  let visitorTrendText = "Stable";
+  let visitorTrendClass = "trend-neutral";
+  if (prevUniqueCount > 0) {
+    const diff = ((curUniqueCount - prevUniqueCount) / prevUniqueCount) * 100;
+    visitorTrendText = `${diff >= 0 ? '+' : ''}${diff.toFixed(0)}% vs last period`;
+    visitorTrendClass = diff >= 0 ? "trend-up" : "trend-down";
+  } else if (curUniqueCount > 0) {
+    visitorTrendText = "+100% vs last period";
+    visitorTrendClass = "trend-up";
+  }
+
+  let pageviewTrendText = "Stable";
+  let pageviewTrendClass = "trend-neutral";
+  if (prevPageviews > 0) {
+    const diff = ((curPageviews - prevPageviews) / prevPageviews) * 100;
+    pageviewTrendText = `${diff >= 0 ? '+' : ''}${diff.toFixed(0)}% vs last period`;
+    pageviewTrendClass = diff >= 0 ? "trend-up" : "trend-down";
+  } else if (curPageviews > 0) {
+    pageviewTrendText = "+100% vs last period";
+    pageviewTrendClass = "trend-up";
+  }
+
+  // Retention Average
+  const validRetentionDays = retentionData.filter(v => v > 0);
+  const avgRetention = validRetentionDays.length > 0 ? (validRetentionDays.reduce((a, b) => a + b, 0) / validRetentionDays.length) : 0;
+  let retentionTrendText = "No retention data";
+  let retentionTrendClass = "trend-neutral";
+  if (avgRetention > 0) {
+    retentionTrendText = avgRetention > 30 ? "Healthy retention" : "Low retention";
+    retentionTrendClass = avgRetention > 30 ? "trend-up" : "trend-warning";
+  }
+
+  // Conversion rate (orders placed / unique visitors)
+  const conversionRate = totalUniqueVisitors > 0 ? (totalOrdersInPeriod / totalUniqueVisitors) * 100 : 0;
+  const conversionTrendText = `${totalOrdersInPeriod} orders placed`;
+  const conversionTrendClass = totalOrdersInPeriod > 0 ? "trend-up" : "trend-neutral";
+
+  // Update UI elements
+  document.getElementById('kpi-unique-visitors').innerText = totalUniqueVisitors.toLocaleString();
+  const visitorTrendEl = document.getElementById('kpi-unique-visitors-trend');
+  visitorTrendEl.innerText = visitorTrendText;
+  visitorTrendEl.className = `kpi-trend ${visitorTrendClass}`;
+
+  document.getElementById('kpi-page-views').innerText = totalPageviews.toLocaleString();
+  const pageviewsTrendEl = document.getElementById('kpi-page-views-trend');
+  pageviewsTrendEl.innerText = pageviewTrendText;
+  pageviewsTrendEl.className = `kpi-trend ${pageviewTrendClass}`;
+
+  document.getElementById('kpi-retention-rate').innerText = `${avgRetention.toFixed(1)}%`;
+  const retentionTrendEl = document.getElementById('kpi-retention-rate-trend');
+  retentionTrendEl.innerText = retentionTrendText;
+  retentionTrendEl.className = `kpi-trend ${retentionTrendClass}`;
+
+  document.getElementById('kpi-conversion-rate').innerText = `${conversionRate.toFixed(2)}%`;
+  const conversionTrendEl = document.getElementById('kpi-conversion-rate-trend');
+  conversionTrendEl.innerText = conversionTrendText;
+  conversionTrendEl.className = `kpi-trend ${conversionTrendClass}`;
+
+  // Formatted date labels
+  const dateLabels = dateList.map(d => {
+    const parts = d.split('-');
+    const dateObj = new Date(parseInt(parts[0]), parts[1] - 1, parseInt(parts[2]));
+    return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  });
+
+  // Group events by eventName in the selected dateList
+  const eventAggregation = {};
+  realEvents.forEach(evt => {
+    const date = evt.dateStr;
+    const name = evt.eventName;
+    if (!date || !name || !dateList.includes(date)) return;
+
+    if (!eventAggregation[name]) {
+      eventAggregation[name] = {
+        name: name,
+        visitors: new Set(),
+        hits: 0
+      };
+    }
+    eventAggregation[name].hits++;
+    eventAggregation[name].visitors.add(evt.visitorId);
+  });
+
+  const sortedEvents = Object.values(eventAggregation).sort((a, b) => b.hits - a.hits);
+
+  function getEventCategoryInfo(name) {
+    if (name.startsWith('Page View:')) {
+      return { label: 'Page View', badge: 'status-pending' };
+    } else if (name.startsWith('Modal:')) {
+      return { label: 'Modal Screen', badge: 'status-lyrics' };
+    } else if (name.startsWith('Step:')) {
+      return { label: 'Funnel Step', badge: 'status-production' };
+    } else if (name.startsWith('Action:')) {
+      return { label: 'User Action', badge: 'status-completed' };
+    }
+    return { label: 'Interaction', badge: '' };
+  }
+
+  const tbody = document.getElementById('analytics-content-tbody');
+  if (tbody) {
+    tbody.innerHTML = '';
+    if (sortedEvents.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding: 2rem 0;">No tracking events recorded yet.</td></tr>';
+    } else {
+      sortedEvents.forEach(evt => {
+        const catInfo = getEventCategoryInfo(evt.name);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${evt.name}</strong></td>
+          <td><span class="status-badge ${catInfo.badge}">${catInfo.label}</span></td>
+          <td style="text-align: right; padding-right: 1.5rem;">${evt.visitors.size.toLocaleString()}</td>
+          <td style="text-align: right; padding-right: 1.5rem;">${evt.hits.toLocaleString()}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  }
+
+  // Render charts
+  renderTrafficTrendChart(dateLabels, pageviewsData, visitorsData);
+  renderRetentionChart(dateLabels, retentionData);
+  renderCountriesChart(countryCounts);
+  renderDevicesChart(deviceCounts);
+}
+
+function renderTrafficTrendChart(labels, pageviews, visitors) {
+  const canvas = document.getElementById('chart-traffic-trend');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (chartTraffic) {
+    chartTraffic.destroy();
+  }
+
+  const gradientViews = ctx.createLinearGradient(0, 0, 0, 300);
+  gradientViews.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+  gradientViews.addColorStop(1, 'rgba(16, 185, 129, 0.00)');
+
+  const gradientVisitors = ctx.createLinearGradient(0, 0, 0, 300);
+  gradientVisitors.addColorStop(0, 'rgba(107, 76, 255, 0.20)');
+  gradientVisitors.addColorStop(1, 'rgba(107, 76, 255, 0.00)');
+
+  chartTraffic = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: 'Pageviews',
+          data: pageviews,
+          borderColor: '#10b981',
+          backgroundColor: gradientViews,
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+          pointBackgroundColor: '#10b981',
+          pointHoverRadius: 6
+        },
+        {
+          label: 'Unique Visitors',
+          data: visitors,
+          borderColor: '#6b4cff',
+          backgroundColor: gradientVisitors,
+          fill: true,
+          tension: 0.35,
+          borderWidth: 2,
+          pointBackgroundColor: '#6b4cff',
+          pointHoverRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          labels: { color: '#9ba1a6', font: { family: 'Outfit', size: 12 } }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255, 255, 255, 0.04)' },
+          ticks: { color: '#9ba1a6', font: { family: 'Outfit' } }
+        },
+        y: {
+          grid: { color: 'rgba(255, 255, 255, 0.04)' },
+          ticks: { color: '#9ba1a6', font: { family: 'Outfit' } }
+        }
+      }
+    }
+  });
+}
+
+function renderRetentionChart(labels, data) {
+  const canvas = document.getElementById('chart-retention-rate');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (chartRetention) {
+    chartRetention.destroy();
+  }
+
+  chartRetention = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Day 1 Retention Rate (%)',
+        data: data,
+        borderColor: '#f59e0b',
+        backgroundColor: 'rgba(245, 158, 11, 0.05)',
+        fill: true,
+        tension: 0.3,
+        borderWidth: 2,
+        pointBackgroundColor: '#f59e0b'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255, 255, 255, 0.03)' },
+          ticks: { color: '#9ba1a6', font: { family: 'Outfit' } }
+        },
+        y: {
+          grid: { color: 'rgba(255, 255, 255, 0.03)' },
+          ticks: { color: '#9ba1a6', font: { family: 'Outfit' } },
+          min: 0,
+          max: 100
+        }
+      }
+    }
+  });
+}
+
+function renderCountriesChart(countryCounts) {
+  const canvas = document.getElementById('chart-countries');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (chartCountries) {
+    chartCountries.destroy();
+  }
+
+  const sorted = Object.entries(countryCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const labels = sorted.map(x => x[0]);
+  const values = sorted.map(x => x[1]);
+
+  chartCountries = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: '#10b981',
+        borderRadius: 6,
+        barThickness: 16
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          grid: { color: 'rgba(255, 255, 255, 0.03)' },
+          ticks: { color: '#9ba1a6', font: { family: 'Outfit' } }
+        },
+        y: {
+          grid: { display: false },
+          ticks: { color: '#9ba1a6', font: { family: 'Outfit' } }
+        }
+      }
+    }
+  });
+}
+
+function renderDevicesChart(deviceCounts) {
+  const canvas = document.getElementById('chart-devices');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  if (chartDevices) {
+    chartDevices.destroy();
+  }
+
+  chartDevices = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Mobile', 'Tablet', 'Desktop'],
+      datasets: [{
+        data: [deviceCounts.Mobile || 0, deviceCounts.Tablet || 0, deviceCounts.Desktop || 0],
+        backgroundColor: ['#6b4cff', '#f59e0b', '#10b981'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: { color: '#9ba1a6', font: { family: 'Outfit', size: 12 } }
+        }
+      },
+      cutout: '70%'
     }
   });
 }

@@ -1785,3 +1785,70 @@ window.addEventListener('pageshow', (event) => {
   }
 });
 
+/* ═══════════════════════════════════════════════════════════════
+   FLASH SALE COUNTDOWN TIMER
+   ═══════════════════════════════════════════════════════════════ */
+(function initFlashSaleTimer() {
+  const STORAGE_KEY = 'lyrica_flash_sale_end';
+  const SALE_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+  const daysEl = document.getElementById('flash-days');
+  const hoursEl = document.getElementById('flash-hours');
+  const minsEl = document.getElementById('flash-mins');
+  const secsEl = document.getElementById('flash-secs');
+  const bannerEl = document.getElementById('flash-sale-banner');
+
+  if (!daysEl || !hoursEl || !minsEl || !secsEl || !bannerEl) return;
+
+  // Get or create the sale end timestamp
+  let endTime = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+  if (!endTime || isNaN(endTime) || endTime <= Date.now()) {
+    endTime = Date.now() + SALE_DURATION_MS;
+    localStorage.setItem(STORAGE_KEY, endTime.toString());
+  }
+
+  let prevSecs = -1;
+
+  function pad(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function updateTimer() {
+    const now = Date.now();
+    const diff = endTime - now;
+
+    if (diff <= 0) {
+      // Sale has ended
+      daysEl.textContent = '00';
+      hoursEl.textContent = '00';
+      minsEl.textContent = '00';
+      secsEl.textContent = '00';
+      bannerEl.style.display = 'none';
+      localStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    daysEl.textContent = pad(days);
+    hoursEl.textContent = pad(hours);
+    minsEl.textContent = pad(mins);
+    secsEl.textContent = pad(secs);
+
+    // Tick animation on seconds change
+    if (secs !== prevSecs) {
+      prevSecs = secs;
+      secsEl.classList.add('tick');
+      setTimeout(() => secsEl.classList.remove('tick'), 200);
+    }
+
+    requestAnimationFrame(updateTimer);
+  }
+
+  // Start the timer
+  requestAnimationFrame(updateTimer);
+})();

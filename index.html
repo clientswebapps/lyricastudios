@@ -50,17 +50,19 @@
       {
         "@type": "Offer",
         "name": "Standard",
-        "price": "79.00",
+        "price": "39.00",
         "priceCurrency": "USD",
         "availability": "https://schema.org/InStock",
+        "priceValidUntil": "2026-07-13",
         "deliveryLeadTime": { "@type": "QuantitativeValue", "minValue": 2, "maxValue": 5, "unitCode": "DAY" }
       },
       {
         "@type": "Offer",
         "name": "Rush Delivery",
-        "price": "89.00",
+        "price": "49.00",
         "priceCurrency": "USD",
         "availability": "https://schema.org/InStock",
+        "priceValidUntil": "2026-07-13",
         "deliveryLeadTime": { "@type": "QuantitativeValue", "minValue": 1, "maxValue": 1, "unitCode": "DAY" }
       }
     ],
@@ -896,9 +898,47 @@
     <!-- ═══════════════════════════════════════════ -->
     <section class="pricing" id="pricing">
       <div class="container">
+
+        <!-- ── Flash Sale Banner ──────────────────── -->
+        <div class="flash-sale-banner" data-animate="fade-up" id="flash-sale-banner">
+          <div class="flash-sale-banner__glow" aria-hidden="true"></div>
+          <div class="flash-sale-banner__content">
+            <div class="flash-sale-banner__left">
+              <div class="flash-sale-banner__icon">
+                <img src="/Logo/Lyrica Favicon.svg" alt="Lyrica" style="width: 28px; height: 28px; object-fit: contain;" />
+              </div>
+              <div class="flash-sale-banner__text">
+                <span class="flash-sale-banner__label">⚡ Flash Sale — Limited Time Only</span>
+                <span class="flash-sale-banner__save">Save up to <strong>50% OFF</strong> on all custom songs</span>
+              </div>
+            </div>
+            <div class="flash-sale-banner__timer" id="flash-sale-timer">
+              <div class="flash-timer-unit">
+                <span class="flash-timer-value" id="flash-days">00</span>
+                <span class="flash-timer-label">Days</span>
+              </div>
+              <span class="flash-timer-sep">:</span>
+              <div class="flash-timer-unit">
+                <span class="flash-timer-value" id="flash-hours">00</span>
+                <span class="flash-timer-label">Hours</span>
+              </div>
+              <span class="flash-timer-sep">:</span>
+              <div class="flash-timer-unit">
+                <span class="flash-timer-value" id="flash-mins">00</span>
+                <span class="flash-timer-label">Mins</span>
+              </div>
+              <span class="flash-timer-sep">:</span>
+              <div class="flash-timer-unit">
+                <span class="flash-timer-value" id="flash-secs">00</span>
+                <span class="flash-timer-label">Secs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="section-header" data-animate="fade-up">
           <span class="section-tag">
-            Simple Pricing
+            Limited Time Offer
             <span class="soundwave-animation" aria-hidden="true">
               <span></span>
               <span></span>
@@ -913,9 +953,12 @@
 
         <div class="pricing-cards" data-animate="fade-up">
           <!-- Standard -->
-          <div class="pricing-card">
+          <div class="pricing-card pricing-card--sale">
             <h3 class="pricing-card__name">Standard</h3>
-            <div class="pricing-card__price"><sup>$</sup>79</div>
+            <div class="pricing-card__price-group">
+              <div class="pricing-card__old-price"><sup>$</sup>79</div>
+              <div class="pricing-card__price pricing-card__price--sale"><sup>$</sup>39</div>
+            </div>
             <p class="pricing-card__delivery">Delivered in 2–5 days</p>
             <ul class="pricing-card__features">
               <li>
@@ -940,16 +983,19 @@
               </li>
             </ul>
             <a href="#categories" class="btn btn--primary btn--lg pricing-card__cta" data-open-modal>
-              <span>Get Started</span>
+              <span>Get Started — $39</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </a>
           </div>
 
           <!-- Rush -->
-          <div class="pricing-card pricing-card--featured">
+          <div class="pricing-card pricing-card--featured pricing-card--sale">
             <span class="pricing-card__badge">⚡ Need It Fast?</span>
             <h3 class="pricing-card__name">Rush Delivery</h3>
-            <div class="pricing-card__price"><sup>$</sup>89</div>
+            <div class="pricing-card__price-group">
+              <div class="pricing-card__old-price"><sup>$</sup>89</div>
+              <div class="pricing-card__price pricing-card__price--sale"><sup>$</sup>49</div>
+            </div>
             <p class="pricing-card__delivery">Delivered in up to 1 day</p>
             <ul class="pricing-card__features">
               <li>
@@ -974,7 +1020,7 @@
               </li>
             </ul>
             <a href="#categories" class="btn btn--accent btn--lg pricing-card__cta" data-open-modal>
-              <span>Rush My Song</span>
+              <span>Rush My Song — $49</span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </a>
           </div>

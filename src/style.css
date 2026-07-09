@@ -447,7 +447,8 @@ ol {
 
 .header__pill {
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: 8px 8px 8px 24px;
   height: var(--header-height);
@@ -533,9 +534,8 @@ ol {
   display: flex;
   align-items: center;
   gap: var(--space-lg);
-  flex: 1;
-  justify-content: flex-end;
-  margin-left: var(--space-xl);
+  justify-content: center;
+  justify-self: center;
 }
 
 .nav__link {
@@ -557,17 +557,18 @@ ol {
   max-width: 200px;
   padding-left: 1rem;
   padding-right: 1rem;
-  margin-left: var(--space-lg);
   white-space: nowrap;
   flex-shrink: 0;
   transition: transform var(--duration-normal) var(--ease-out),
     background var(--duration-normal) var(--ease-out);
+  justify-self: end;
 }
 
 .header__top-row {
   display: flex;
   align-items: center;
   width: auto;
+  justify-self: start;
 }
 
 /* Hamburger */
@@ -3974,6 +3975,7 @@ body.modal-open {
   }
 
   .header__pill {
+    display: flex;
     width: calc(100vw - 32px);
     max-width: calc(100vw - 32px);
     height: auto;

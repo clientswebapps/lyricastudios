@@ -1600,29 +1600,16 @@ if (document.readyState === 'loading') {
 /* ── Hero Title Typewriter ────────────────────────────── */
 function initHeroTypewriter() {
   const typewriterSpan = document.querySelector('.hero__title .typewriter-text');
-  const cursorSpan = document.querySelector('.hero__title .typewriter-cursor');
   if (!typewriterSpan) return;
 
-  const words = [
-    "Beautiful Song",
-    "Personalized Track",
-    "Custom Song",
-    "Heartfelt Gift"
-  ];
-  let wordIndex = 0;
-  let charIndex = words[0].length;
-  let isDeleting = true;
-  let typingSpeed = 100;
-  let delayAfterWord = 2000;
-
   function createSplashNote() {
-    if (!cursorSpan) return;
+    if (!typewriterSpan) return;
     const note = document.createElement('span');
     const notes = ['♪', '♫', '♬', '♩'];
     note.textContent = notes[Math.floor(Math.random() * notes.length)];
     note.classList.add('splash-note', 'text-gradient');
-    const rect = cursorSpan.getBoundingClientRect();
-    const startX = rect.left + window.scrollX + (Math.random() * 10 - 5);
+    const rect = typewriterSpan.getBoundingClientRect();
+    const startX = rect.left + window.scrollX + (Math.random() * rect.width);
 
     // Start notes at the vertical center of the text so they look closer to the baseline
     const centerY = rect.top + window.scrollY + rect.height / 2;
@@ -1631,13 +1618,10 @@ function initHeroTypewriter() {
     note.style.left = `${startX}px`;
     note.style.top = `${startY}px`;
 
-    // 50% chance to splash up, 50% to splash down
-    const splashUp = Math.random() > 0.5;
-    const tx = (Math.random() * 40 - 20) + 'px';
-    const ty = splashUp
-      ? -(Math.random() * 35 + 25) + 'px' // move up further
-      : (Math.random() * 25 + 15) + 'px';  // move down
-    const rot = (Math.random() * 60 - 30) + 'deg';
+    // Drift slowly upwards
+    const tx = (Math.random() * 30 - 15) + 'px'; // small horizontal drift
+    const ty = -(Math.random() * 60 + 50) + 'px';  // drift upwards
+    const rot = (Math.random() * 90 - 45) + 'deg'; // gentle rotation
 
     note.style.setProperty('--tx', tx);
     note.style.setProperty('--ty', ty);
@@ -1649,36 +1633,11 @@ function initHeroTypewriter() {
       if (note.parentNode) {
         note.remove();
       }
-    }, 400);
+    }, 2500);
   }
 
-  function type() {
-    const currentWord = words[wordIndex];
-
-    if (isDeleting) {
-      typewriterSpan.textContent = currentWord.substring(0, charIndex - 1);
-      charIndex--;
-      typingSpeed = 30;
-    } else {
-      typewriterSpan.textContent = currentWord.substring(0, charIndex + 1);
-      charIndex++;
-      typingSpeed = 80;
-      createSplashNote();
-    }
-
-    if (!isDeleting && charIndex === currentWord.length) {
-      isDeleting = true;
-      setTimeout(type, delayAfterWord);
-    } else if (isDeleting && charIndex === 0) {
-      isDeleting = false;
-      wordIndex = (wordIndex + 1) % words.length;
-      setTimeout(type, 500);
-    } else {
-      setTimeout(type, typingSpeed);
-    }
-  }
-
-  setTimeout(type, delayAfterWord);
+  // Continuous floating notes generator
+  setInterval(createSplashNote, 500);
 }
 
 /* ── Category Cards Touch/Tap Toggle ─────────────────────────── */

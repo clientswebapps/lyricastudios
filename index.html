@@ -1933,7 +1933,94 @@
   </div>
 
 
+  <!-- ═══════════════════════════════════════════ -->
+  <!-- STICKY FLASH SALE SIDE BANNER               -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="flash-sticky" id="flash-sticky" aria-label="Flash Sale Offer">
+
+    <!-- Desktop: vertical pill tab (collapsed by default) -->
+    <div class="flash-sticky__tab" id="flash-sticky-tab" role="button" tabindex="0"
+         aria-expanded="false" aria-controls="flash-sticky-panel">
+      <span class="flash-sticky__tab-icon" aria-hidden="true">⚡</span>
+      <span class="flash-sticky__tab-label">Flash Sale</span>
+      <div class="flash-sticky__tab-timer" aria-label="Time remaining">
+        <span id="fst-days">06</span>d&thinsp;<span id="fst-hours">14</span>h
+      </div>
+    </div>
+
+    <!-- Mobile: icon-only floating button -->
+    <div class="flash-sticky__mobile-btn" id="flash-sticky-mobile-btn" role="button" tabindex="0"
+         aria-expanded="false" aria-controls="flash-sticky-panel" aria-label="Flash Sale — tap to see deal">
+      <span class="flash-sticky__mobile-icon" aria-hidden="true">⚡</span>
+      <span class="flash-sticky__mobile-pulse" aria-hidden="true"></span>
+    </div>
+
+    <!-- Expanded panel (shared desktop + mobile) -->
+    <div class="flash-sticky__panel" id="flash-sticky-panel" aria-hidden="true" role="region">
+      <div class="flash-sticky__panel-inner">
+        <div class="flash-sticky__panel-header">
+          <div class="flash-sticky__panel-title">
+            <span aria-hidden="true">⚡</span> Flash Sale
+          </div>
+          <button class="flash-sticky__close" id="flash-sticky-close" aria-label="Close flash sale panel">&times;</button>
+        </div>
+
+        <p class="flash-sticky__ends-label">Limited time offer — ends in:</p>
+        <div class="flash-sticky__countdown">
+          <div class="fst-unit">
+            <span class="fst-val" id="fst2-days">06</span>
+            <small>days</small>
+          </div>
+          <span class="fst-sep">:</span>
+          <div class="fst-unit">
+            <span class="fst-val" id="fst2-hours">14</span>
+            <small>hrs</small>
+          </div>
+          <span class="fst-sep">:</span>
+          <div class="fst-unit">
+            <span class="fst-val" id="fst2-mins">00</span>
+            <small>min</small>
+          </div>
+          <span class="fst-sep">:</span>
+          <div class="fst-unit">
+            <span class="fst-val" id="fst2-secs">00</span>
+            <small>sec</small>
+          </div>
+        </div>
+
+        <div class="flash-sticky__prices">
+          <div class="fsp-card">
+            <span class="fsp-name">Standard</span>
+            <div class="fsp-price-row">
+              <span class="fsp-old">$79</span>
+              <span class="fsp-new">$39</span>
+            </div>
+            <span class="fsp-delivery">2–5 day delivery</span>
+          </div>
+          <div class="fsp-card fsp-card--featured">
+            <span class="fsp-badge">⚡ Rush</span>
+            <span class="fsp-name">Rush Delivery</span>
+            <div class="fsp-price-row">
+              <span class="fsp-old">$89</span>
+              <span class="fsp-new">$49</span>
+            </div>
+            <span class="fsp-delivery">Up to 1 day</span>
+          </div>
+        </div>
+
+        <a href="#pricing" class="flash-sticky__cta" id="flash-sticky-cta">
+          Claim This Deal
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        </a>
+
+        <p class="flash-sticky__disclaimer">Sale applies automatically at checkout</p>
+      </div>
+    </div>
+  </div>
+
+
   <!-- Full-Page Checkout Redirect Overlay -->
+
   <div class="checkout-redirect-overlay" id="checkout-redirect-overlay">
     <div class="checkout-redirect-overlay__card">
       <div class="checkout-redirect-overlay__icon">

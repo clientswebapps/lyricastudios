@@ -1811,3 +1811,139 @@ window.addEventListener('pageshow', (event) => {
   // Start the timer
   requestAnimationFrame(updateTimer);
 })();
+
+// --- Sticky Left-Side Flash Sale Banner Logic ---
+(function initStickyFlashSale() {
+  const widget = document.getElementById('flash-sticky');
+  const tab = document.getElementById('flash-sticky-tab');
+  const mobileBtn = document.getElementById('flash-sticky-mobile-btn');
+  const panel = document.getElementById('flash-sticky-panel');
+  const closeBtn = document.getElementById('flash-sticky-close');
+  const ctaBtn = document.getElementById('flash-sticky-cta');
+
+  // Desktop tab timer fields
+  const tabDaysEl = document.getElementById('fst-days');
+  const tabHoursEl = document.getElementById('fst-hours');
+
+  // Expanded panel timer fields
+  const panDaysEl = document.getElementById('fst2-days');
+  const panHoursEl = document.getElementById('fst2-hours');
+  const panMinsEl = document.getElementById('fst2-mins');
+  const panSecsEl = document.getElementById('fst2-secs');
+
+  if (!widget || !panel) return;
+
+  function openPanel() {
+    widget.classList.add('is-open');
+    if (tab) tab.setAttribute('aria-expanded', 'true');
+    if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'true');
+    panel.setAttribute('aria-hidden', 'false');
+  }
+
+  function closePanel() {
+    widget.classList.remove('is-open');
+    if (tab) tab.setAttribute('aria-expanded', 'false');
+    if (mobileBtn) mobileBtn.setAttribute('aria-expanded', 'false');
+    panel.setAttribute('aria-hidden', 'true');
+  }
+
+  // Event Listeners
+  if (tab) {
+    tab.addEventListener('click', (e) => {
+      e.stopPropagation();
+      widget.classList.contains('is-open') ? closePanel() : openPanel();
+    });
+    tab.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        widget.classList.contains('is-open') ? closePanel() : openPanel();
+      }
+    });
+  }
+
+  if (mobileBtn) {
+    mobileBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      widget.classList.contains('is-open') ? closePanel() : openPanel();
+    });
+    mobileBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        widget.classList.contains('is-open') ? closePanel() : openPanel();
+      }
+    });
+  }
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closePanel();
+    });
+  }
+
+  if (ctaBtn) {
+    ctaBtn.addEventListener('click', () => {
+      closePanel();
+    });
+  }
+
+  // Close panel when clicking outside the widget
+  document.addEventListener('click', (e) => {
+    if (widget.classList.contains('is-open') && !widget.contains(e.target)) {
+      closePanel();
+    }
+  });
+
+  // Share the same timer / end time as the inline banner
+  const STORAGE_KEY = 'lyrica_flash_sale_end';
+  const SALE_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+  let endTime = parseInt(localStorage.getItem(STORAGE_KEY), 10);
+  if (!endTime || isNaN(endTime) || endTime <= Date.now()) {
+    endTime = Date.now() + SALE_DURATION_MS;
+    localStorage.setItem(STORAGE_KEY, endTime.toString());
+  }
+
+  function pad(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function updateStickyTimer() {
+    const now = Date.now();
+    const diff = endTime - now;
+
+    if (diff <= 0) {
+      // Sale ended
+      if (tabDaysEl) tabDaysEl.textContent = '00';
+      if (tabHoursEl) tabHoursEl.textContent = '00';
+      if (panDaysEl) panDaysEl.textContent = '00';
+      if (panHoursEl) panHoursEl.textContent = '00';
+      if (panMinsEl) panMinsEl.textContent = '00';
+      if (panSecsEl) panSecsEl.textContent = '00';
+      widget.style.display = 'none';
+      return;
+    }
+
+    const totalSeconds = Math.floor(diff / 1000);
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+
+    // Update Desktop Tab (DD:HH format)
+    if (tabDaysEl) tabDaysEl.textContent = pad(days);
+    if (tabHoursEl) tabHoursEl.textContent = pad(hours);
+
+    // Update Panel (DD:HH:MM:SS format)
+    if (panDaysEl) panDaysEl.textContent = pad(days);
+    if (panHoursEl) panHoursEl.textContent = pad(hours);
+    if (panMinsEl) panMinsEl.textContent = pad(mins);
+    if (panSecsEl) panSecsEl.textContent = pad(secs);
+
+    requestAnimationFrame(updateStickyTimer);
+  }
+
+  // Start the sticky timer loop
+  requestAnimationFrame(updateStickyTimer);
+})();
+

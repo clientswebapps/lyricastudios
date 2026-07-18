@@ -1203,6 +1203,7 @@ function initSongModal() {
         (document.getElementById('word-2') || {}).value || '',
         (document.getElementById('word-3') || {}).value || '',
       ].filter(Boolean),
+      additionalNotes: (document.getElementById('additional-notes') || {}).value || '',
       plan: 'standard',
       deliveryType: 'standard',
       price: '$79.00',

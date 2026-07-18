@@ -2521,6 +2521,13 @@ body.modal-open {
   font-style: italic;
 }
 
+.song-modal__field-hint {
+  margin: 0 0 var(--space-sm) 0;
+  font-size: var(--fs-xs);
+  color: var(--color-text-muted);
+  line-height: var(--lh-normal);
+}
+
 /* ── Footer (Back / Next buttons) ────────────────────────────── */
 .song-modal__footer {
   display: flex;
